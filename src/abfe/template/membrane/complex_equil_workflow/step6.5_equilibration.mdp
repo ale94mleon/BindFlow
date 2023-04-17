@@ -1,12 +1,12 @@
-define                  = -DPOSRES -DPOSRES_FC_BB=2000.0 -DPOSRES_FC_SC=1000.0 -DPOSRES_FC_LIPID=1000.0 -DPOSRES_LIG=2000.0
+define                  = -DPOSRES -DPOSRES_FC_BB=200.0 -DPOSRES_FC_SC=50.0 -DPOSRES_FC_LIPID=40.0 -DPOSRES_LIG=200.0
 integrator              = md
-dt                      = 0.001
-nsteps                  = 125000
+dt                      = 0.002
+nsteps                  = 250000
 nstxout		            = 0
 nstvout                 = 0
 nstfout                 = 0
 nstcalcenergy           = 100
-nstenergy               = 50
+nstenergy               = 100
 nstlog                  = 0
 nstxout-compressed      = 0
 ;
@@ -25,7 +25,13 @@ epsilon-rf              = 1
 tcoupl                  = v-rescale
 tc_grps                 = SOLU MEMB SOLV
 tau_t                   = 1.0 1.0 1.0
-ref_t                   = 303.15 303.15 303.15
+ref_t                   = 298.15 298.15 298.15
+;
+pcoupl                  = c-rescale
+pcoupltype              = semiisotropic 
+tau_p                   = 5.0
+compressibility         = 4.5e-5  4.5e-5
+ref_p                   = 1.0     1.0
 ;
 constraints             = h-bonds
 constraint_algorithm    = LINCS

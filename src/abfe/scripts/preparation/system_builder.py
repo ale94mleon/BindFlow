@@ -165,7 +165,8 @@ def parmed_solvate(
         nname:str = "CL",
         rmin:float = 1.0,
         out_dir:PathLike = '.'):
-
+    
+    # TODO, ion concentration is not used, only neutralize
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -256,6 +257,7 @@ def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[floa
             box_length = (max(box_size) + 1.5 * padding)
             vectors, angles = bss.Box.truncatedOctahedron(box_length.value() * bss.Units.Length.angstrom)
         
+        # TODO, ion concentration is not used, only neutralize
         solvated = bss.Solvent.tip3p(bss_system, box=vectors, angles=angles)
         
         cwd = os.getcwd()

@@ -25,7 +25,7 @@ epsilon-rf              = 1
 tcoupl                  = v-rescale
 tc_grps                 = SOLU MEMB SOLV
 tau_t                   = 1.0 1.0 1.0
-ref_t                   = 303.15 303.15 303.15
+ref_t                   = 298.15 298.15 298.15
 ;
 pcoupl                  = c-rescale
 pcoupltype              = semiisotropic 

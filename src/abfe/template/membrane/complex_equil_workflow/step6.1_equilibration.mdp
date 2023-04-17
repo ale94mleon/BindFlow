@@ -25,7 +25,7 @@ epsilon-rf              = 1
 tcoupl                  = v-rescale
 tc_grps                 = SOLU MEMB SOLV
 tau_t                   = 1.0 1.0 1.0
-ref_t                   = 303.15 303.15 303.15
+ref_t                   = 298.15 298.15 298.15
 ;
 constraints             = h-bonds
 constraint_algorithm    = LINCS
@@ -35,7 +35,7 @@ comm_mode               = linear
 comm_grps               = SOLU MEMB SOLV
 ;
 gen-vel                 = yes
-gen-temp                = 303.15
+gen-temp                = 298.15
 gen-seed                = -1
 ;
 refcoord_scaling        = com

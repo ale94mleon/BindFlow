@@ -80,6 +80,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 abfe = [
+    "LICENSE",
     "data/gmx_ff/*.tar.gz",
     "template/**/*.mdp", 
     "rules/**/*.smk",

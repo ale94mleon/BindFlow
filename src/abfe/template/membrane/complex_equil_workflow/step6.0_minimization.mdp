@@ -1,4 +1,4 @@
-define                  = -DPOSRES -DPOSRES_FC_BB=4000.0 -DPOSRES_FC_SC=2000.0 -DPOSRES_FC_LIPID=1000.0 -DPOSRES_LIG=4000.0
+define                  = -DPOSRES -DPOSRES_FC_BB=4000.0 -DPOSRES_FC_SC=2000.0 -DPOSRES_FC_LIPID=1500.0 -DPOSRES_LIG=4000.0
 integrator              = steep
 emtol                   = 1000.0
 nsteps                  = 5000
