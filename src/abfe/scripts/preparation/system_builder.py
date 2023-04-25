@@ -3,17 +3,17 @@ import warnings
 import glob
 import os
 import shutil
-import subprocess
 import argparse
 import tempfile
 import copy
-from typing import Union, Iterable
+from typing import Iterable
 import tarfile
 import logging
 logger = logging.getLogger(__name__)
 
 from abfe.home import home
 from abfe.scripts.preparation.gmx_topology import fix_topology, add_water_ions_param
+from abfe.utils.tools import run, PathLike
 
 from toff import Parameterize
 
@@ -29,7 +29,6 @@ from parmed.tools.actions import HMassRepartition
 # from openmm.app import PDBFile
 
 # TODO remove the BioSimSpace dependency and just use ParmED
-PathLike = Union[os.PathLike, str, bytes]
 
 def readParmEDMolecule(top_file:PathLike, gro_file:PathLike) -> Structure:
     """Read a gro and top GROMACS file and return
@@ -83,45 +82,6 @@ def get_gmx_ff(ff_code:str, out_dir:PathLike = '.') -> PathLike:
     tar.close()
     return os.path.join(out_dir,  f'{ff_code}.ff')
 
-def run(command:str, shell:bool = True, executable:str = '/bin/bash', Popen:bool = False) -> subprocess.CompletedProcess:
-    """A simple wrapper around subprocess.Popen/subprocess.run
-
-    Parameters
-    ----------
-    command : str
-        The command line to be executed
-    shell : bool, optional
-        Create a shell section, by default True
-    executable : str, optional
-        what executable to use, pass `sys.executable` to check yours, by default '/bin/bash'
-    Popen : bool, optional
-        Use `Popen` (the PID could be access) instead of `run`, by default False
-
-    Returns
-    -------
-    subprocess.CompletedProcess
-        The process
-
-    Raises
-    ------
-    RuntimeError
-        In case that the command fails, the error is raised in a nice way
-    """
-    #Here I could make some modification in order that detect the operator system
-    #NAd make the command compatible with the operator system
-    #the function eval could be an option if some modification to the variable command
-    #need to be done.... Some flash ideas...
-
-    if Popen:
-        #In this case you could access the pid as: run.pid
-        process = subprocess.Popen(command, shell = shell, executable = executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text = True)
-    else:
-        process = subprocess.run(command, shell = shell, executable = executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text = True)
-        returncode = process.returncode
-        if returncode != 0:
-            print(f'Command {command} returned non-zero exit status {returncode}')
-            raise RuntimeError(process.stderr)
-    return process
 
 def system_combiner(**md_elements):
     """This function simply sum up all the elements provided 
@@ -694,5 +654,4 @@ def __system_builder_cmd():
 
 #############################################################################################
 
-if __name__ == "__main__":
-    __system_builder_cmd()
+if __name__ == "__main__": ...
