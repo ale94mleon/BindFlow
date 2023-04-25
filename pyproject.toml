@@ -88,4 +88,6 @@ abfe = [
 ]
 
 [project.scripts]
-abfe-calculator = "abfe.cli:abfe_run"
+abfe-run = "abfe.cli:abfe_run"
+abfe-build_sys = "abfe.scripts.preparation.system_builder:__system_builder_cmd"
+abfe-gen_boresch_restraints = "abfe.scripts.preparation.generate_boresch_restraints:gen_boresch_restraints"
