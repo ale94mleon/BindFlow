@@ -2,7 +2,7 @@ from abfe.utils.tools import gmx_runner
 
 input_path = config['input_data_path']
 run_path = config["run_path"]
-num_sim_threads = config['num_sim_threads']
+threads = config['threads']
 num_retries = config['num_retries']
 load_dependencies = config['job_extra_directives']
 mdrun_extra = config['mdrun_extra_directives']
@@ -13,18 +13,17 @@ rule equil_run_ligand_emin:
         gro=input_path+"/ligand/ligand.gro",
         mdp=run_path+"/ligand/equil-mdsim/emin/emin.mdp"
     params:
-        nthreads=num_sim_threads,
         run_dir=run_path+"/ligand/equil-mdsim/emin"
     output:
         gro=run_path+"/ligand/equil-mdsim/emin/emin.gro"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
@@ -37,19 +36,18 @@ rule equil_run_ligand_nvt_heat:
         gro=run_path+"/ligand/equil-mdsim/emin/emin.gro"
         mdp=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.mdp",
     params:
-        nthreads=num_sim_threads,
         run_dir=run_path+"/ligand/equil-mdsim/nvt_heat"
     output:
         gro=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.gro",
         cpt=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.cpt"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
@@ -63,12 +61,11 @@ rule equil_run_ligand_npt_eq1:
         cpt=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.cpt",
         mdp=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.gro",
     params:
-        nthreads=num_sim_threads,
         run_dir=run_path+"/ligand/equil-mdsim/npt_equil1"
     output:
         gro=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.gro",
         cpt=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.cpt"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
@@ -76,7 +73,7 @@ rule equil_run_ligand_npt_eq1:
             topology = input.top,
             structure = input.gro,
             checkpoint = input.cpt,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
@@ -90,12 +87,11 @@ rule equil_run_ligand_npt_eq2:
         cpt=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.cpt",
         mdp=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.gro",
     params:
-        nthreads=num_sim_threads,
         run_dir=run_path+"/ligand/equil-mdsim/npt_equil2"
     output:
         gro=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.gro",
         cpt=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.cpt",
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
@@ -103,7 +99,7 @@ rule equil_run_ligand_npt_eq2:
             topology = input.top,
             structure = input.gro,
             checkpoint = input.cpt,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,

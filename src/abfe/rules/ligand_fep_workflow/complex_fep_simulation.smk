@@ -3,7 +3,7 @@ from abfe.tools import gmx_runner
 run_path = config["run_path"]
 simulation_dir = run_path+"/complex/fep/simulation"
 
-num_sim_threads = config['num_sim_threads']
+threads = config['threads']
 num_retries = config['num_retries']
 load_dependencies = config['job_extra_directives']
 # TODO when is prepeared the configuration should be the dict with the key:values for mdrun or some dictionary 
@@ -18,18 +18,17 @@ rule fep_run_complex_emin:
         gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
         
     params:
-        nthreads=num_sim_threads, 
         run_dir=simulation_dir+"/{state}/emin",
     output:
         gro=simulation_dir+"/{state}/emin/emin.gro"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
@@ -42,19 +41,18 @@ rule fep_run_complex_nvt_heat:
         mdp=simulation_dir+"/{state}/nvt/nvt.mdp",
         gro=simulation_dir+"/{state}/emin/emin.gro"
     params:
-        nthreads=num_sim_threads,
         run_dir=simulation_dir+"/{state}/nvt",
     output:
         gro=simulation_dir+"/{state}/nvt/nvt.gro",
         cpt=simulation_dir+"/{state}/nvt/nvt.cpt"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
-            nthreads = params.nthreads,
+            nthreads = threadss,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
@@ -68,12 +66,11 @@ rule fep_run_complex_npt_eq1:
         gro=simulation_dir+"/{state}/nvt/nvt.gro",
         cpt=simulation_dir+"/{state}/nvt/nvt.cpt"
     params:
-        nthreads=num_sim_threads,
         run_dir=simulation_dir+"/{state}/npt",
     output:
         gro=simulation_dir+"/{state}/npt/npt.gro",
         cpt=simulation_dir+"/{state}/npt/npt.cpt"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
@@ -81,7 +78,7 @@ rule fep_run_complex_npt_eq1:
             topology = input.top,
             structure = input.gro,
             checkpoint = input.cpt,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
@@ -95,12 +92,11 @@ rule fep_run_complex_npt_eq2:
         gro=simulation_dir+"/{state}/npt/npt.gro",
         cpt=simulation_dir+"/{state}/npt/npt.cpt"
     params:
-        nthreads=num_sim_threads,
         run_dir=simulation_dir+"/{state}/npt-norest",
     output:
         gro=simulation_dir+"/{state}/npt-norest/npt-norest.gro",
         cpt=simulation_dir+"/{state}/npt-norest/npt-norest.cpt"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     shell:
         gmx_runner(
@@ -108,7 +104,7 @@ rule fep_run_complex_npt_eq2:
             topology = input.top,
             structure = input.gro,
             checkpoint = input.cpt,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
@@ -122,19 +118,18 @@ rule fep_run_complex_prod:
         gro=simulation_dir+"/{state}/npt-norest/npt-norest.gro",
         cpt=simulation_dir+"/{state}/npt-norest/npt-norest.cpt"
     params:
-        nthreads=num_sim_threads,
         run_dir=simulation_dir+"/{state}/prod",
     output:
         gro=simulation_dir+"/{state}/prod/prod.gro",
         xvg=simulation_dir+"/{state}/prod/prod.xvg"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
         gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
             checkpoint = input.cpt,
-            nthreads = params.nthreads,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             cpi = True,
