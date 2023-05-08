@@ -1,114 +1,142 @@
-run_path = config["run_path"]
-num_retries = config['num_retries']
-num_sim_threads = config['num_sim_threads']
+from abfe.tools import gmx_runner
 
-gromacs_run_script=config['gmx_run_kernel_path']
-gromacs_cont_script=config['gmx_cont_kernel_path']
+run_path = config["run_path"]
+simulation_dir = run_path+"/complex/fep/simulation"
+
+num_sim_threads = config['num_sim_threads']
+num_retries = config['num_retries']
+load_dependencies = config['job_extra_directives']
+# TODO when is prepeared the configuration should be the dict with the key:values for mdrun or some dictionary 
+# with the mdrun kwargs or an empty dict
+mdrun_extra = config['mdrun_extra_directives']
 
 
 rule fep_run_complex_emin:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
-        gro=run_path+"/complex/fep/fep-topology/complex.gro",
-        mdp=run_path+"/complex/fep/simulation/{state}/emin/emin.mdp",
+        mdp=simulation_dir+"/{state}/emin/emin.mdp",
+        gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
+        
     params:
-        nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/fep/simulation/{state}/emin",
-        gmx_template=gromacs_run_script
+        nthreads=num_sim_threads, 
+        run_dir=simulation_dir+"/{state}/emin",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/emin/emin.gro"
+        gro=simulation_dir+"/{state}/emin/emin.gro"
     threads: num_sim_threads
     retries: num_retries
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_emin.sh   
-            ./job_emin.sh {params.nthreads} emin {input.top} {input.gro}
-        '''
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule fep_run_complex_nvt_heat:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/nvt/nvt.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/emin/emin.gro"
+        mdp=simulation_dir+"/{state}/nvt/nvt.mdp",
+        gro=simulation_dir+"/{state}/emin/emin.gro"
     params:
         nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/fep/simulation/{state}/nvt",
-        gmx_template=gromacs_run_script
+        run_dir=simulation_dir+"/{state}/nvt",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/nvt/nvt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/nvt/nvt.cpt"
+        gro=simulation_dir+"/{state}/nvt/nvt.gro",
+        cpt=simulation_dir+"/{state}/nvt/nvt.cpt"
     threads: num_sim_threads
     retries: num_retries
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_nvt.sh   
-            ./job_nvt.sh {params.nthreads} nvt {input.top} {input.gro}
-        '''
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
-rule run_fep_complex_npt_eq1:
+rule fep_run_complex_npt_eq1:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/npt/npt.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/nvt/nvt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/nvt/nvt.cpt"
+        mdp=simulation_dir+"/{state}/npt/npt.mdp",
+        gro=simulation_dir+"/{state}/nvt/nvt.gro",
+        cpt=simulation_dir+"/{state}/nvt/nvt.cpt"
     params:
         nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/fep/simulation/{state}/npt",
-        gmx_template=gromacs_cont_script
+        run_dir=simulation_dir+"/{state}/npt",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/npt/npt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt/npt.cpt"
+        gro=simulation_dir+"/{state}/npt/npt.gro",
+        cpt=simulation_dir+"/{state}/npt/npt.cpt"
     threads: num_sim_threads
     retries: num_retries
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_npt.sh   
-            ./job_npt.sh {params.nthreads} npt {input.top} {input.gro} {input.cpt}
-        '''
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule fep_run_complex_npt_eq2:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/npt/npt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt/npt.cpt"
+        mdp=simulation_dir+"/{state}/npt-norest/npt-norest.mdp",
+        gro=simulation_dir+"/{state}/npt/npt.gro",
+        cpt=simulation_dir+"/{state}/npt/npt.cpt"
     params:
-        nthreads=num_sim_threads,        
-        run_dir=run_path+"/complex/fep/simulation/{state}/npt-norest",
-        gmx_template=gromacs_cont_script
+        nthreads=num_sim_threads,
+        run_dir=simulation_dir+"/{state}/npt-norest",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.cpt"
+        gro=simulation_dir+"/{state}/npt-norest/npt-norest.gro",
+        cpt=simulation_dir+"/{state}/npt-norest/npt-norest.cpt"
     threads: num_sim_threads
     retries: num_retries
     shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_npt_norest.sh   
-            ./job_npt_norest.sh {params.nthreads} npt-norest {input.top} {input.gro} {input.cpt}
-        '''
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule fep_run_complex_prod:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.cpt"
+        mdp=simulation_dir+"/{state}/prod/prod.mdp",
+        gro=simulation_dir+"/{state}/npt-norest/npt-norest.gro",
+        cpt=simulation_dir+"/{state}/npt-norest/npt-norest.cpt"
     params:
         nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/fep/simulation/{state}/prod",
-        gmx_template=gromacs_cont_script
+        run_dir=simulation_dir+"/{state}/prod",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/prod/prod.gro",
-        xvg=run_path+"/complex/fep/simulation/{state}/prod/prod.xvg"
+        gro=simulation_dir+"/{state}/prod/prod.gro",
+        xvg=simulation_dir+"/{state}/prod/prod.xvg"
     threads: num_sim_threads
     retries: num_retries
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_prod.sh   
-            ./job_prod.sh {params.nthreads} prod {input.top} {input.gro} {input.cpt}  
-        '''
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )

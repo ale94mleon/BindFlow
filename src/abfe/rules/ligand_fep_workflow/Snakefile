@@ -1,4 +1,4 @@
-#Setup: FEP dir structure 
+#Setup: FEP dir structure and make mdp files from templates
 include: 'ligand_fep_setup.smk' 
 include: 'complex_fep_setup.smk' 
  

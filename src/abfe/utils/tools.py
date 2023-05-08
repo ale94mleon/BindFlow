@@ -91,42 +91,6 @@ def gmx_command(load_dependencies:List[str] = None, interactive:bool = False):
         return wrapper
     return decorator
 
-# @gmx_command()
-# def grompp(
-#         f:str = 'grompp.mdp',
-#         c:str = 'conf.gro',
-#         r:str = 'restraint.gro',
-#         n:str = None,
-#         p:str = 'topol.top',
-#         o:str = 'topol.tpr',
-#         maxwarn:int = 0,
-#         **keywords
-#         ):
-#     """Extremely lazy wrapper of grompp.
-#     Check here for more info about the possible parameters
-#     https://manual.gromacs.org/current/onlinehelp/gmx-grompp.html
-
-#     In this implementation flags are booleans, for example v = True, if you want to be verbose.
-
-#     This function is mean to be used with gmx_command function as decorator.
-#     e.g:
-
-#     """
-#     pass
-
-# @gmx_command()
-# def mdrun(
-#         **keywords
-#         ):
-#     """Extremely lazy wrapper of mdrun.
-#     Check here for more info about the possible parameters
-#     https://manual.gromacs.org/current/onlinehelp/gmx-mdrun.html
-
-#     In this implementation flags are booleans, for example cpt = True, if you want to use the checkpoint.
-
-#     """
-#     pass
-
 def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:PathLike = None, nthreads:int = 12, load_dependencies:List[str] = None, run_dir:PathLike = '.', **mdrun_extra):
     """This function create the tpr file based on the input provided
     And run the simulation.
@@ -197,11 +161,31 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
 def list_if_dir(path = '.'):
     return [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item))]
 
-def list_if_file(path = '.'):
-    return [item for item in os.listdir(path) if os.path.isfile(os.path.join(path, item))]
+def list_if_file(path:PathLike = '.', ext:str = None) -> List[str]:
+    """Dir all the files in path
+
+    Parameters
+    ----------
+    path : PathLike, optional
+        Path to look for the file, by default '.'
+    ext : str, optional
+        Th extension of the file, for example: "py", "sh", "txt", by default None
+
+    Returns
+    -------
+    List[str]
+        The list of file names
+    """
+    files = [item for item in os.listdir(path) if os.path.isfile(os.path.join(path, item))]
+    if ext:
+        files = [file for file in files if os.path.splitext(file)[-1] == f".{ext}"]
+    return files
 
 def makedirs(path):
     if os.path.exists(path):
         pass
     else:
         os.makedirs(path,exist_ok=True)
+
+if __name__ == "__main__":
+    pass

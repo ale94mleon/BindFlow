@@ -23,15 +23,15 @@ rule fep_ana_gather_complex_xvg:
         xvg_dir=directory(run_path+"/complex/fep/ana/xvgs")
     shell:
         '''
-            mkdir -p {params.ana_loc}/xvgs/restraints-xvg
+            mkdir -p {params.ana_loc}/xvgs/bonded-xvg
             mkdir -p {params.ana_loc}/xvgs/vdw-xvg
             mkdir -p {params.ana_loc}/xvgs/coul-xvg
 
-            # restraints
+            # bonded
             let max_window={params.rest_max_windows}  
             for i in $(seq 0 1 $((max_window-1)))
             do
-                cp {params.sim_loc}/restraints.${{i}}/prod/prod.xvg {params.ana_loc}/xvgs/restraints-xvg/dhdl.${{i}}.xvg
+                cp {params.sim_loc}/bonded.${{i}}/prod/prod.xvg {params.ana_loc}/xvgs/bonded-xvg/dhdl.${{i}}.xvg
             done
 
             # vdw

@@ -1,109 +1,143 @@
-from abfe import scripts
 
+input_path = config['input_data_path']
 run_path = config["run_path"]
 num_sim_threads = config['num_sim_threads']
-
-gromacs_run_script=config['gmx_run_kernel_path']
-gromacs_cont_script=config['gmx_cont_kernel_path']
-
+num_retries = config['num_retries']
+load_dependencies = config['job_extra_directives']
+mdrun_extra = config['mdrun_extra_directives']
 
 rule equil_run_complex_emin:
     input:
-        top=run_path+"/complex/topology/complex.top",
-        gro=run_path+"/complex/topology/complex.gro",
+        top=input_path+"/complex/complex.top",
+        gro=input_path+"/complex/complex.gro",
+        mdp=run_path+"/complex/equil-mdsim/emin/emin.mdp"
     params:
         nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/equil-mdsim/emin",
-        gmx_template=gromacs_run_script
+        run_dir=run_path+"/complex/equil-mdsim/emin"
     output:
         gro=run_path+"/complex/equil-mdsim/emin/emin.gro"
     threads: num_sim_threads
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_emin.sh   
-            ./job_emin.sh {params.nthreads} emin {input.top} {input.gro} 
-        '''
+    retries: num_retries
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule equil_run_complex_nvt_heat:
     input:
-        top=run_path+"/complex/topology/complex.top",
+        top=input_path+"/complex/complex.top",
         gro=run_path+"/complex/equil-mdsim/emin/emin.gro"
+        mdp=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.mdp",
     params:
         nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/equil-mdsim/nvt_heat",
-        gmx_template=gromacs_run_script
+        run_dir=run_path+"/complex/equil-mdsim/nvt_heat"
     output:
         gro=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.gro",
         cpt=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.cpt"
     threads: num_sim_threads
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_nvt_heat.sh   
-            ./job_nvt_heat.sh {params.nthreads} nvt_heat  {input.top} {input.gro}
-        '''
+    retries: num_retries
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule equil_run_complex_npt_eq1:
     input:
-        top=run_path+"/complex/topology/complex.top",
+        top=input_path+"/complex/complex.top",
         gro=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.gro",
-        cpt=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.cpt"
+        cpt=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.cpt",
+        mdp=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.mdp",
     params:
         nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/equil-mdsim/npt_equil1",
-        gmx_template=gromacs_cont_script
+        run_dir=run_path+"/complex/equil-mdsim/npt_equil1"
     output:
         gro=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.gro",
         cpt=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.cpt"
     threads: num_sim_threads
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_npt_eq1.sh   
-            ./job_npt_eq1.sh {params.nthreads} npt_equil1 {input.top} {input.gro} {input.cpt}
-        '''
+    retries: num_retries
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule equil_run_complex_npt_eq2:
     input:
-        top=run_path+"/complex/topology/complex.top",
+        top=input_path+"/complex/complex.top",
         gro=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.gro",
-        cpt=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.cpt"
+        cpt=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.cpt",
+        mdp=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.mdp",
     params:
         nthreads=num_sim_threads,
-        run_dir=run_path+"/complex/equil-mdsim/npt_equil2",
-        gmx_template=gromacs_cont_script
+        run_dir=run_path+"/complex/equil-mdsim/npt_equil2"
     output:
         gro=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.gro",
         cpt=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.cpt"
     threads: num_sim_threads
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_npt_eq2.sh   
-            ./job_npt_eq2.sh {params.nthreads} npt_equil2 {input.top} {input.gro} {input.cpt}
-        '''
+    retries: num_retries
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule equil_run_complex_prod:
     input:
         top=run_path+"/complex/topology/complex.top",
         gro=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.gro",
         cpt=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.cpt"
+        mdp=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.mdp",
     params:
         nthreads=num_sim_threads,
         run_dir=run_path+"/complex/equil-mdsim/npt_prod",
         gmx_template=gromacs_cont_script
     output:
-        tpr=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.tpr",
         gro=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.gro",
+        cpt=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.cpt",
+        tpr=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.tpr",
         xtc=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.xtc",
     threads: num_sim_threads
-    shell:
-        '''
-            cd {params.run_dir}
-            cp {params.gmx_template} ./job_npt_prod.sh   
-            ./job_npt_prod.sh  {params.nthreads} npt_prod {input.top} {input.gro} {input.cpt}
-        '''
+    retries: num_retries
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = params.nthreads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            cpi = True,
+            **mdrun_extra
+        )
 
 rule equil_run_complex_trjconv:
     input:
@@ -115,6 +149,7 @@ rule equil_run_complex_trjconv:
         xtc=run_path+"/complex/equil-mdsim/boreschcalc/npt_prod_center.xtc"
     shell:
         '''
+            mkdir {params.run_dir}
             echo 0 | gmx trjconv -s {input.tpr} -f {input.xtc} -o {params.run_dir}/whole.xtc -pbc whole
             echo 0 | gmx trjconv -s {input.tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump
             gmx trjconv -s {input.tpr} -f {params.run_dir}/nojump.xtc -o {output.xtc} -pbc mol -center -ur compact << EOF
@@ -137,5 +172,5 @@ rule equil_run_complex_get_boresch_restraints:
         boresch_dG_off=run_path+"/complex/equil-mdsim/boreschcalc/dG_off.dat"
     shell:
         '''
-            python {params.code_path}/preparation/generate_boresch_restraints.py --top {input.tpr} --trj {input.xtc} --outpath {params.run_dir}
+            abfe-gen_boresch_restraints --top {input.tpr} --trj {input.xtc} --outpath {params.run_dir}
         '''

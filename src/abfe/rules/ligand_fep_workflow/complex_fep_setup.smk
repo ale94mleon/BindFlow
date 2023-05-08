@@ -1,20 +1,33 @@
 from abfe import template
+from abfe.utils.tools import makedirs
+from abfe.utils import mdp
+import os, shutil
+template_dir=template.complex_fep_template_path
 
 
 run_path = config["run_path"]
-complex_windows = config["complex_windows"]
-lam_rest_range = config['lam_rest_complex_range']
-lam_coul_range = config['lam_coul_complex_range']
-lam_vdw_range = config['lam_vdw_complex_range']
-n_rest_windows = len(lam_rest_range)
-n_coul_windows = len(lam_coul_range)
-n_vdw_windows = len(lam_vdw_range)
+coul_lambdas = config['ligand_coul_lambdas']
+vdw_lambdas = config['ligand_vdw_lambdas']
+bonded_lambdas = config['complex_bonded_lambdas']
+
+vdw_steps = [os.path.splitext(step)[0] for step in list_if_file(template_dir+"/vdw", ext='mdp')]
+coul_steps = [os.path.splitext(step)[0] for step in list_if_file(template_dir+"/coul", ext='mdp')]
+bonded_steps = [os.path.splitext(step)[0] for step in list_if_file(template_dir+"/bonded", ext='mdp')]
+
+# TODO In case of user defined MDP keywords, take those from the config
+try:
+    # TODO sanity check on the passed MDP options
+    mdp_extra_kwargs = config['mdp']['complex']['fep']
+except KeyError:
+    mdp_extra_kwargs = {}
 
 rule fep_setup_complex:
     input:
-        complex_top=run_path+"/complex/topology",
+        complex_top=directory(run_path+"/complex/topology"),
         boresch_top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
-        boresch_gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
+        mdp_vdw=expand(template_dir+"/vdw/{step}.mdp", step=vdw_steps),
+        mdp_coul=expand(template_dir+"/coul/{step}.mdp", step=coul_steps),
+        mdp_bonded=expand(template_dir+"/bonded/{step}.mdp", step=bonded_steps)
     params:
         sim_dir=run_path+"/complex/fep",
         restraint_range=" ".join(map(str, lam_rest_range)),
@@ -22,51 +35,45 @@ rule fep_setup_complex:
         vdw_range=" ".join(map(str, lam_vdw_range)),
         vdw_windows=n_vdw_windows,
         coul_range=" ".join(map(str, lam_coul_range)),
-        coul_windows=n_coul_windows,
-        template_dir=template.complex_fep_template_path,
+        coul_windows=n_coul_windows
     output:
-        fep_em=expand(run_path+"/complex/fep/simulation/{state}/emin/emin.mdp", state=complex_windows),
-        fep_npt=expand(run_path+"/complex/fep/simulation/{state}/npt/npt.mdp", state=complex_windows),
-        fep_npt_norest=expand(run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.mdp", state=complex_windows),
-        fep_nvt=expand(run_path+"/complex/fep/simulation/{state}/nvt/nvt.mdp", state=complex_windows),
-        fep_prod=expand(run_path+"/complex/fep/simulation/{state}/prod/prod.mdp", state=complex_windows),
+        mdp_vdw=expand(run_path+"/ligand/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(vdw_lambdas)), step=vdw_steps),
+        mdp_coul=expand(run_path+"/ligand/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(coul_lambdas)), step=coul_steps)
+        mdp_bonded=expand(run_path+"/ligand/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(bonded_lambdas)), step=coul_steps)
         fep_top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
-        fep_gro=run_path+"/complex/fep/fep-topology/complex.gro"
-    shell:
-        '''
-            mkdir -p {params.sim_dir}/template
-            cp -r {params.template_dir}/template/* {params.sim_dir}/template
-            cp -r {input.complex_top}/* {params.sim_dir}/fep-topology
-            cp {input.boresch_gro} {params.sim_dir}/fep-topology/complex.gro
-            cat {params.sim_dir}/fep-topology/complex.top {input.boresch_top} > {params.sim_dir}/fep-topology/complex_boresch.top
+    run:
+        # Copy complex topology
+        shutil.copytree(input.complex_top, sim_dir+"/complex/fep/fep-topology")
+        
+        # Modify the main topology incorporating the boresch restraints
+        with open(params.sim_dir+"/fep-topology/complex.top", 'r') as original_top:
+            with open(input.boresch_top, 'r') as boresch_top:
+                with open(output.fep_top, 'w') as final_top:
+                    final_top.write(original_top.read() + boresch_top.read())
 
-            # create simulation directory
-            mkdir -p {params.sim_dir}/simulation
+        # Create MDP template for Van der Waals states
+        mdp.make_fep_dir_structure(
+            sim_dir = params.sim_dir,
+            template_dir = template_dir,
+            lambda_values = vdw_lambdas,
+            lambda_type = 'vdw',
+            **mdp_extra_kwargs,
+        )
 
-            let max_window={params.restraint_windows}
-            for i in $(seq 0 $((max_window)))
-            do
-                mkdir -p {params.sim_dir}/simulation/restraints.${{i}}
-                cp -r {params.sim_dir}/template/restraints/* {params.sim_dir}/simulation/restraints.${{i}}
-                sed -i "s/<state>/${{i}}/g" {params.sim_dir}/simulation/restraints.${{i}}/*/*.mdp
-                sed -i "s/<lamRange>/{params.restraint_range}/g" {params.sim_dir}/simulation/restraints.${{i}}/*/*.mdp
-            done
-            
-            let max_window={params.vdw_windows}
-            for i in $(seq 0 $((max_window-1)))
-            do
-                mkdir -p {params.sim_dir}/simulation/vdw.${{i}}
-                cp -r {params.sim_dir}/template/vdw/* {params.sim_dir}/simulation/vdw.${{i}}
-                sed -i "s/<state>/${{i}}/g" {params.sim_dir}/simulation/vdw.${{i}}/*/*.mdp
-                sed -i "s/<lamRange>/{params.vdw_range}/g" {params.sim_dir}/simulation/vdw.${{i}}/*/*.mdp
-            done
+        # Create MDP template for Coulomb states
+        mdp.make_fep_dir_structure(
+            sim_dir = params.sim_dir,
+            template_dir = template_dir,
+            lambda_values = coul_lambdas,
+            lambda_type = 'coul',
+            **mdp_extra_kwargs,
+        )
 
-            let max_window={params.coul_windows}
-            for i in $(seq 0 $((max_window-1)))
-            do
-                mkdir -p {params.sim_dir}/simulation/coul.${{i}}
-                cp -r {params.sim_dir}/template/coul/* {params.sim_dir}/simulation/coul.${{i}}
-                sed -i "s/<state>/${{i}}/g" {params.sim_dir}/simulation/coul.${{i}}/*/*.mdp
-                sed -i "s/<lamRange>/{params.coul_range}/g" {params.sim_dir}/simulation/coul.${{i}}/*/*.mdp
-            done
-        '''
+        # Create MDP template for Restraint states
+        mdp.make_fep_dir_structure(
+            sim_dir = params.sim_dir,
+            template_dir = template_dir,
+            lambda_values = coul_lambdas,
+            lambda_type = 'bonded',
+            **mdp_extra_kwargs,
+        )

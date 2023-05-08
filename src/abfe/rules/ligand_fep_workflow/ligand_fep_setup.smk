@@ -1,58 +1,49 @@
 from abfe import template
+from abfe.utils.tools import makedirs, PathLike
+from abfe.utils import mdp
+import os
+template_dir = template.ligand_fep_template_path
 
 run_path = config["run_path"]
-ligand_windows = config["ligand_windows"]
-lam_coul_range = config['lam_coul_ligand_range']
-lam_vdw_range = config['lam_vdw_ligand_range']
-n_coul_windows = len(lam_coul_range)
-n_vdw_windows = len(lam_vdw_range)
+vdw_lambdas = config['ligand_vdw_lambdas']
+coul_lambdas = config['ligand_coul_lambdas']
+
+# TODO In case of user defined MDP keywords, take those from the config
+try:
+    # TODO sanity check on the passed MDP options
+    mdp_extra_kwargs = config['mdp']['ligand']['fep']
+except KeyError:
+    mdp_extra_kwargs = {}
+
+vdw_steps = [os.path.splitext(step)[0] for step in list_if_file(template_dir+"/vdw", ext='mdp')]
+coul_steps = [os.path.splitext(step)[0] for step in list_if_file(template_dir+"/coul", ext='mdp')]
 
 rule fep_setup_ligand:
     input:
-        ligand_top=run_path+"/ligand/topology",
-        equil_gro=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.gro",
+        mdp_vdw=expand(template_dir+"/vdw/{step}.mdp", step=vdw_steps),
+        mdp_coul=expand(template_dir+"/coul/{step}.mdp", step=coul_steps)
     params:
         sim_dir=run_path+"/ligand/fep",
-        vdw_windows=n_vdw_windows,
-        vdw_range=" ".join(map(str, lam_vdw_range)),
-        coul_windows=n_coul_windows,
-        coul_range=" ".join(map(str, lam_coul_range)),
-        template_dir = template.ligand_fep_template_path,
+        vdw_range_str=" ".join(map(str, vdw_lambdas)),
+        coul_range_str=" ".join(map(str, coul_lambdas)),
     output:
-        fep_em=expand(run_path+"/ligand/fep/simulation/{state}/emin/emin.mdp", state=ligand_windows),
-        fep_npt=expand(run_path+"/ligand/fep/simulation/{state}/npt/npt.mdp", state=ligand_windows),
-        fep_npt_norest=expand(run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.mdp", state=ligand_windows),
-        fep_nvt=expand(run_path+"/ligand/fep/simulation/{state}/nvt/nvt.mdp", state=ligand_windows),
-        fep_prod=expand(run_path+"/ligand/fep/simulation/{state}/prod/prod.mdp", state=ligand_windows),
-        fep_top=run_path+"/ligand/fep/fep-topology/ligand.top",
-        fep_gro=run_path+"/ligand/fep/fep-topology/equil.gro"
-    shell:
-        '''
-            mkdir -p {params.sim_dir}/template
-            cp -r {params.template_dir}/template/* {params.sim_dir}/template
+        mdp_vdw=expand(run_path+"/ligand/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(vdw_lambdas)), step=vdw_steps),
+        mdp_coul=expand(run_path+"/ligand/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(coul_lambdas)), step=coul_steps)
+    run:
+        # Create MDP template for Van der Waals states
+        mdp.make_fep_dir_structure(
+            sim_dir = params.sim_dir,
+            template_dir = template_dir,
+            lambda_values = vdw_lambdas,
+            lambda_type = 'vdw',
+            **mdp_extra_kwargs,
+        )
 
-            cp -r {input.ligand_top}/* {params.sim_dir}/fep-topology
-            cp {input.equil_gro} {params.sim_dir}/fep-topology/equil.gro
-
-            # create simulation directory
-            mkdir -p {params.sim_dir}/simulation
-           
-            let max_window={params.vdw_windows}
-            for i in $(seq 0 $((max_window-1)))
-            do
-                mkdir -p {params.sim_dir}/simulation/vdw.${{i}}
-                cp -r {params.sim_dir}/template/vdw/* {params.sim_dir}/simulation/vdw.${{i}}
-                sed -i "s/<state>/${{i}}/g" {params.sim_dir}/simulation/vdw.${{i}}/*/*.mdp
-                sed -i "s/<lamRange>/{params.vdw_range}/g" {params.sim_dir}/simulation/vdw.${{i}}/*/*.mdp
-            done
-
-            let max_window={params.coul_windows}
-            for i in $(seq 0 $((max_window-1)))
-            do
-                mkdir -p {params.sim_dir}/simulation/coul.${{i}}
-                cp -r {params.sim_dir}/template/coul/* {params.sim_dir}/simulation/coul.${{i}}
-                sed -i "s/<state>/${{i}}/g" {params.sim_dir}/simulation/coul.${{i}}/*/*.mdp
-                sed -i "s/<lamRange>/{params.coul_range}/g" {params.sim_dir}/simulation/coul.${{i}}/*/*.mdp
-            done
-
-        '''
+        # Create MDP template for Coulomb states
+        mdp.make_fep_dir_structure(
+            sim_dir = params.sim_dir,
+            template_dir = template_dir,
+            lambda_values = coul_lambdas,
+            lambda_type = 'coul',
+            **mdp_extra_kwargs,
+        )

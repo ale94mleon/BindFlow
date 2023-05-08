@@ -1,10 +1,6 @@
 import json, os
-from typing import Union
-from abfe import template as tp
+from abfe.utils.tools import list_if_file, PathLike, makedirs, List
 
-PathLike = Union[os.PathLike, str, bytes]
-
-_MDP_MEMB_EQUI_TEMPLATES_PATH = os.path.join(tp.membrane_path,'complex_equil_workflow')
 _MDP_PARAM_DEFAULT={
     "integrator": "steep",
     "emtol": "1000.0",
@@ -64,16 +60,141 @@ class MDP:
     def __repr__(self):
         return f"{self.__class__.__name__}({json.dumps(self.parameters, indent=4)})"
 
-class MembraneEquiMDP(MDP):
-    def __init__(self, **kwargs):
+class StepMDP(MDP):
+    """This subclass will inherit from :meth:`abfe.utils.mdp.MDP`
+    It is meant to be used in combination with the templates that can 
+    be access from :mod: `abfe.templates`.
+    This class define the method `set_new_step`. One time initialized,
+    the instance could be used to access other steps on the step_path
+
+    Parameters
+    ----------
+    MDP : abfe.utils.mdp.MDP
+        base MDP class
+    """
+    def __init__(self, step:str = None, step_path:PathLike = None, **kwargs):
+        """Constructor. It is assume a tree directory as:
+        
+        ::
+            .
+            ├── emin
+            │   └── emin.mdp
+            ├── npt
+            │   └── npt.mdp
+            ├── npt-norest
+            │   └── npt-norest.mdp
+            ├── nvt
+            │   └── nvt.mdp
+            └── prod
+                └── prod.mdp
+
+        Parameters
+        ----------
+        step : str, optional
+            the step, basically the name of the mdp file on templates, by default None
+        step_path : PathLike, optional
+            where to look for the mdp, by default None
+        Example
+        -------
+        .. ipython:: python
+
+            from abfe.utils import mdp
+            from abfe import template as tp
+            import os
+            my_mdp = mdp.StepMDP(step = 'emin', step_path = os.path.join(tp.ligand_fep_template_path, 'coul'))
+            my_mdp.set_parameters(**{"init-lambda-state": "0", "coul-lambdas": "0 0.5 1",})
+            print(my_mdp)
+            my_mdp.set_new_step(step='npt-norest')
+            print(my_mdp.to_string())
+        """
         super().__init__(**kwargs)
-    def from_archive(self, name = 'step6.0_minimization'):
-        valid_names = ['step6.0_minimization'] + [f'step6.{i}_equilibration' for i in range(1,8)]
-        if name not in valid_names:
-            raise ValueError(f"name = {name} is not valid, must be one of: {valid_names}")
-        self.from_file(os.path.join(_MDP_MEMB_EQUI_TEMPLATES_PATH, f"{name}.mdp"))
+        self.step = step
+        self.step_path = step_path
+        self.__from_archive()
+    
+    def set_new_step(self, step):
+        self.__from_archive(explicit_step=step)
+    
+    def __from_archive(self, explicit_step:str = None):
+        if explicit_step: self.step = explicit_step
+        valid_steps = [os.path.splitext(step)[0] for step in list_if_file(self.step_path, ext='mdp')]
+        if self.step not in valid_steps:
+            raise ValueError(f"name = {self.step} is not valid, must be one of: {valid_steps}")
+        self.from_file(os.path.join(self.step_path, f"{self.step}.mdp"))
 
 
-eq_mdp = MembraneEquiMDP()
-eq_mdp.from_archive(name = 'step6.7_equilibration') # name = 'step6.5_equilibration'
-print(eq_mdp)
+def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_values:List[float], lambda_type:str, mdp_extra_kwargs:dict = None):
+    """This function is mean to be used on ligand_fep_setup and complex_fet_setup.
+    It will create the structure of the simulation directory: {sim_dir}/simulation/{lambda_type}.{i}/{step}/{step}.mdp
+    Where:
+        * i:  init-lambda-state,
+        * step: the name of the simulation to carry on
+
+    Parameters
+    ----------
+    sim_dir : PathLike
+        Where the simulation suppose to run
+    template_dir : PathLike
+        This is the directory that storage the mdp templates: template.ligand_fep_template_path or template.complex_fep_template_path
+    lambda_values : List[float]
+        This is a the list of lambda values to be used inside the mdp on the entrance {lambda_type}-lambdas
+    lambda_type : str
+        Must one of the following strings "vdw", "coul", "bonded" (the last is for restraints)
+    mdp_extra_kwargs : dict
+        The MDP options for the fep calculations on every step. This dictionary must have the structure:
+            {
+            'vdw':{
+                'step1': <mdp options>,
+                'step2': <mdp options>,
+                ...
+                }
+            'coul':{
+                'step1': <mdp options>,
+                'step2': <mdp options>, 
+                ...
+            'bonded':{
+                'step1': <mdp options>,
+                'step2': <mdp options>, 
+                ...
+                }
+            }
+    Raises
+    ------
+    ValueError
+        In case of an invalid lambda_type
+    """
+    valid_lambda_types = ["vdw", "coul", "bonded"]
+    if lambda_type not in valid_lambda_types:
+        raise ValueError(f"Non valid lambda_type = {lambda_type}. Must be one of {valid_lambda_types}")
+
+    # Take from the source of the package what are the input MDP files
+    input_mdp = [os.path.splitext(step)[0] for step in list_if_file(template_dir+f"/{lambda_type}", ext='mdp')]
+
+    # Create the lambda string
+    lambda_range_str = " ".join(map(str, lambda_values))
+    # Create MDP template for fep calculations
+    mdp_template = StepMDP(step_path = os.path.join(template_dir, lambda_type))
+    # Set, if any, the user MDP options
+    if mdp_extra_kwargs:
+        try:
+            # TODO sanity check on the passed mdp options
+            mdp_template.set_parameters(**mdp_extra_kwargs[lambda_type][step])
+        except KeyError:
+            pass
+    for mdp_file in input_mdp:
+        step = os.path.splitext(os.path.basename(mdp_file))[0]
+        # Update MDP step
+        mdp_template.set_new_step(step)
+        # Update lambdas
+        mdp_template.set_parameters(**{f"{lambda_type}-lambdas": lambda_range_str})
+
+        for i in range(len(lambda_values)):
+            # Create simulation/state/step directory
+            makedirs(sim_dir + f"/simulation/{lambda_type}.{i}/{step}")
+            # Update init-lambda-state
+            mdp_template.set_parameters(**{"init-lambda-state": i})
+            # Write MDP to the proper location
+            mdp_template.write(sim_dir + f"/simulation/{lambda_type}.{i}/{step}/{step}.mdp")
+
+if __name__ == "__main__":
+    pass

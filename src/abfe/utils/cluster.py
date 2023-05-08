@@ -293,12 +293,13 @@ class SLURMCluster(BaseCluster):
         return status
 
 if __name__ == '__main__':
-    scheduler_directives = {"partition": "my_partition", "time": "10:00:00", "c": 16, "mem-per-cpu": "4G"}
-    job_extra_directives = ["source /groups/CBG/opt/spack-0.18.1/shared.bash", "module load gromacs/2022.4"]
-    mdrun_extra_directives = {"bonded": "gpu", "npme": 2, "cpi": True}
-    my_cluster = SLURMCluster(scheduler_directives=scheduler_directives, job_extra_directives=job_extra_directives, mdrun_extra_directives=mdrun_extra_directives)
-    print(isinstance(my_cluster, BaseCluster))
-    # Write the attributes of the object to a JSON file
-    # my_cluster.set_main_mdrun("gmx-mpi mdrun -deffnm production")
-    # print(my_cluster)
-    # print(my_cluster.get_job_script())
+    pass
+    # scheduler_directives = {"partition": "my_partition", "time": "10:00:00", "c": 16, "mem-per-cpu": "4G"}
+    # job_extra_directives = ["source /groups/CBG/opt/spack-0.18.1/shared.bash", "module load gromacs/2022.4"]
+    # mdrun_extra_directives = {"bonded": "gpu", "npme": 2, "cpi": True}
+    # my_cluster = SLURMCluster(scheduler_directives=scheduler_directives, job_extra_directives=job_extra_directives, mdrun_extra_directives=mdrun_extra_directives)
+    # print(isinstance(my_cluster, BaseCluster))
+    # # Write the attributes of the object to a JSON file
+    # # my_cluster.set_main_mdrun("gmx-mpi mdrun -deffnm production")
+    # # print(my_cluster)
+    # # print(my_cluster.get_job_script())

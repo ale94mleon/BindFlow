@@ -18,7 +18,7 @@ def calculate_transformation_dG(conf_path: str, xvg_path: str,
 
     if (system_name == "complex"):
         system_steps_windows = {
-            "restraints-xvg": conf['n_rest_windows_complex'],
+            "bonded-xvg": conf['n_rest_windows_complex'],
             'vdw-xvg': conf['n_vdw_windows_complex'],
             'coul-xvg': conf['n_coul_windows_complex']
         }
