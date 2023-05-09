@@ -4,8 +4,8 @@ input_path = config['input_data_path']
 run_path = config["run_path"]
 threads = config['threads']
 num_retries = config['num_retries']
-load_dependencies = config['job_extra_directives']
-mdrun_extra = config['mdrun_extra_directives']
+load_dependencies = config['extra_directives']['dependencies']
+mdrun_extra = config['extra_directives']['mdrun']
 
 rule equil_run_complex_emin:
     input:
@@ -33,14 +33,14 @@ rule equil_run_complex_emin:
 rule equil_run_complex_nvt_heat:
     input:
         top=input_path+"/complex/complex.top",
-        gro=run_path+"/complex/equil-mdsim/emin/emin.gro"
+        gro=run_path+"/complex/equil-mdsim/emin/emin.gro",
         mdp=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.mdp",
     params:
         run_dir=run_path+"/complex/equil-mdsim/nvt_heat"
     output:
         gro=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.gro",
         cpt=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.cpt"
-    threads: num_sim_threads
+    threads: threads
     retries: num_retries
     run:
         gmx_runner(
@@ -108,13 +108,12 @@ rule equil_run_complex_npt_eq2:
 
 rule equil_run_complex_prod:
     input:
-        top=run_path+"/complex/topology/complex.top",
+        top=input_path+"/complex/complex.top",
         gro=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.gro",
-        cpt=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.cpt"
+        cpt=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.cpt",
         mdp=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.mdp",
     params:
         run_dir=run_path+"/complex/equil-mdsim/npt_prod",
-        gmx_template=gromacs_cont_script
     output:
         gro=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.gro",
         cpt=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.cpt",
@@ -161,7 +160,6 @@ rule equil_run_complex_get_boresch_restraints:
         xtc=run_path+"/complex/equil-mdsim/boreschcalc/npt_prod_center.xtc"
     params:
         run_dir=run_path+"/complex/equil-mdsim/boreschcalc/",
-        code_path = scripts.root_path
     output:
         gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
         top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",

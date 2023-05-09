@@ -1,24 +1,24 @@
 from abfe import scripts
 
 run_path = config["run_path"]
-complex_windows = config["complex_windows"]
-
-n_coul_windows = config['n_coul_windows_complex']
-n_rest_windows = config['n_rest_windows_complex']
-n_vdw_windows = config['n_vdw_windows_complex']
-
+vdw_lambdas = config['lambdas']['complex']['vdw']
+coul_lambdas = config['lambdas']['complex']['coul']
+bonded_lambdas = config['lambdas']['complex']['bonded']
 
 #Ana
 rule fep_ana_gather_complex_xvg:
     input:
-        xvg_loc=expand(run_path+"/complex/fep/simulation/{state}/prod/prod.xvg",
-                       state=complex_windows)
+        xvg_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(vdw_lambdas))),
+        xvg_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(coul_lambdas))),
+        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(bonded_lambdas)))
+
     params:
         sim_loc=run_path+"/complex/fep/simulation",
         ana_loc=run_path+"/complex/fep/ana",
-        rest_max_windows=n_rest_windows,
-        vdw_max_windows=n_vdw_windows,
-        coul_max_windows=n_coul_windows
+
+        vdw_max_windows=len(vdw_lambdas),
+        coul_max_windows=len(coul_lambdas),
+        bonded_max_windows=len(bonded_lambdas),
     output:
         xvg_dir=directory(run_path+"/complex/fep/ana/xvgs")
     shell:
@@ -28,7 +28,7 @@ rule fep_ana_gather_complex_xvg:
             mkdir -p {params.ana_loc}/xvgs/coul-xvg
 
             # bonded
-            let max_window={params.rest_max_windows}  
+            let max_window={params.bonded_max_windows}  
             for i in $(seq 0 1 $((max_window-1)))
             do
                 cp {params.sim_loc}/bonded.${{i}}/prod/prod.xvg {params.ana_loc}/xvgs/bonded-xvg/dhdl.${{i}}.xvg

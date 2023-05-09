@@ -1,21 +1,20 @@
 from abfe import scripts
 
 run_path = config["run_path"]
-ligand_windows = config["ligand_windows"]
-n_coul_windows = config['n_coul_windows_ligand']
-n_vdw_windows = config['n_vdw_windows_ligand']
+vdw_lambdas = config['lambdas']['ligand']['vdw']
+coul_lambdas = config['lambdas']['ligand']['coul']
 
 
 # Ana
 rule fep_ana_gather_ligand_xvg:
     input:
-        xvg_loc=expand(run_path+"/ligand/fep/simulation/{state}/prod/prod.xvg",
-                       state=ligand_windows)
+        xvg_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(vdw_lambdas))),
+        xvg_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(coul_lambdas)))
     params:
         sim_loc=run_path+"/ligand/fep/simulation",
         ana_loc=run_path+"/ligand/fep/ana",
-        vdw_max_windows=n_vdw_windows,
-        coul_max_windows=n_coul_windows
+        vdw_max_windows=len(vdw_lambdas),
+        coul_max_windows=len(coul_lambdas)
     output:
         xvg_dir=directory(run_path+"/ligand/fep/ana/xvgs")
     shell:

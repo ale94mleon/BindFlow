@@ -1,5 +1,5 @@
 from abfe import template
-from abfe.utils.tools import makedirs, list_if_dir
+from abfe.utils.tools import makedirs, list_if_file
 from abfe.utils import mdp
 import os
 template_dir=template.complex_equil_template_path

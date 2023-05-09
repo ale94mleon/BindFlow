@@ -1,14 +1,14 @@
 from abfe import template
-from abfe.utils.tools import makedirs
+from abfe.utils.tools import makedirs, list_if_file
 from abfe.utils import mdp
 import os, shutil
 template_dir=template.complex_fep_template_path
 
-
+input_path = config['input_data_path']
 run_path = config["run_path"]
-coul_lambdas = config['ligand_coul_lambdas']
-vdw_lambdas = config['ligand_vdw_lambdas']
-bonded_lambdas = config['complex_bonded_lambdas']
+coul_lambdas = config['lambdas']['complex']['coul']
+vdw_lambdas = config['lambdas']['complex']['vdw']
+bonded_lambdas = config['lambdas']['complex']['bonded']
 
 vdw_steps = [os.path.splitext(step)[0] for step in list_if_file(template_dir+"/vdw", ext='mdp')]
 coul_steps = [os.path.splitext(step)[0] for step in list_if_file(template_dir+"/coul", ext='mdp')]
@@ -23,23 +23,17 @@ except KeyError:
 
 rule fep_setup_complex:
     input:
-        complex_top=directory(run_path+"/complex/topology"),
+        complex_top=input_path+"/complex/complex.top",
         boresch_top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
         mdp_vdw=expand(template_dir+"/vdw/{step}.mdp", step=vdw_steps),
         mdp_coul=expand(template_dir+"/coul/{step}.mdp", step=coul_steps),
         mdp_bonded=expand(template_dir+"/bonded/{step}.mdp", step=bonded_steps)
     params:
         sim_dir=run_path+"/complex/fep",
-        restraint_range=" ".join(map(str, lam_rest_range)),
-        restraint_windows=n_rest_windows,
-        vdw_range=" ".join(map(str, lam_vdw_range)),
-        vdw_windows=n_vdw_windows,
-        coul_range=" ".join(map(str, lam_coul_range)),
-        coul_windows=n_coul_windows
     output:
-        mdp_vdw=expand(run_path+"/ligand/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(vdw_lambdas)), step=vdw_steps),
-        mdp_coul=expand(run_path+"/ligand/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(coul_lambdas)), step=coul_steps)
-        mdp_bonded=expand(run_path+"/ligand/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(bonded_lambdas)), step=coul_steps)
+        mdp_vdw=expand(run_path+"/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(vdw_lambdas)), step=vdw_steps),
+        mdp_coul=expand(run_path+"/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(coul_lambdas)), step=coul_steps),
+        mdp_bonded=expand(run_path+"/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(bonded_lambdas)), step=coul_steps),
         fep_top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
     run:
         # Copy complex topology

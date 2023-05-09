@@ -187,5 +187,63 @@ def makedirs(path):
     else:
         os.makedirs(path,exist_ok=True)
 
+def config_validator(global_config:dict) -> List:
+    """It checks for the validity of the global config.
+    This dictionary is usually passed to :meth:`abfe.calculate_abfe.calculate_abfe`
+
+    Parameters
+    ----------
+    global_config : dict
+        The configuration of the ABFE workflow
+
+    Returns
+    -------
+    List[bool,str]
+        result[0], True if pass all the checks. False otherwise.
+        result[1], Extra information.
+    """
+
+    # Checking cluster
+    if 'cluster' not in global_config:
+        return False, "Cluster configuration is missing"
+
+    if 'type' not in global_config['cluster']:
+        return False, "Cluster type is missing"
+
+    if 'options' not in global_config['cluster']:
+        return False, "Cluster configuration is valid, but no cluster options provided"
+
+    if 'calculation' not in global_config['cluster']['options']:
+        return False, "cluster/options configuration is valid, but no cluster/options/calculation provided"
+
+
+    # Setting up default extra mdrun and job dependencies in case it was not provided
+    if "extra_directives" in global_config:
+        if not "dependencies" in global_config["extra_directives"]:
+            global_config["extra_directives"]["dependencies"] = []
+        if not "mdrun" in global_config["extra_directives"]:
+            global_config["extra_directives"]["mdrun"] = {}    
+    else:
+        global_config["extra_directives"] = {
+            "dependencies": [],
+            "mdrun": {},
+        }
+
+
+    return True, "Cluster configuration is valid"
+
+
+
 if __name__ == "__main__":
     pass
+    glolba_config = {
+        "cluster": {
+            # "type": "slurm",
+            "options":{
+                "calculation": {
+                    1:1
+                }
+            }
+        }
+    }
+    print(config_validator(global_config=glolba_config))

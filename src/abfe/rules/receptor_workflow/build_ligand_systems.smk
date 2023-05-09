@@ -15,6 +15,7 @@ rule build_ligand_systems:
         input_ligand_mol_paths=input_ligand_mol_paths
     output:
         expand(out_approach_path+"/{ligand_name}/input/{sytem_type}/{sytem_type}.{ext}", ligand_name=ligand_names, ext=['gro', 'top'], sytem_type=['ligand', 'complex'])
+    threads: config["threads"]
     run:
         # Initialize the files builder
         builder = sb.MakeInputs(

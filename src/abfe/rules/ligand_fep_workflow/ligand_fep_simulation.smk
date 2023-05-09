@@ -1,4 +1,4 @@
-from abfe.tools import gmx_runner
+from abfe.utils.tools import gmx_runner
 
 run_path = config["run_path"]
 input_path = config['input_data_path']
@@ -6,10 +6,8 @@ simulation_dir = run_path+"/ligand/fep/simulation"
 
 threads = config['threads']
 num_retries = config['num_retries']
-load_dependencies = config['job_extra_directives']
-# TODO when is prepeared the configuration should be the dict with the key:values for mdrun or some dictionary 
-# with the mdrun kwargs or an empty dict
-mdrun_extra = config['mdrun_extra_directives']
+load_dependencies = config['extra_directives']['dependencies']
+mdrun_extra = config['extra_directives']['mdrun']
 
 rule fep_run_ligand_emin:
     input:
@@ -97,7 +95,7 @@ rule fep_run_ligand_npt_eq2:
         cpt=simulation_dir+"/{state}/npt-norest/npt-norest.cpt"
     threads: threads
     retries: num_retries
-    shell:
+    run:
         gmx_runner(
             mdp = input.mdp,
             topology = input.top,
@@ -123,6 +121,7 @@ rule fep_run_ligand_prod:
         xvg=simulation_dir+"/{state}/prod/prod.xvg"
     threads: threads
     retries: num_retries
+    run:
         gmx_runner(
             mdp = input.mdp,
             topology = input.top,

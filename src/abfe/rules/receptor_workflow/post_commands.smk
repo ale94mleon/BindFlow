@@ -3,8 +3,8 @@ from abfe import scripts
 #Final Check Job
 approach_path = config["out_approach_path"]
 ligand_names = config['ligand_names']
-num_replica =  config['num_replica']
-replica_list = list(map(str, range(1,1 + num_replica)))
+replicas =  config['replicas']
+replica_list = list(map(str, range(1,1 + replicas)))
 
 rule gather_receptor_results:
     input:

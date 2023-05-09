@@ -54,7 +54,7 @@ def get_all_eq_fep_res() -> str:
 def get_superFlow() -> str:
     cmd = [
         "#DO",
-        "## Do Equilibration",
+        "## Start the launching process",
         "include: \'" + rules.receptor_workflow_path + "\'",
         "",
         "## Do Check all results",

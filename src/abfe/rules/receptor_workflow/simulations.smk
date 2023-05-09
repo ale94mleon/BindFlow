@@ -7,7 +7,7 @@ rule calculate_ABFE:
         in_ligand_top= approach_path + "/{ligand_name}/input/ligand/ligand.top",
         in_complex_gro = approach_path + "/{ligand_name}/input/complex/complex.gro",
         in_complex_top = approach_path + "/{ligand_name}/input/complex/complex.top",
-        output_dir = directory(approach_path + "/{ligand_name}/{replica}"),
+        output_dir = approach_path + "/{ligand_name}/{replica}",
 
     output:
         out_dg= approach_path + "/{ligand_name}/{replica}/dG_results.csv"
