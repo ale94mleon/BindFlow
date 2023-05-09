@@ -1,124 +1,287 @@
 import json
 import os
 import stat
-import subprocess
+from abfe.utils.cluster import _SBATCH_KEYWORDS
+from abfe.utils import tools
+from abfe.utils.tools import PathLike
+from abc import ABC, abstractmethod
 
-from abfe.orchestration import slurm_status
+class Scheduler(ABC):
+    # Default class variables
+    submit_command = None
+    cancel_command = None
+    shebang = None
+    job_keyword = None
 
-
-class scheduler():
-
-    def __init__(self, out_dir_path: str, n_cores: int = 1, cluster_config: dict = None) -> None:
-        self.n_cores = n_cores
-        self.out_dir_path = out_dir_path
-        self.out_job_path = out_dir_path + "/job.sh"
-        self.out_scheduler_path = out_dir_path + "/scheduler.sh"
-        self.cluster_config = {'partition':'cpu','time':'96:00:00', "mem": "5000"}
-        if cluster_config:
-            self.cluster_config.update(cluster_config)
-
-    def generate_scheduler_file(self, out_prefix):
-        if (isinstance(self.out_job_path, str)):
-            self.out_job_path = [self.out_job_path]
-
-        file_str = [
-            "#!/bin/env bash",
-            "",
-            # "conda activate abfe",
-        ]
-        # TODO: It is more general to construct dynamically any slurm command based on the cluster config, --{key} {self.cluster_config[key}}
-        for i, job_path in enumerate(self.out_job_path):
-            basename = os.path.basename(job_path).replace(".sh", "")
-            file_str.extend([
-                "",
-                "cd " + os.path.dirname(job_path),
-                 # TODO: str(self.n_cores) gives a to higher number, and the cluster does not have this resources.
-                "job" + str(i) + f"=$(sbatch -p {self.cluster_config['partition']} --time {self.cluster_config['time']} -c " + str(self.n_cores) + " -J " + str(
-                    out_prefix + "_" + basename) + "_scheduler " + job_path + ")",
-                "jobID" + str(i) + "=$(echo $job" + str(i) + " | awk '{print $4}')",
-                "echo \"${jobID" + str(i) + "}\"",
-            ])
-
-        if (len(self.out_job_path) > 1):
-            file_str.append("\n")
-            file_str.append("echo " + ":".join(["${jobID" + str(i) + "}" for i in range(len(self.out_job_path))]))
-            file_str.append(f"sbatch -p {self.cluster_config['partition']} --time {self.cluster_config['time']}  --dependency=afterok:" + ":".join(
-                ["${jobID" + str(i) + "}" for i in range(len(self.out_job_path))]) + " -c " + str(
-                self.n_cores) + " -J " + str(out_prefix + "_final_ana") + "_scheduler " + self._final_job_path)
-
-        file_str = "\n".join(file_str)
-        file_io = open(self.out_scheduler_path, "w")
-        file_io.write(file_str)
-        file_io.close()
-        os.chmod(self.out_scheduler_path, stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
-
-        return self.out_scheduler_path
-
-    def generate_job_file(self, out_prefix, cluster_conf_path: str = None, cluster=False,
-                          num_jobs: int = 1, latency_wait: int = 120, snake_job=""):
-        if (cluster and cluster_conf_path is not None):
-            root_dir = os.path.dirname(cluster_conf_path)
-            slurm_logs = os.path.dirname(cluster_conf_path) + "/slurm_logs"
-            if (not os.path.exists(slurm_logs)): os.mkdir(slurm_logs)
-
-
-            if (out_prefix == ""):
-                name = str(out_prefix) + "{name}.{jobid}"
-                log = slurm_logs + "/" + str(out_prefix) + "{name}_{jobid}"
-            else:
-                name = str(out_prefix) + ".{name}.{jobid}"
-                log = slurm_logs + "/" + str(out_prefix) + "_{name}_{jobid}"
-
-            self.cluster_config.update({
-                "cpus-per-task": '{threads}',
-                "cores-per-socket": '{threads}',
-                "chdir": root_dir,
-                "job-name": "\\\"" + name + "\\\"",
-                "output": "\\\"" + log + ".out\\\"",
-                "error": "\\\"" + log + ".err\\\""
-            })
-
-            json.dump(self.cluster_config, open(cluster_conf_path, "w"), indent="  ")
-            cluster_options = " ".join(["--" + key + "=" + str(val) + " " for key, val in self.cluster_config.items()]) + " --parsable"
-            status_script_path = slurm_status.__file__
-
-            # TODO: change this here, such each job can access resource from cluster-config!
-            file_str = "\n".join([
-                "#!/bin/env bash",
-                "snakemake --cluster \"sbatch " + cluster_options + "\" "
-                            "--cluster-config " + cluster_conf_path + " "
-                             "--cluster-status " + status_script_path + " "
-                             "--cluster-cancel \"scancel\" "
-                             "--jobs " + str(num_jobs) + " --latency-wait " + str(latency_wait) + " --rerun-incomplete " + snake_job
-            ])
-        elif (cluster):
-            raise ValueError("give cluster conf! ")
+    def __init__(self, cluster_config:dict, out_dir:PathLike = '.', prefix_name:str = '', snake_executor_file:str = None) -> None:
+        self.cluster_config = cluster_config
+        self.out_dir = os.path.abspath(out_dir)
+        self.prefix_name = prefix_name
+        if self.prefix_name: self.prefix_name+='.'
+        if snake_executor_file:
+            self.snake_executor_file = os.path.join(self.out_dir, snake_executor_file)
         else:
-            file_str = "\n".join([
-                "#!/bin/env bash",
-                "snakemake -c " + str(self.n_cores) + " -j "+str(num_jobs)+" --latency-wait " + str(
-                    latency_wait) + " --rerun-incomplete " + snake_job
-            ])
+             self.snake_executor_file = snake_executor_file
 
-        file_io = open(self.out_job_path, "w")
-        file_io.write(file_str)
-        file_io.close()
-        os.chmod(self.out_job_path, stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
+        self.__cluster_validation__()
 
-        return self.out_job_path
+    @abstractmethod
+    def __cluster_validation__(self):
+        """Each scheduler should validate if the necessary options, as partition, CPUs, etc are in cluster_config.
+        """
 
-    def schedule_run(self) -> int:
-        orig_path = os.getcwd()
-        os.chdir(self.out_dir_path)
-        out = subprocess.getoutput(self.out_scheduler_path)
+    @abstractmethod
+    def build_snakemake(self):
+        pass
 
-        job_id = int(out.strip())
-        os.chdir(orig_path)
+    @abstractmethod
+    def submit(self):
+        pass
 
-        return job_id
+    def __get_full_data(self):
+        data = {
+            "submit_command": self.__class__.submit_command,
+            "cancel_command": self.__class__.cancel_command,
+            "shebang": self.__class__.shebang,
+            "job_keyword": self.__class__.job_keyword,
+        }
+        data.update(self.__dict__)
+        return data    
 
-    def submit_run(self, out_prefix="ABFE", cluster=True) -> int:
-        self.generate_job_file(out_prefix, cluster=cluster)
-        self.generate_scheduler_file(out_prefix)
-        out = self.schedule_run()
-        return out
+    def to_json(self, out_file:str = "cluster.json"):
+        """Method to write all the attributes of the BaseCluster class to a JSON file
+
+        Parameters
+        ----------
+        out_file : str, optional
+            Name of the output JSON file, by default "cluster.config".
+        """
+
+        with open(out_file, 'w') as f:
+            json.dump(self.__get_full_data(), f, indent=4)
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__}(\n{json.dumps(self.__get_full_data(), indent=5)}\n)"
+
+
+class SlurmScheduler(Scheduler):
+    # Override class variables
+    submit_command = "sbatch"
+    cancel_command = "scancel"
+    shebang = "#!/bin/bash"
+    job_keyword = "#SBATCH"
+
+
+    def __init__(self, cluster_config: dict, out_dir: PathLike = '.', prefix_name: str = '', snake_executor_file:str = None) -> None:
+        super().__init__(cluster_config = cluster_config, out_dir = out_dir, prefix_name = prefix_name, snake_executor_file = snake_executor_file)
+        self.__update_internal_sbatch_values__()
+
+    def __cluster_validation__(self):
+        self.cluster_config = slurm_validation(self.cluster_config)
+
+    def __update_internal_sbatch_values__(self):
+        """This will update self.cluster_config keywords: cpus-per-task, job-name, output and error
+        for better interaction with snakemake rules.
+        """
+        # Make log directory on demand
+        cluster_log_path = os.path.join(self.out_dir, 'slurm_logs')
+        cluster_log_path = os.path.abspath(cluster_log_path)
+        tools.makedirs(cluster_log_path)
+        # Make a copy of the user defined cluster configuration
+        self._user_cluster_config = self.cluster_config.copy()
+        # Update with internal values
+        # threads, rule and jobid are identified and accessible during snakemake execution
+        self.cluster_config.update(
+            {   
+                # Always use the threads defined on the rules
+                "cpus-per-task": "{threads}",
+                # Clear naming
+                "job-name": f"{self.prefix_name}{{rule}}.{{jobid}}",
+                "output": os.path.join(cluster_log_path, f"{self.prefix_name}{{rule}}.{{jobid}}.out"),
+                "error": os.path.join(cluster_log_path, f"{self.prefix_name}{{rule}}.{{jobid}}.err"),
+            }
+        )
+
+    def build_snakemake(self, jobs:int = 100000, latency_wait:int = 360,
+                      verbose:bool = False, debug_dag:bool = False,
+                      rerun_incomplete:bool = True, keep_going: bool = True) -> str:
+        """Build the snakemake command
+
+        Parameters
+        ----------
+        jobs : int, optional
+            Use at most N CPU cluster/cloud jobs in parallel. For local execution this is an alias for --cores. Note: Set to 'unlimited' in case, this does not play a role.
+            For cluster this is just a limitation.
+            It is advise to provided a big number in order to do not wait for finishing of the jobs rather that launch 
+            all in the queue, by default 100000
+        latency_wait : int, optional
+            Wait given seconds if an output file of a job is not present after the job finished. This helps if your filesystem suffers from latency, by default 120
+        verbose : bool, optional
+            Print debugging output, by default False
+        debug_dag : bool, optional
+            Print candidate and selected jobs (including their wildcards) while inferring DAG. This can help to debug unexpected DAG topology or errors, by default False
+        rerun_incomplete : bool, optional
+            Re-run all jobs the output of which is recognized as incomplete, by default True
+        keep_going : bool, optional
+            Go on with independent jobs if a job fails, by default True
+        Returns
+        -------
+        str
+            The snakemake command string.
+            It also will set self._snakemake_str_cmd to the command string value
+        """
+        command = f"snakemake --jobs {jobs} --latency-wait {latency_wait} --cluster-cancel {self.cancel_command} "
+        if verbose: command += "--verbose "
+        if debug_dag: command += "--debug-dag "
+        if rerun_incomplete: command += "--rerun-incomplete "
+        if keep_going: command += "--keep-going "
+        # Construct the cluster configuration
+        command += f"--cluster '{self.submit_command}"
+        for key in self.cluster_config:
+            command += f" --{key}={self.cluster_config[key]}"
+        command += "'"
+        
+        # Just save the command in the class
+        self._snakemake_str_cmd = command
+
+        if self.snake_executor_file:
+            with open(os.path.join(self.out_dir, self.snake_executor_file), 'w') as f:
+                f.write(command)
+            os.chmod(os.path.join(self.out_dir, self.snake_executor_file), stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
+        return command
+
+    def submit(self, new_cluster_config:dict = None, only_build:bool = False) -> str:
+        """Used to submit to the cluster the created job
+
+        Parameters
+        ----------
+        new_cluster_config : dict, optional
+            New definition of the cluster. It could be useful to run the snakemake command with different resources 
+            as the one used on the workflow. For example, if the cluster has two partition deflt and long with 2 and 5 days as
+            maximum time, we could run in the long partition the snakemake job and only ask for 1 CPU and in deflt
+            the computational expensive calculations. If nothing is provided, cluster_config (passed during initialization)
+            will be used, by default None
+        only_build : bool, optional
+            Only create the file to submit to the cluster but it will not be executed, by default False
+
+        Returns
+        -------
+        str
+            The output of the submit command or None.
+        Raises
+        ------
+        RuntimeError
+            If snake_executor_file is not present. You must declare it during initialization
+        """
+        # If extra_cluster_config, modify  self.snake_executor_file
+        # Validate 
+        if new_cluster_config:
+            cluster_to_work = slurm_validation(new_cluster_config)
+        else:
+            cluster_to_work = self._user_cluster_config
+        
+        # Update some configurations:
+        # Make log directory on demand
+        cluster_log_path = os.path.join(self.out_dir, 'slurm_logs')
+        cluster_log_path = os.path.abspath(cluster_log_path)
+        tools.makedirs(cluster_log_path)
+        cluster_to_work.update({
+            # Clear naming
+            "job-name": "RuleThemAll",
+            "output": os.path.join(cluster_log_path, "RuleThemAll.out"),
+            "error": os.path.join(cluster_log_path, "RuleThemAll.err"),
+        })
+
+        # Create the sbatch section of the script
+        sbatch_section = f"{self.shebang}\n"
+        for key in cluster_to_work:
+            sbatch_section += f"{self.job_keyword} --{key}={cluster_to_work[key]}\n"
+
+        if self.snake_executor_file:
+            # Update snake_executor_file
+            with open(self.snake_executor_file, 'w') as sef:
+                sef.write(sbatch_section + self._snakemake_str_cmd)
+            if not only_build:
+                # Submit to the cluster
+                process = tools.run(f"{self.submit_command} {self.snake_executor_file}")
+                return process.stdout
+        else:
+            raise RuntimeError("'snake_executor_file' attribute is not present on the current instance. Consider to call build_snakemake first")
+
+
+def slurm_validation(cluster_config:dict) -> dict:
+    """Validate the provided user slurm keywords
+
+    Parameters
+    ----------
+    cluster_config : dict
+        A dictionary with key[SBATCH keyword]: value[SBATCH value]
+
+    Returns
+    -------
+    dict
+        Corrected dictionary. Keywords like: c or p are translated to cpu-per-task and partition respectively.
+
+    Raises
+    ------
+    ValueError
+         Invalid Slurm keywords
+    ValueError
+        It was not provided necessary Slurm keywords
+    """
+    # Translate scheduler_directives
+    translated_cluster_config = {}
+    for key in cluster_config:
+        if key not in _SBATCH_KEYWORDS: raise ValueError(f"{key} is not a valid SLURM string key")
+        # Check for SBATCH flags (setting by using a boolean as value)
+        if isinstance(cluster_config[key],bool):
+            if cluster_config[key]:
+                # Just set the flag
+                translated_cluster_config[_SBATCH_KEYWORDS[key]] = ""
+        else:
+            translated_cluster_config[_SBATCH_KEYWORDS[key]] = cluster_config[key]
+    
+    # Check for important missing cluster definitions
+    # TODO, check for other kwargs
+    if 'partition' not in translated_cluster_config:
+        raise ValueError(f"cluster_config does not have a valid SLURM definition for partition, consider to include 'p' or 'partition'")
+
+    return translated_cluster_config
+
+class FrontEnd:
+    # TODO build a class to execute the workflow in a frontend like environment, E.g LAPTOP.
+    def __init__(self) -> None:
+        raise NotImplemented
+
+def create_scheduler(scheduler_type:str, **kwargs) -> Scheduler:
+    """Factory method to create the appropriate scheduler instance
+
+    Parameters
+    ----------
+    scheduler_type : str
+        Name of the scheduler, e.g slurm
+
+    Returns
+    -------
+    Scheduler
+        An instance of the proper selected scheduler
+
+    Raises
+    ------
+    NotImplementedError
+        In case of non implemented scheduler.
+    """
+    scheduler_type = scheduler_type.lower()
+    if scheduler_type == "slurm":
+        return SlurmScheduler(**kwargs)
+    else:
+        raise NotImplementedError("Invalid scheduler type. Choose from: [slurm].")
+
+if __name__ == "__main__":
+    cluster_config = {
+        'p': 'deflt'
+    }
+    s = SlurmScheduler(cluster_config=cluster_config, out_dir='.', prefix_name='lig1', snake_executor_file='pepe.sh')
+    # print(s)
+    s.build_snakemake()
+    s.submit()
