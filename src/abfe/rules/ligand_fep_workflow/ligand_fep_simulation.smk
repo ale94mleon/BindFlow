@@ -1,9 +1,9 @@
 from abfe.utils.tools import gmx_runner
 
+# Common to all the sub-workflows ligand/replica
 run_path = config["run_path"]
 input_path = config['input_data_path']
 simulation_dir = run_path+"/ligand/fep/simulation"
-
 threads = config['threads']
 num_retries = config['num_retries']
 load_dependencies = config['extra_directives']['dependencies']
@@ -12,12 +12,12 @@ mdrun_extra = config['extra_directives']['mdrun']
 rule fep_run_ligand_emin:
     input:
         top=input_path+"/ligand/ligand.top",
-        mdp=simulation_dir+"/{state}/emin/emin.mdp",
+        mdp=run_path+"/ligand/fep/simulation/{state}/emin/emin.mdp",
         gro=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.gro"
     params:
-        run_dir=simulation_dir+"/{state}/emin",
+        run_dir=run_path+"/ligand/fep/simulation/{state}/emin",
     output:
-        gro=simulation_dir+"/{state}/emin/emin.gro"
+        gro=run_path+"/ligand/fep/simulation/{state}/emin/emin.gro"
     threads: threads
     retries: num_retries
     run:
@@ -28,20 +28,19 @@ rule fep_run_ligand_emin:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
 
 rule fep_run_ligand_nvt_heat:
     input:
         top=input_path+"/ligand/ligand.top",
-        mdp=simulation_dir+"/{state}/nvt/nvt.mdp",
-        gro=simulation_dir+"/{state}/emin/emin.gro"
+        mdp=run_path+"/ligand/fep/simulation/{state}/nvt/nvt.mdp",
+        gro=run_path+"/ligand/fep/simulation/{state}/emin/emin.gro"
     params:
-        run_dir=simulation_dir+"/{state}/nvt",
+        run_dir=run_path+"/ligand/fep/simulation/{state}/nvt",
     output:
-        gro=simulation_dir+"/{state}/nvt/nvt.gro",
-        cpt=simulation_dir+"/{state}/nvt/nvt.cpt"
+        gro=run_path+"/ligand/fep/simulation/{state}/nvt/nvt.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/nvt/nvt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -52,21 +51,20 @@ rule fep_run_ligand_nvt_heat:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
 
 rule fep_run_ligand_npt_eq1:
     input:
         top=input_path+"/ligand/ligand.top",
-        mdp=simulation_dir+"/{state}/npt/npt.mdp",
-        gro=simulation_dir+"/{state}/nvt/nvt.gro",
-        cpt=simulation_dir+"/{state}/nvt/nvt.cpt"
+        mdp=run_path+"/ligand/fep/simulation/{state}/npt/npt.mdp",
+        gro=run_path+"/ligand/fep/simulation/{state}/nvt/nvt.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/nvt/nvt.cpt"
     params:
-        run_dir=simulation_dir+"/{state}/npt",
+        run_dir=run_path+"/ligand/fep/simulation/{state}/npt",
     output:
-        gro=simulation_dir+"/{state}/npt/npt.gro",
-        cpt=simulation_dir+"/{state}/npt/npt.cpt"
+        gro=run_path+"/ligand/fep/simulation/{state}/npt/npt.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/npt/npt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -78,21 +76,20 @@ rule fep_run_ligand_npt_eq1:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
 
 rule fep_run_ligand_npt_eq2:
     input:
         top=input_path+"/ligand/ligand.top",
-        mdp=simulation_dir+"/{state}/npt-norest/npt-norest.mdp",
-        gro=simulation_dir+"/{state}/npt/npt.gro",
-        cpt=simulation_dir+"/{state}/npt/npt.cpt"
+        mdp=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.mdp",
+        gro=run_path+"/ligand/fep/simulation/{state}/npt/npt.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/npt/npt.cpt"
     params:
-        run_dir=simulation_dir+"/{state}/npt-norest",
+        run_dir=run_path+"/ligand/fep/simulation/{state}/npt-norest",
     output:
-        gro=simulation_dir+"/{state}/npt-norest/npt-norest.gro",
-        cpt=simulation_dir+"/{state}/npt-norest/npt-norest.cpt"
+        gro=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -104,21 +101,20 @@ rule fep_run_ligand_npt_eq2:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
 
 rule fep_run_ligand_prod:
     input:
         top=input_path+"/ligand/ligand.top",
-        mdp=simulation_dir+"/{state}/prod/prod.mdp",
-        gro=simulation_dir+"/{state}/npt-norest/npt-norest.gro",
-        cpt=simulation_dir+"/{state}/npt-norest/npt-norest.cpt"
+        mdp=run_path+"/ligand/fep/simulation/{state}/prod/prod.mdp",
+        gro=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.cpt"
     params:
-        run_dir=simulation_dir+"/{state}/prod",
+        run_dir=run_path+"/ligand/fep/simulation/{state}/prod",
     output:
-        gro=simulation_dir+"/{state}/prod/prod.gro",
-        xvg=simulation_dir+"/{state}/prod/prod.xvg"
+        gro=run_path+"/ligand/fep/simulation/{state}/prod/prod.gro",
+        xvg=run_path+"/ligand/fep/simulation/{state}/prod/prod.xvg"
     threads: threads
     retries: num_retries
     run:
@@ -130,6 +126,5 @@ rule fep_run_ligand_prod:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )

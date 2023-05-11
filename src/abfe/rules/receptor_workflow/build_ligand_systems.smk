@@ -9,7 +9,7 @@ ligand_names = config['ligand_names']
 input_cofactor_mol_path = config["inputs"]["cofactor_mol_path"]
 hmr_factor = float(config['hmr_factor'])
 
-
+# TODO, build a sanakemake-base parallelizable rule
 rule build_ligand_systems:
     input:
         input_ligand_mol_paths=input_ligand_mol_paths
@@ -32,3 +32,27 @@ rule build_ligand_systems:
             # Create topologies and input files
             builder(ligand_mol=input_ligand_mol_path,out_dir=out_ligand_input_path)
         builder.clean()
+
+
+# TODO, maybe something similar like this. For now that will not work ligand_names[0], input_ligand_mol_paths[0]
+# rule build_ligand_systems:
+#     input:
+#         input_ligand_mol_paths=input_ligand_mol_paths
+#     output:
+#         out_approach_path+"/{ligand_name}/input/{sytem_type}/{sytem_type}.{ext}"
+#     threads: config["threads"]
+#     run:
+#         # Initialize the files builder
+#         builder = sb.MakeInputs(
+#             protein_pdb=input_protein_pdb_path,
+#             membrane_pdb=input_membrane_pdb_path,
+#             cofactor_mol=input_cofactor_mol_path,
+#             hmr_factor = hmr_factor,
+#         )
+
+#         out_ligand_path = os.path.join(out_approach_path, ligand_names[0])
+#         out_ligand_input_path = os.path.join(out_ligand_path, 'input')
+
+#         # Create topologies and input files
+#         builder(ligand_mol=input.input_ligand_mol_paths[0], out_dir=out_ligand_input_path)
+#         builder.clean()

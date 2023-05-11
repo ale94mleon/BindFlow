@@ -124,7 +124,7 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
         It is used in case some previous loading steps are needed;
         e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
     run_dir : PathLike, optional
-        Where the simulation should run (write files). If it doe snot exist will be created, by default '.'
+        Where the simulation should run (write files). If it does not exist will be created, by default '.'
     **mdrun_extra : any
         Any valid keyword for mdrun. flags are passing as boolean. E.g: cpi = True
     """
@@ -149,6 +149,8 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
     grompp(f = f"{mdp}", c = structure, r = structure, p = topology, o = f"{name}.tpr", maxwarn = 2, **grompp_extra)
     
     mdrun_kwargs = {
+        # TODO DEBUG
+        # "ntomp": nthreads,
         "nt": nthreads,
         "deffnm": name,
     }
@@ -228,6 +230,8 @@ def config_validator(global_config:dict) -> List:
             "dependencies": [],
             "mdrun": {},
         }
+    # Always allow continuation
+    global_config["extra_directives"]["mdrun"]['cpi'] = True
 
 
     return True, "Cluster configuration is valid"

@@ -8,13 +8,13 @@ coul_lambdas = config['lambdas']['ligand']['coul']
 # Ana
 rule fep_ana_gather_ligand_xvg:
     input:
-        xvg_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(vdw_lambdas))),
-        xvg_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(coul_lambdas)))
+        xvg_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['vdw']))),
+        xvg_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['coul'])))
     params:
         sim_loc=run_path+"/ligand/fep/simulation",
         ana_loc=run_path+"/ligand/fep/ana",
-        vdw_max_windows=len(vdw_lambdas),
-        coul_max_windows=len(coul_lambdas)
+        vdw_max_windows=len(config['lambdas']['ligand']['vdw']),
+        coul_max_windows=len(config['lambdas']['ligand']['coul'])
     output:
         xvg_dir=directory(run_path+"/ligand/fep/ana/xvgs")
     shell:

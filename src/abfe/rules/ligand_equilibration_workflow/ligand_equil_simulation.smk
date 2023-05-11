@@ -1,5 +1,6 @@
 from abfe.utils.tools import gmx_runner
 
+# Common to all the sub-workflows ligand/replica
 input_path = config['input_data_path']
 run_path = config["run_path"]
 threads = config['threads']
@@ -26,7 +27,6 @@ rule equil_run_ligand_emin:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
 
@@ -50,7 +50,6 @@ rule equil_run_ligand_nvt_heat:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
 
@@ -76,7 +75,6 @@ rule equil_run_ligand_npt_eq1:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
 
@@ -102,6 +100,5 @@ rule equil_run_ligand_npt_eq2:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            cpi = True,
             **mdrun_extra
         )
