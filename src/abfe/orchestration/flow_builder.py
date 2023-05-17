@@ -96,6 +96,10 @@ def ligand_flows(global_config:dict):
             },
         },
     }
+    try:
+        ligand_config['mdp'] = global_config['mdp']
+    except KeyError:
+        pass
 
     for input_ligand_path in global_config["inputs"]["ligand_mol_paths"]:
         ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
@@ -175,6 +179,8 @@ def approach_flow(global_config: dict, submit=False):
     generate_snake.generate_approach_snake_file(out_file_path=snake_path,
                                                 conf_file_path=approach_conf_path)
 
+    # TODO this LIgand si also mostly waiting not performing heavy calculations. Think on a better strategy,
+    # I think that in this case we should use the resources of job, but I have to take a look
     scheduler = generate_scheduler.create_scheduler(
         scheduler_type = global_config["cluster"]["type"],
         cluster_config = global_config["cluster"]["options"]["calculation"],
