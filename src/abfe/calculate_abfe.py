@@ -15,7 +15,7 @@ def calculate_abfe(
         hmr_factor: float = 3.0,
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
         ligand_jobs: int = None,# By defaults it will take number of ligands * replicas
-        jobs_per_ligand: int = 10000, # On each ligand, how many jobs should run in parallel
+        jobs_per_ligand_job: int = 10000, # On each ligand, how many jobs should run in parallel
         replicas: int = 3,
         submit: bool = False,
         global_config: dict = {}):
@@ -62,7 +62,7 @@ def calculate_abfe(
 
     global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol))[0] for mol in global_config["inputs"]["ligand_mol_paths"]]
     global_config["ligand_jobs"] = ligand_jobs if (ligand_jobs is not None) else len(global_config["ligand_names"]) * replicas
-    global_config["jobs_per_ligand"] = jobs_per_ligand
+    global_config["jobs_per_ligand_job"] = jobs_per_ligand_job
     global_config["replicas"] = replicas
     global_config["threads"] = threads
 
