@@ -1,5 +1,5 @@
 from abfe.utils.tools import gmx_runner
-
+from abfe.scripts.preparation import boresch
 
 # Common to all the sub-workflows ligand/replica
 input_path = config['input_data_path']
@@ -141,7 +141,7 @@ rule equil_run_complex_trjconv:
         xtc=run_path+"/complex/equil-mdsim/boreschcalc/npt_prod_center.xtc"
     shell:
         '''
-            mkdir {params.run_dir}
+            mkdir -p {params.run_dir}
             echo 0 | gmx trjconv -s {input.tpr} -f {input.xtc} -o {params.run_dir}/whole.xtc -pbc whole
             echo 0 | gmx trjconv -s {input.tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump
             gmx trjconv -s {input.tpr} -f {params.run_dir}/nojump.xtc -o {output.xtc} -pbc mol -center -ur compact << EOF
@@ -161,7 +161,9 @@ rule equil_run_complex_get_boresch_restraints:
         gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
         top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
         boresch_dG_off=run_path+"/complex/equil-mdsim/boreschcalc/dG_off.dat"
-    shell:
-        '''
-            abfe-gen_boresch_restraints --top {input.tpr} --trj {input.xtc} --outpath {params.run_dir}
-        '''
+    run:
+        boresch.gen_restraint(
+            topology = input.tpr,
+            trajectory = input.xtc,
+            outpath = params.run_dir,
+        )
