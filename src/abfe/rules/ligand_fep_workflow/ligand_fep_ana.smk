@@ -1,15 +1,15 @@
 from abfe import scripts
 
 run_path = config["run_path"]
-vdw_lambdas = config['lambdas']['ligand']['vdw']
-coul_lambdas = config['lambdas']['ligand']['coul']
-
 
 # Ana
 rule fep_ana_gather_ligand_xvg:
     input:
         xvg_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['vdw']))),
-        xvg_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['coul'])))
+        xvg_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['coul']))),
+        # Make sure that the simualtion ends properly
+        gro_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.gro", state=range(len(config['lambdas']['ligand']['vdw']))),
+        gro_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.gro", state=range(len(config['lambdas']['ligand']['coul']))),
     params:
         sim_loc=run_path+"/ligand/fep/simulation",
         ana_loc=run_path+"/ligand/fep/ana",

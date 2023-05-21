@@ -9,7 +9,7 @@ run_path = config["run_path"]
 
 rule fep_setup_complex:
     input:
-        complex_top=input_path+"/complex/complex.top",
+        complex_top_dir=input_path+"/complex",
         boresch_top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
         mdp_vdw=expand(template.complex_fep_template_path+"/vdw/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/vdw", ext='mdp')]),
         mdp_coul=expand(template.complex_fep_template_path+"/coul/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/coul", ext='mdp')]),
@@ -34,11 +34,16 @@ rule fep_setup_complex:
         except KeyError:
             mdp_extra_kwargs = {}
         
-        # Copy complex topology
-        shutil.copytree(input.complex_top, sim_dir+"/complex/fep/fep-topology")
+        # Make directory
+        makedirs(params.sim_dir+"/fep-topology")
+        
+        # Copy complex topology (only itp),
+        # I can not set them as output of the rule becasue the name might change
+        for itp_file in list_if_file(input.complex_top_dir, ext = 'itp'):
+            shutil.copy(os.path.join(input.complex_top_dir, itp_file), params.sim_dir+"/fep-topology")
         
         # Modify the main topology incorporating the boresch restraints
-        with open(params.sim_dir+"/fep-topology/complex.top", 'r') as original_top:
+        with open(os.path.join(input.complex_top_dir, 'complex.top'), 'r') as original_top:
             with open(input.boresch_top, 'r') as boresch_top:
                 with open(output.fep_top, 'w') as final_top:
                     final_top.write(original_top.read() + boresch_top.read())

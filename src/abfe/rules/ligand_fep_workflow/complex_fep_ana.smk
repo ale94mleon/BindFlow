@@ -5,8 +5,11 @@ rule fep_ana_gather_complex_xvg:
     input:
         xvg_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw']))),
         xvg_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul']))),
-        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded'])))
-
+        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded'])))
+        # Make sure that the simualtion ends properly
+        gro_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['vdw']))),
+        gro_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['coul']))),
+        gro_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['bonded'])))
     params:
         sim_loc=run_path+"/complex/fep/simulation",
         ana_loc=run_path+"/complex/fep/ana",

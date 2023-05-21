@@ -49,7 +49,7 @@ rule fep_run_complex_nvt_heat:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
-            nthreads = threadss,
+            nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra
