@@ -36,6 +36,7 @@ class MDP:
         with open(template_filename, 'r') as f:
             lines = f.readlines()
             if clean_current_parameters:
+                # Clean all defined parameters
                 self.parameters = {}
             for line in lines:
                 if line.startswith(';') or line.startswith('#'):
@@ -110,7 +111,8 @@ class StepMDP(MDP):
         super().__init__(**kwargs)
         self.step = step
         self.step_path = step_path
-        self.__from_archive()
+        if self.step:
+            self.__from_archive()
     
     def set_new_step(self, step):
         self.__from_archive(explicit_step=step)
@@ -119,11 +121,11 @@ class StepMDP(MDP):
         if explicit_step: self.step = explicit_step
         valid_steps = [os.path.splitext(step)[0] for step in list_if_file(self.step_path, ext='mdp')]
         if self.step not in valid_steps:
-            raise ValueError(f"name = {self.step} is not valid, must be one of: {valid_steps}")
+            raise ValueError(f"name = {self.step} is not a valid step mdp, must be one of: {valid_steps}")
         self.from_file(os.path.join(self.step_path, f"{self.step}.mdp"))
 
 
-def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_values:List[float], lambda_type:str, mdp_extra_kwargs:dict = None):
+def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_values:List[float], lambda_type:str, sys_type:str, mdp_extra_kwargs:dict = None):
     """This function is mean to be used on ligand_fep_setup and complex_fet_setup.
     It will create the structure of the simulation directory: {sim_dir}/simulation/{lambda_type}.{i}/{step}/{step}.mdp
     Where:
@@ -139,7 +141,9 @@ def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_value
     lambda_values : List[float]
         This is a the list of lambda values to be used inside the mdp on the entrance {lambda_type}-lambdas
     lambda_type : str
-        Must one of the following strings "vdw", "coul", "bonded" (the last is for restraints)
+        Must be one of the following strings "vdw", "coul", "bonded" (the last is for restraints)
+    sys_type : str
+        Must one of the following strings "ligand" or "complex". This is used in order to turn on the bonded lambdas for the complex simulations
     mdp_extra_kwargs : dict
         The MDP options for the fep calculations on every step. This dictionary must have the structure:
             {
@@ -162,10 +166,15 @@ def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_value
     ------
     ValueError
         In case of an invalid lambda_type
+    ValueError
+        In case of an invalid sys_type
     """
     valid_lambda_types = ["vdw", "coul", "bonded"]
+    valid_sys_types = ['ligand', 'complex']
     if lambda_type not in valid_lambda_types:
         raise ValueError(f"Non valid lambda_type = {lambda_type}. Must be one of {valid_lambda_types}")
+    if sys_type not in valid_sys_types:
+        raise ValueError(f"Non valid sys_type = {sys_type}. Must be one of {valid_sys_types}")
 
     # Take from the source of the package what are the input MDP files
     input_mdp = [os.path.splitext(step)[0] for step in list_if_file(template_dir+f"/{lambda_type}", ext='mdp')]
@@ -174,19 +183,26 @@ def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_value
     lambda_range_str = " ".join(map(str, lambda_values))
     # Create MDP template for fep calculations
     mdp_template = StepMDP(step_path = os.path.join(template_dir, lambda_type))
-    # Set, if any, the user MDP options
-    if mdp_extra_kwargs:
-        try:
-            # TODO sanity check on the passed mdp options
-            mdp_template.set_parameters(**mdp_extra_kwargs[lambda_type][step])
-        except KeyError:
-            pass
     for mdp_file in input_mdp:
         step = os.path.splitext(os.path.basename(mdp_file))[0]
+        
         # Update MDP step
         mdp_template.set_new_step(step)
+
+        # Set, if any, the user MDP options
+        if mdp_extra_kwargs:
+            try:
+                # TODO sanity check on the passed mdp options
+                mdp_template.set_parameters(**mdp_extra_kwargs[lambda_type][step])
+            except KeyError:
+                pass
+        
         # Update lambdas
         mdp_template.set_parameters(**{f"{lambda_type}-lambdas": lambda_range_str})
+
+        # Set to 1 all the bonded-lambdas in case of vdw and coul for the complex
+        if sys_type.lower() == 'complex' and lambda_type in ['vdw', 'coul']:
+            mdp_template.set_parameters(**{"bonded-lambdas": " ".join(map(str, len(lambda_values)*[1]))})
 
         for i in range(len(lambda_values)):
             # Create simulation/state/step directory

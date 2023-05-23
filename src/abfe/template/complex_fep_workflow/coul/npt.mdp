@@ -81,13 +81,13 @@ gen_vel      = no      ; Velocity generation is off
 ;----------------------------------------------------
 free-energy              = yes
 couple-moltype           = LIG
-couple-lambda0           = vdw-q
-couple-lambda1           = vdw
+couple-lambda0           = vdw
+couple-lambda1           = vdw-q
 sc-alpha                 = 0.5
 sc-power                 = 1
 sc-sigma                 = 0.3
 init-lambda-state        = <state>
-bonded-lambdas           = 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+bonded-lambdas           = <lamRangeOfOnes>
 coul-lambdas             = <lamRange>
 nstdhdl                  = 100
 dhdl-print-energy        = total
