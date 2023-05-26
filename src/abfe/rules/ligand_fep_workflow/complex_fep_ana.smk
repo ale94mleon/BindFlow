@@ -1,5 +1,6 @@
 from abfe.scripts.free_energy import analysis
-from abfe.utils import tools, mdp
+from abfe.utils import tools
+from abfe.mdp import mdp
 import os
 import shutil
 

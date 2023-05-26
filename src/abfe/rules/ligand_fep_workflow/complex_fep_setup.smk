@@ -1,6 +1,6 @@
-from abfe import template
 from abfe.utils.tools import makedirs, list_if_file
-from abfe.utils import mdp
+from abfe.mdp import mdp
+from abfe.mdp.templates import TemplatePath
 import os, shutil
 
 # Common to all the sub-workflows ligand/replica
@@ -11,19 +11,19 @@ rule fep_setup_complex:
     input:
         complex_top_dir=input_path+"/complex",
         boresch_top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
-        mdp_vdw=expand(template.complex_fep_template_path+"/vdw/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/vdw", ext='mdp')]),
-        mdp_coul=expand(template.complex_fep_template_path+"/coul/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/coul", ext='mdp')]),
-        mdp_bonded=expand(template.complex_fep_template_path+"/bonded/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/bonded", ext='mdp')])
+        mdp_vdw=expand(TemplatePath.complex.soluble.fep+"/vdw/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/vdw", ext='mdp')]),
+        mdp_coul=expand(TemplatePath.complex.soluble.fep+"/coul/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/coul", ext='mdp')]),
+        mdp_bonded=expand(TemplatePath.complex.soluble.fep+"/bonded/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/bonded", ext='mdp')])
     params:
         sim_dir=run_path+"/complex/fep",
-        template_dir=template.complex_fep_template_path,
+        template_dir=TemplatePath.complex.soluble.fep,
         vdw_lambdas=config['lambdas']['complex']['vdw'],
         coul_lambdas=config['lambdas']['complex']['coul'],
         bonded_lambdas=config['lambdas']['complex']['bonded'],
     output:
-        mdp_vdw=expand(run_path+"/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['vdw'])), step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/vdw", ext='mdp')]),
-        mdp_coul=expand(run_path+"/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/coul", ext='mdp')]),
-        mdp_bonded=expand(run_path+"/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[os.path.splitext(step)[0] for step in list_if_file(template.complex_fep_template_path+"/bonded", ext='mdp')]),
+        mdp_vdw=expand(run_path+"/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['vdw'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/vdw", ext='mdp')]),
+        mdp_coul=expand(run_path+"/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/coul", ext='mdp')]),
+        mdp_bonded=expand(run_path+"/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/bonded", ext='mdp')]),
         fep_top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
     run:
 

@@ -83,14 +83,14 @@ rule fep_complex_npt:
 rule fep_complex_npt_norest:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.mdp",
+        mdp=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/npt/npt.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/npt/npt.cpt"
     params:
         run_dir=run_path+"/complex/fep/simulation/{state}/npt-norest",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.cpt"
+        gro=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -109,8 +109,8 @@ rule fep_complex_prod:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.cpt"
+        gro=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.cpt"
     params:
         run_dir=run_path+"/complex/fep/simulation/{state}/prod",
     output:

@@ -4,6 +4,7 @@ import glob, os
 import argparse
 
 from abfe import calculate_abfe, __version__
+from abfe.utils import tools
 import logging
 loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
 for logger in loggers:
@@ -51,6 +52,9 @@ def abfe_run():
                    submit = args.submit,
                    global_config=args.global_config,
                    )
+
+def abfe_dag():
+    tools.run("snakemake --dag | dot -Tpng -o dag.png", interactive=True)
 
 
 if __name__ == "__main__":...

@@ -1,6 +1,6 @@
-from abfe import template
 from abfe.utils.tools import makedirs, list_if_file
-from abfe.utils import mdp
+from abfe.mdp.templates import TemplatePath
+from abfe.mdp import mdp
 import os
 
 
@@ -10,17 +10,17 @@ run_path = config["run_path"]
 
 rule fep_setup_ligand:
     input:
-        mdp_vdw=expand(template.ligand_fep_template_path+"/vdw/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.ligand_fep_template_path+"/vdw", ext='mdp')]),
-        mdp_coul=expand(template.ligand_fep_template_path+"/coul/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.ligand_fep_template_path+"/coul", ext='mdp')])
+        mdp_vdw=expand(TemplatePath.ligand.fep+"/vdw/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.ligand.fep+"/vdw", ext='mdp')]),
+        mdp_coul=expand(TemplatePath.ligand.fep+"/coul/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.ligand.fep+"/coul", ext='mdp')])
     params:
         sim_dir=run_path+"/ligand/fep",
-        template_dir = template.ligand_fep_template_path,
+        template_dir = TemplatePath.ligand.fep,
         vdw_lambdas = config['lambdas']['ligand']['vdw'],
         coul_lambdas = config['lambdas']['ligand']['coul'],
 
     output:
-        mdp_vdw=expand(run_path+"/ligand/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['vdw'])), step=[os.path.splitext(step)[0] for step in list_if_file(template.ligand_fep_template_path+"/vdw", ext='mdp')]),
-        mdp_coul=expand(run_path+"/ligand/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['coul'])), step=[os.path.splitext(step)[0] for step in list_if_file(template.ligand_fep_template_path+"/coul", ext='mdp')])
+        mdp_vdw=expand(run_path+"/ligand/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['vdw'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.ligand.fep+"/vdw", ext='mdp')]),
+        mdp_coul=expand(run_path+"/ligand/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['coul'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.ligand.fep+"/coul", ext='mdp')])
     run:
 
         # TODO In case of user defined MDP keywords, take those from the config

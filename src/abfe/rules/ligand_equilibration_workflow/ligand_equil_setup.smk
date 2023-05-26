@@ -1,23 +1,22 @@
-from abfe import template
+from abfe.mdp.templates import TemplatePath
 from abfe.utils.tools import makedirs, list_if_file
-from abfe.utils import mdp
+from abfe.mdp import mdp
 import os
 
 # Common to all the sub-workflows ligand/replica
 run_path = config["run_path"]
 
-
 rule equil_setup_ligand:
     input:
-        mdp=expand(template.ligand_equil_template_path+"/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.ligand_equil_template_path, ext='mdp')])
+        mdp=expand(TemplatePath.ligand.equi+"/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.ligand.equi, ext='mdp')])
     params:
         sim_dir=run_path+"/ligand/equil-mdsim",
-        template_dir=template.ligand_equil_template_path,
+        template_dir=TemplatePath.ligand.equi,
         # Dynamically access the simulation steps based on the name of the mdp files inside template_dir.
         # Must be defined in this way, outside of the rule is overwrite it.
-        steps = [os.path.splitext(step)[0] for step in list_if_file(template.ligand_equil_template_path, ext='mdp')],
+        steps = [os.path.splitext(step)[0] for step in list_if_file(TemplatePath.ligand.equi, ext='mdp')],
     output:
-        mdp=expand(run_path+"/ligand/equil-mdsim/{step}/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(template.ligand_equil_template_path, ext='mdp')])
+        mdp=expand(run_path+"/ligand/equil-mdsim/{step}/{step}.mdp", step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.ligand.equi, ext='mdp')])
     run:
         # Create MDP template
         mdp_template = mdp.StepMDP(step_path = params.template_dir)

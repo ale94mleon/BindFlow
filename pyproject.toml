@@ -90,4 +90,5 @@ abfe = [
 
 [project.scripts]
 abfe-run = "abfe.cli:abfe_run"
+abfe-dag = "abfe.cli:abfe_dag"
 abfe-build_sys = "abfe.scripts.preparation.system_builder:__system_builder_cmd"

@@ -82,14 +82,14 @@ rule fep_ligand_npt:
 rule fep_ligand_npt_norest:
     input:
         top=input_path+"/ligand/ligand.top",
-        mdp=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.mdp",
+        mdp=run_path+"/ligand/fep/simulation/{state}/npt_norest/npt_norest.mdp",
         gro=run_path+"/ligand/fep/simulation/{state}/npt/npt.gro",
         cpt=run_path+"/ligand/fep/simulation/{state}/npt/npt.cpt"
     params:
         run_dir=run_path+"/ligand/fep/simulation/{state}/npt-norest",
     output:
-        gro=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.gro",
-        cpt=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.cpt"
+        gro=run_path+"/ligand/fep/simulation/{state}/npt_norest/npt_norest.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/npt_norest/npt_norest.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -108,8 +108,8 @@ rule fep_ligand_prod:
     input:
         top=input_path+"/ligand/ligand.top",
         mdp=run_path+"/ligand/fep/simulation/{state}/prod/prod.mdp",
-        gro=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.gro",
-        cpt=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.cpt"
+        gro=run_path+"/ligand/fep/simulation/{state}/npt_norest/npt_norest.gro",
+        cpt=run_path+"/ligand/fep/simulation/{state}/npt_norest/npt_norest.cpt"
     params:
         run_dir=run_path+"/ligand/fep/simulation/{state}/prod",
     output:

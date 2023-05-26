@@ -1,4 +1,3 @@
-       
 #Setup: Build dir structure of equil
 include: 'ligand_equil_setup.smk'
 include: 'complex_equil_setup.smk'
