@@ -24,7 +24,7 @@ rule fep_setup_complex:
         mdp_vdw=expand(run_path+"/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['vdw'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/vdw", ext='mdp')]),
         mdp_coul=expand(run_path+"/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/coul", ext='mdp')]),
         mdp_bonded=expand(run_path+"/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.soluble.fep+"/bonded", ext='mdp')]),
-        fep_top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
+        fep_top=run_path+"/complex/fep/topology/complex_boresch.top",
     run:
 
         # TODO In case of user defined MDP keywords, take those from the config
@@ -35,12 +35,12 @@ rule fep_setup_complex:
             mdp_extra_kwargs = {}
         
         # Make directory
-        makedirs(params.sim_dir+"/fep-topology")
+        makedirs(params.sim_dir+"/topology")
         
         # Copy complex topology (only itp),
         # I can not set them as output of the rule becasue the name might change
         for itp_file in list_if_file(input.complex_top_dir, ext = 'itp'):
-            shutil.copy(os.path.join(input.complex_top_dir, itp_file), params.sim_dir+"/fep-topology")
+            shutil.copy(os.path.join(input.complex_top_dir, itp_file), params.sim_dir+"/topology")
         
         # Modify the main topology incorporating the boresch restraints
         with open(os.path.join(input.complex_top_dir, 'complex.top'), 'r') as original_top:

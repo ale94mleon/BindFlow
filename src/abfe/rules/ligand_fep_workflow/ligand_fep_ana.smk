@@ -21,7 +21,7 @@ rule fep_ana_get_dg_ligand_contributions:
         ana_loc=run_path+"/ligand/fep/ana",
     output:
         ligand_json=run_path+"/ligand/fep/ana/dg_ligand_contributions.json"
-    threads: threads
+    # threads: threads # TODO: If I use threads, the rule hang for a longer time
     run:
         # Make directory
         tools.makedirs(params.ana_loc)        

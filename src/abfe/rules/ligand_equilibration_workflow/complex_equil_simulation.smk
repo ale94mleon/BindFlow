@@ -150,6 +150,7 @@ rule equil_run_complex_trjconv:
             EOF
             rm {params.run_dir}/whole.xtc {params.run_dir}/nojump.xtc
         '''
+        # TODO: the rm is not working
 
 rule equil_run_complex_get_boresch_restraints:
     input:

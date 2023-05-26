@@ -11,7 +11,7 @@ mdrun_extra = config['extra_directives']['mdrun']
 
 rule fep_complex_emin:
     input:
-        top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
+        top=run_path+"/complex/fep/topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/emin/emin.mdp",
         gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
         
@@ -34,7 +34,7 @@ rule fep_complex_emin:
 
 rule fep_complex_nvt:
     input:
-        top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
+        top=run_path+"/complex/fep/topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/nvt/nvt.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/emin/emin.gro"
     params:
@@ -57,7 +57,7 @@ rule fep_complex_nvt:
 
 rule fep_complex_npt:
     input:
-        top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
+        top=run_path+"/complex/fep/topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/npt/npt.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/nvt/nvt.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/nvt/nvt.cpt"
@@ -82,12 +82,12 @@ rule fep_complex_npt:
 
 rule fep_complex_npt_norest:
     input:
-        top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
+        top=run_path+"/complex/fep/topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/npt/npt.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/npt/npt.cpt"
     params:
-        run_dir=run_path+"/complex/fep/simulation/{state}/npt-norest",
+        run_dir=run_path+"/complex/fep/simulation/{state}/npt_norest",
     output:
         gro=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.cpt"
@@ -107,7 +107,7 @@ rule fep_complex_npt_norest:
 
 rule fep_complex_prod:
     input:
-        top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
+        top=run_path+"/complex/fep/topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.cpt"

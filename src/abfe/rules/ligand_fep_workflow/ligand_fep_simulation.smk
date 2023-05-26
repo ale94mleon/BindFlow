@@ -86,7 +86,7 @@ rule fep_ligand_npt_norest:
         gro=run_path+"/ligand/fep/simulation/{state}/npt/npt.gro",
         cpt=run_path+"/ligand/fep/simulation/{state}/npt/npt.cpt"
     params:
-        run_dir=run_path+"/ligand/fep/simulation/{state}/npt-norest",
+        run_dir=run_path+"/ligand/fep/simulation/{state}/npt_norest",
     output:
         gro=run_path+"/ligand/fep/simulation/{state}/npt_norest/npt_norest.gro",
         cpt=run_path+"/ligand/fep/simulation/{state}/npt_norest/npt_norest.cpt"
