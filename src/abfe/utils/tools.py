@@ -4,6 +4,21 @@ from typing import List, Union
 
 PathLike = Union[os.PathLike, str, bytes]
 
+class DotDict:
+    """A simple implementation of dot-access dict"""
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            if isinstance(value, dict):
+                self.__dict__[key] = DotDict(**value)
+            else:
+                self.__dict__[key] = value
+
+    def __repr__(self) -> str:
+        return str(self.__dict__)
+    
+    def to_dict(self):
+        return self.__dict__
+
 def run(command:str, shell:bool = True, executable:str = '/bin/bash', interactive:bool = False) -> subprocess.CompletedProcess:
     """A simple wrapper around subprocess.Popen/subprocess.run
 
@@ -43,7 +58,7 @@ def run(command:str, shell:bool = True, executable:str = '/bin/bash', interactiv
 
     return process
 
-def gmx_command(load_dependencies:List[str] = None, interactive:bool = False):
+def gmx_command(load_dependencies:List[str] = None, interactive:bool = False, stdout_file:PathLike = None):
     """Lazy wrapper of gmx commands
 
     Parameters
@@ -51,6 +66,11 @@ def gmx_command(load_dependencies:List[str] = None, interactive:bool = False):
     load_dependencies : List[str]
         It is used in case some previous loading steps are needed;
         e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4']
+    interactive : bool
+        In case, and interactive section is desired, by default False
+    stdout_file : bool
+        IF provided, it will append to the command ` >& {stdout_file}`, by default None
+    
     A typical function will be:
     
     Example
@@ -83,7 +103,10 @@ def gmx_command(load_dependencies:List[str] = None, interactive:bool = False):
                         cmd += f" -{key}"
                     else:
                         cmd += f" -{key} {value}"
-            print(cmd)
+            if stdout_file:
+                cmd += f" >& {stdout_file}"
+                if interactive:
+                    raise RuntimeError("stdout_file argument is not compatible with interactive flag")
             if interactive:
                 return run(cmd, interactive=True)
             else:
@@ -131,6 +154,8 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
     # Create run directory on demand
     makedirs(run_dir)
 
+    name = os.path.splitext(os.path.basename(mdp))[0]
+    
     # Because of how snakemake handles environmental variables that are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
     # We have to hard code the unset of some of them
     # TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
@@ -146,18 +171,17 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
     @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies)
     def grompp(**kwargs):...
     
-    @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies)
+    @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies, stdout_file=f"{name}.lis")
     def mdrun(**kwargs):...
     
-    name = os.path.splitext(os.path.basename(mdp))[0]
     cwd = os.getcwd()
     os.chdir(run_dir)
-    # TODO, I do not like to use the maxwarn keyword hardcoded.
     
     if checkpoint:
         grompp_extra = {'t':checkpoint}
     else:
         grompp_extra = {}
+    # TODO, I do not like to use the maxwarn keyword hardcoded.
     grompp(f = f"{mdp}", c = structure, r = structure, p = topology, o = f"{name}.tpr", maxwarn = 2, **grompp_extra)
     
     mdrun_kwargs = {
@@ -236,15 +260,46 @@ def config_validator(global_config:dict) -> List:
         if not "dependencies" in global_config["extra_directives"]:
             global_config["extra_directives"]["dependencies"] = []
         if not "mdrun" in global_config["extra_directives"]:
-            global_config["extra_directives"]["mdrun"] = {}    
+            global_config["extra_directives"]["mdrun"] = {
+                'ligand': {},
+                'complex': {},
+                'all': {}
+            }  
     else:
         global_config["extra_directives"] = {
             "dependencies": [],
-            "mdrun": {},
+            "mdrun": {
+                'ligand': {},
+                'complex': {},
+                'all': {}
+            },
         }
-    # Always allow continuation
-    global_config["extra_directives"]["mdrun"]['cpi'] = True
+    valid_mdrun = ["ligand", "complex", "all"]
+    # In case that 'extra_directives/mdrun/key' was not defined
+    for key in valid_mdrun:
+        if key not in global_config["extra_directives"]["mdrun"]:
+            global_config["extra_directives"]["mdrun"][key] = {}
+    
+    # Check that mdrun is valid
+    valid_mdrun = ["ligand", "complex", "all"]
+    for key in  global_config["extra_directives"]["mdrun"]:
+        if key not in valid_mdrun:
+            return False, f"extra_directives/mdrun/{key} is not valid, you must select one of valid mdrun options {valid_mdrun}"
+        
+        # Here we use as base keywords the one defined in all
+        # And then, for ligand and complex, update those based on th user input
+        # In other words, ligand and complex will use the all definition updated by their own keywords.
+        if key != 'all':
+            key_all = global_config["extra_directives"]["mdrun"]['all'].copy()
+            key_all.update(global_config["extra_directives"]["mdrun"][key])
+            global_config["extra_directives"]["mdrun"][key] = key_all
 
+        # Always allow continuation in case the user did not defined
+        if "cpi" not in  global_config["extra_directives"]["mdrun"][key]:
+            global_config["extra_directives"]["mdrun"]['cpi'] = True
+    
+    # After the update keywords, keep all is not needed any more
+    del global_config["extra_directives"]["mdrun"]['all']
 
     return True, "Cluster configuration is valid"
 

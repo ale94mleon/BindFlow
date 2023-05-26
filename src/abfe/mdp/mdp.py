@@ -21,7 +21,7 @@ _MDP_PARAM_DEFAULT={
 }
 class MDP:
     def __init__(self, **kwargs):
-        self.parameters = {}
+        self.parameters = dict()
         self._set_default_parameters()
         self.set_parameters(**kwargs)
 
@@ -47,6 +47,7 @@ class MDP:
                 parameter_name = tokens[0].strip()
                 parameter_value = tokens[1].strip()
                 self.parameters[parameter_name] = parameter_value
+        return self
     
     def to_string(self):
         s = ''
@@ -62,9 +63,9 @@ class MDP:
         return f"{self.__class__.__name__}({json.dumps(self.parameters, indent=4)})"
 
 class StepMDP(MDP):
-    """This subclass will inherit from :meth:`abfe.utils.mdp.MDP`
+    """This subclass will inherit from :meth:`abfe.mdp.mdp.MDP`
     It is meant to be used in combination with the templates that can 
-    be access from :mod: `abfe.templates`.
+    be access from :mod: `abfe.mdp.templates.TemplatePath`.
     This class define the method `set_new_step`. One time initialized,
     the instance could be used to access other steps on the step_path
 
@@ -99,13 +100,13 @@ class StepMDP(MDP):
         -------
         .. ipython:: python
 
-            from abfe.utils import mdp
-            from abfe import template as tp
+            from abfe.mdp import mdp
+            from abfe.mdp.templates import TemplatePath
             import os
-            my_mdp = mdp.StepMDP(step = 'emin', step_path = os.path.join(tp.ligand_fep_template_path, 'coul'))
+            my_mdp = mdp.StepMDP(step = 'emin', step_path = os.path.join(TemplatePath.ligand.fep, 'coul'))
             my_mdp.set_parameters(**{"init-lambda-state": "0", "coul-lambdas": "0 0.5 1",})
             print(my_mdp)
-            my_mdp.set_new_step(step='npt-norest')
+            my_mdp.set_new_step(step='npt_norest')
             print(my_mdp.to_string())
         """
         super().__init__(**kwargs)
@@ -116,6 +117,7 @@ class StepMDP(MDP):
     
     def set_new_step(self, step):
         self.__from_archive(explicit_step=step)
+        return self
     
     def __from_archive(self, explicit_step:str = None):
         if explicit_step: self.step = explicit_step
@@ -137,7 +139,7 @@ def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_value
     sim_dir : PathLike
         Where the simulation suppose to run
     template_dir : PathLike
-        This is the directory that storage the mdp templates: template.ligand_fep_template_path or template.complex_fep_template_path
+        This is the directory that storage the mdp templates: abfe.mdp.templates.TemplatePath.ligand.fep or abfe.mdp.templates.TemplatePath.complex.fep
     lambda_values : List[float]
         This is a the list of lambda values to be used inside the mdp on the entrance {lambda_type}-lambdas
     lambda_type : str
