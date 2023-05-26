@@ -1,61 +1,44 @@
-from abfe import scripts
+from abfe.scripts.free_energy import analysis
+from abfe.utils import tools, mdp
+import os
+import shutil
 
-#Ana
-rule fep_ana_gather_complex_xvg:
+run_path = config["run_path"]
+threads = config['threads']
+
+# Ana
+rule fep_ana_get_dg_complex_contributions:
     input:
         xvg_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw']))),
         xvg_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul']))),
-        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded'])))
+        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded']))),
         # Make sure that the simualtion ends properly
         gro_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['vdw']))),
         gro_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['coul']))),
-        gro_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['bonded'])))
+        gro_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['bonded']))),
+        # To get the simulaiton temperature
+        mdp_vdw_0_prod=run_path+"/complex/fep/simulation/vdw.0/prod/prod.mdp",
     params:
-        sim_loc=run_path+"/complex/fep/simulation",
         ana_loc=run_path+"/complex/fep/ana",
-        vdw_max_windows=len(config['lambdas']['complex']['vdw']),
-        coul_max_windows=len(config['lambdas']['complex']['coul']),
-        bonded_max_windows=len(config['lambdas']['complex']['bonded']),
     output:
-        xvg_dir=directory(run_path+"/complex/fep/ana/xvgs")
-    shell:
-        '''
-            mkdir -p {params.ana_loc}/xvgs/vdw-xvg
-            mkdir -p {params.ana_loc}/xvgs/coul-xvg
-            mkdir -p {params.ana_loc}/xvgs/bonded-xvg
-
-            # vdw
-            let max_window={params.vdw_max_windows}  
-            for i in $(seq 0 1 $((max_window-1)))
-            do
-                cp {params.sim_loc}/vdw.${{i}}/prod/prod.xvg {params.ana_loc}/xvgs/vdw-xvg/dhdl.${{i}}.xvg
-            done
-
-            # coul
-            let max_window={params.coul_max_windows}  
-            for i in $(seq 0 1 $((max_window-1)))
-            do
-                cp {params.sim_loc}/coul.${{i}}/prod/prod.xvg {params.ana_loc}/xvgs/coul-xvg/dhdl.${{i}}.xvg
-            done
-
-            # bonded
-            let max_window={params.bonded_max_windows}  
-            for i in $(seq 0 1 $((max_window-1)))
-            do
-                cp {params.sim_loc}/bonded.${{i}}/prod/prod.xvg {params.ana_loc}/xvgs/bonded-xvg/dhdl.${{i}}.xvg
-            done
-        '''
-
-rule fep_ana_get_dg_complex:
-    input:
-        xvg_dir=run_path+"/complex/fep/ana/xvgs",
-        boresch_dat = run_path+"/complex/equil-mdsim/boreschcalc/dG_off.dat"
-    params:
-        conf_path = run_path+"/snake_conf.json",
-        out_dir=run_path+"/complex/fep/ana",
-        script_dir = scripts.root_path
-    output:
-        complex_var=run_path+"/complex/fep/ana/dg_results.csv"
-    shell:
-        "python {params.script_dir}/free_energy/calculate_ABFE_transformation_dG.py --xvg_path {input.xvg_dir}  --conf_path {params.conf_path} --out_path {params.out_dir} --boresch_data {input.boresch_dat} --system_name complex"
+        complex_json=run_path+"/complex/fep/ana/dg_complex_contributions.json"
+    threads: threads
+    run:
+        # Make directory
+        tools.makedirs(params.ana_loc)
+        # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
+        temperature = float(mdp.MDP().from_file(input.mdp_vdw_0_prod).parameters['ref-t'].split()[0]) 
+        analysis.get_dG_contributions(
+            boresch_data = None,
+            out_json_path = output.complex_json,
+            # Check if it is necessary to remove some initial burning simulation time
+            lower = None,
+            upper = None,
+            min_samples = 500,
+            temperature = temperature,
+            # Sort the paths
+            vdw = sorted(input.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            coul = sorted(input.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            bonded = sorted(input.xvg_bonded_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+        )
 

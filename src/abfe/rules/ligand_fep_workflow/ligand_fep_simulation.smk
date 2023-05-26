@@ -9,7 +9,7 @@ num_retries = config['num_retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
-rule fep_run_ligand_emin:
+rule fep_ligand_emin:
     input:
         top=input_path+"/ligand/ligand.top",
         mdp=run_path+"/ligand/fep/simulation/{state}/emin/emin.mdp",
@@ -28,10 +28,10 @@ rule fep_run_ligand_emin:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )
 
-rule fep_run_ligand_nvt_heat:
+rule fep_ligand_nvt:
     input:
         top=input_path+"/ligand/ligand.top",
         mdp=run_path+"/ligand/fep/simulation/{state}/nvt/nvt.mdp",
@@ -51,10 +51,10 @@ rule fep_run_ligand_nvt_heat:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )
 
-rule fep_run_ligand_npt_eq1:
+rule fep_ligand_npt:
     input:
         top=input_path+"/ligand/ligand.top",
         mdp=run_path+"/ligand/fep/simulation/{state}/npt/npt.mdp",
@@ -76,10 +76,10 @@ rule fep_run_ligand_npt_eq1:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )
 
-rule fep_run_ligand_npt_eq2:
+rule fep_ligand_npt_norest:
     input:
         top=input_path+"/ligand/ligand.top",
         mdp=run_path+"/ligand/fep/simulation/{state}/npt-norest/npt-norest.mdp",
@@ -101,10 +101,10 @@ rule fep_run_ligand_npt_eq2:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )
 
-rule fep_run_ligand_prod:
+rule fep_ligand_prod:
     input:
         top=input_path+"/ligand/ligand.top",
         mdp=run_path+"/ligand/fep/simulation/{state}/prod/prod.mdp",
@@ -126,5 +126,5 @@ rule fep_run_ligand_prod:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )

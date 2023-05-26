@@ -54,6 +54,7 @@ dependencies = [
     "TOFF",
     "tabulate == 0.8.10",
     "pyyaml",
+    "uncertainties",
 ]
 
 [tool.versioningit]
@@ -82,7 +83,7 @@ where = ["src"]
 abfe = [
     "LICENSE",
     "data/gmx_ff/*.tar.gz",
-    "template/**/*.mdp", 
+    "mdp/templates/**/*.mdp", 
     "rules/**/*.smk",
     "rules/**/Snakefile"
 ]
@@ -90,4 +91,3 @@ abfe = [
 [project.scripts]
 abfe-run = "abfe.cli:abfe_run"
 abfe-build_sys = "abfe.scripts.preparation.system_builder:__system_builder_cmd"
-abfe-gen_boresch_restraints = "abfe.scripts.preparation.generate_boresch_restraints:gen_boresch_restraints"

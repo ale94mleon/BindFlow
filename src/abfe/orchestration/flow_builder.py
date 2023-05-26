@@ -81,7 +81,7 @@ def ligand_flows(global_config:dict):
     ligand_config = {
         'run_path': None,
         'run_num': None,
-        'threads': global_config["threads"],
+        'threads': global_config['threads'],
         'extra_directives': global_config['extra_directives'],
         'num_retries':3,
         'lambdas': {
@@ -157,7 +157,7 @@ def ligand_flows(global_config:dict):
                 prefix_name = ligand_rep_name,
                 snake_executor_file = 'job.sh')
             
-            scheduler.build_snakemake(jobs = global_config["jobs_per_ligand"])
+            scheduler.build_snakemake(jobs = global_config["jobs_per_ligand_job"])
 
 def approach_flow(global_config: dict, submit=False):
     

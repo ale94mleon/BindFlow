@@ -55,7 +55,7 @@ rule fep_setup_complex:
             lambda_values = params.vdw_lambdas,
             lambda_type = 'vdw',
             sys_type = 'complex',
-            **mdp_extra_kwargs,
+            mdp_extra_kwargs = mdp_extra_kwargs,
         )
 
         # Create MDP template for Coulomb states
@@ -65,7 +65,7 @@ rule fep_setup_complex:
             lambda_values = params.coul_lambdas,
             lambda_type = 'coul',
             sys_type = 'complex',
-            **mdp_extra_kwargs,
+            mdp_extra_kwargs = mdp_extra_kwargs,
         )
 
         # Create MDP template for Restraint states
@@ -75,5 +75,5 @@ rule fep_setup_complex:
             lambda_values = params.bonded_lambdas,
             lambda_type = 'bonded',
             sys_type = 'complex',
-            **mdp_extra_kwargs,
+            mdp_extra_kwargs = mdp_extra_kwargs,
         )

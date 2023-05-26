@@ -37,7 +37,7 @@ rule fep_setup_ligand:
             lambda_values = params.vdw_lambdas,
             lambda_type = 'vdw',
             sys_type = 'ligand',
-            **mdp_extra_kwargs,
+            mdp_extra_kwargs = mdp_extra_kwargs,
         )
 
         # Create MDP template for Coulomb states
@@ -47,5 +47,5 @@ rule fep_setup_ligand:
             lambda_values = params.coul_lambdas,
             lambda_type = 'coul',
             sys_type = 'ligand',
-            **mdp_extra_kwargs,
+            mdp_extra_kwargs = mdp_extra_kwargs,
         )

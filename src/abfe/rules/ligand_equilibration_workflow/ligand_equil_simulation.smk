@@ -8,7 +8,7 @@ num_retries = config['num_retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
-rule equil_run_ligand_emin:
+rule equil_ligand_emin:
     input:
         top=input_path+"/ligand/ligand.top",
         gro=input_path+"/ligand/ligand.gro",
@@ -27,10 +27,10 @@ rule equil_run_ligand_emin:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )
 
-rule equil_run_ligand_nvt_heat:
+rule equil_ligand_nvt_heat:
     input:
         top=input_path+"/ligand/ligand.top",
         gro=run_path+"/ligand/equil-mdsim/emin/emin.gro",
@@ -50,10 +50,10 @@ rule equil_run_ligand_nvt_heat:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )
 
-rule equil_run_ligand_npt_eq1:
+rule equil_ligand_npt_eq1:
     input:
         top=input_path+"/ligand/ligand.top",
         gro=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.gro",
@@ -75,10 +75,10 @@ rule equil_run_ligand_npt_eq1:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )
 
-rule equil_run_ligand_npt_eq2:
+rule equil_ligand_npt_eq2:
     input:
         top=input_path+"/ligand/ligand.top",
         gro=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.gro",
@@ -100,5 +100,5 @@ rule equil_run_ligand_npt_eq2:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['ligand']
         )

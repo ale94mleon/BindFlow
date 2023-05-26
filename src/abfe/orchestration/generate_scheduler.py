@@ -105,6 +105,10 @@ class SlurmScheduler(Scheduler):
     def build_snakemake(self, jobs:int = 100000, latency_wait:int = 360,
                       verbose:bool = False, debug_dag:bool = False,
                       rerun_incomplete:bool = True, keep_going: bool = True) -> str:
+        # TODO, For DEBUG Only
+        verbose = True
+        debug_dag = True
+        keep_going = False
         """Build the snakemake command
 
         Parameters

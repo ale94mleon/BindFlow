@@ -9,7 +9,7 @@ load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
 
-rule fep_run_complex_emin:
+rule fep_complex_emin:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/emin/emin.mdp",
@@ -29,10 +29,10 @@ rule fep_run_complex_emin:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['complex']
         )
 
-rule fep_run_complex_nvt_heat:
+rule fep_complex_nvt:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/nvt/nvt.mdp",
@@ -52,10 +52,10 @@ rule fep_run_complex_nvt_heat:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['complex']
         )
 
-rule fep_run_complex_npt_eq1:
+rule fep_complex_npt:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/npt/npt.mdp",
@@ -77,10 +77,10 @@ rule fep_run_complex_npt_eq1:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['complex']
         )
 
-rule fep_run_complex_npt_eq2:
+rule fep_complex_npt_norest:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/npt-norest/npt-norest.mdp",
@@ -102,10 +102,10 @@ rule fep_run_complex_npt_eq2:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['complex']
         )
 
-rule fep_run_complex_prod:
+rule fep_complex_prod:
     input:
         top=run_path+"/complex/fep/fep-topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",
@@ -127,5 +127,5 @@ rule fep_run_complex_prod:
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
-            **mdrun_extra
+            **mdrun_extra['complex']
         )

@@ -1,15 +1,17 @@
+from abfe.scripts.free_energy import analysis
 run_path = config["run_path"]
 
 
-rule fep_gather_dGs:
+rule fep_get_dg_cycle:
     input:
-        complex_var=run_path+"/complex/fep/ana/dg_results.csv",
-        ligand_var=run_path+"/ligand/fep/ana/dg_results.csv"
-    params:
-        conf_path = run_path+"/snake_conf.json",
-        script_dir = scripts.root_path
+        complex_json=run_path+"/complex/fep/ana/dg_complex_contributions.json",
+        ligand_json=run_path+"/ligand/fep/ana/dg_ligand_contributions.json",
     output:
         out_file_path=run_path+"/dG_results.csv",
-    shell:
-        "python {params.script_dir}/free_energy/calculate_ABFE_ligand_dG.py --in_lig_path {input.ligand_var} --in_comp_path {input.complex_var} --out_csv_path {output.out_file_path}"
+    run:
+        analysis.get_dg_cycle(
+            ligand_contributions = input.ligand_json,
+            complex_contributions = input.complex_json,
+            out_csv = output.out_file_path
+        )
 

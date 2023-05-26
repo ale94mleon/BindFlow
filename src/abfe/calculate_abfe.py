@@ -73,6 +73,7 @@ def calculate_abfe(
 
     print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
     expected_out_paths = int(replicas) * len(global_config["ligand_names"])
+    # TODO, check this part
     result_paths = glob.glob(global_config["out_approach_path"] + "/*/*/dG*csv")
 
     # Only if there is something missing
