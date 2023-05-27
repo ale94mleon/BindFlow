@@ -17,6 +17,7 @@ def calculate_abfe(
         jobs_per_ligand_job: int = 10000, # On each ligand, how many jobs should run in parallel
         replicas: int = 3,
         submit: bool = False,
+        debug:bool = False,
         global_config: dict = {}):
     orig_dir = os.getcwd()
 
@@ -49,7 +50,8 @@ def calculate_abfe(
     out_root_folder_path = os.path.abspath(out_root_folder_path)
     global_config["out_approach_path"] = out_root_folder_path
 
-    
+    # This will only be needed for developing propose.
+    os.environ['abfe_debug'] = debug
 
     ## Generate output folders
     for dir_path in [global_config["out_approach_path"]]:

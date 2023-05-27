@@ -2,7 +2,6 @@ from abfe.scripts.free_energy import analysis
 from abfe.utils import tools
 from abfe.mdp import mdp
 import os
-import shutil
 
 run_path = config["run_path"]
 threads = config['threads']

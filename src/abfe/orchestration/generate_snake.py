@@ -56,7 +56,7 @@ def get_superFlow() -> str:
         "include: \'" + rules.super_flow + "\'",
         "",
         "## Do Check all results",
-        "rule abfe_recptor_result:",
+        "rule abfe_receptor_result:",
         "    input:",
         "        dG_path=approach_path+\"/abfe_results.csv\"",
         ""

@@ -105,10 +105,6 @@ class SlurmScheduler(Scheduler):
     def build_snakemake(self, jobs:int = 100000, latency_wait:int = 360,
                       verbose:bool = False, debug_dag:bool = False,
                       rerun_incomplete:bool = True, keep_going: bool = True) -> str:
-        # TODO, For DEBUG Only
-        verbose = True
-        debug_dag = True
-        keep_going = False
         """Build the snakemake command
 
         Parameters
@@ -134,6 +130,13 @@ class SlurmScheduler(Scheduler):
             The snakemake command string.
             It also will set self._snakemake_str_cmd to the command string value
         """
+        # TODO, For DEBUG Only
+        if 'abfe_debug' in os.environ:
+            if os.environ['abfe_debug']:
+                verbose = True
+                debug_dag = True
+                keep_going = False
+
         command = f"snakemake --jobs {jobs} --latency-wait {latency_wait} --cluster-cancel {self.cancel_command} "
         if verbose: command += "--verbose "
         if debug_dag: command += "--debug-dag "
@@ -178,7 +181,9 @@ class SlurmScheduler(Scheduler):
             If snake_executor_file is not present. You must declare it during initialization
         """
         # If extra_cluster_config, modify  self.snake_executor_file
-        # Validate 
+        # Validate
+        # TODO: Maybe is a good idea, instead of use the whole new_cluster_config, update the current self._user_cluster_config
+        # and then validate with slurm_validation
         if new_cluster_config:
             cluster_to_work = slurm_validation(new_cluster_config)
         else:

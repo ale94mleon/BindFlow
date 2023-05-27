@@ -210,8 +210,9 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     generate_snake.generate_approach_snake_file(out_file_path=snake_path,
                                                 conf_file_path=approach_conf_path)
 
-    # TODO this LIgand si also mostly waiting not performing heavy calculations. Think on a better strategy,
+    # TODO this Ligand si also mostly waiting not performing heavy calculations. Think on a better strategy,
     # I think that in this case we should use the resources of job, but I have to take a look
+    # The only thing here is that the build_ligand_systems is also run at this stage.
     scheduler = generate_scheduler.create_scheduler(
         scheduler_type = global_config["cluster"]["type"],
         # by default, run with the main cluster options

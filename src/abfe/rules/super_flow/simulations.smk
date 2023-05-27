@@ -10,7 +10,7 @@ rule calculate_ABFE:
         output_dir = approach_path + "/{ligand_name}/{replica}",
 
     output:
-        out_dg= approach_path + "/{ligand_name}/{replica}/dG_results.csv"
+        out_dg = approach_path + "/{ligand_name}/{replica}/dG_results.csv"
 
     shell:
         """
