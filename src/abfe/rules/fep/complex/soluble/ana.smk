@@ -23,7 +23,7 @@ rule fep_ana_get_dg_complex_contributions:
         ana_loc=run_path+"/complex/fep/ana",
     output:
         complex_json=run_path+"/complex/fep/ana/dg_complex_contributions.json"
-    # threads: threads # TODO: If I use threads, the rule hang for a longer time
+    threads: threads # TODO: Sometimes the rule hang for a long time
     run:
         # Make directory
         tools.makedirs(params.ana_loc)

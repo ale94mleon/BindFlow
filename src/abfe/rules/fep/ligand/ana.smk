@@ -21,7 +21,7 @@ rule fep_ana_get_dg_ligand_contributions:
         ana_loc=run_path+"/ligand/fep/ana",
     output:
         ligand_json=run_path+"/ligand/fep/ana/dg_ligand_contributions.json"
-    # threads: threads # TODO: If I use threads, the rule hang for a longer time
+    threads: threads # TODO: Sometimes the rule hang for a long time
     run:
         # Make directory
         tools.makedirs(params.ana_loc)        
@@ -35,6 +35,7 @@ rule fep_ana_get_dg_ligand_contributions:
             upper = None,
             min_samples = 500,
             temperature = temperature,
+            # Sort the paths
             vdw = sorted(input.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
             coul = sorted(input.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
         )

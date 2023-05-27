@@ -6,6 +6,8 @@ import argparse
 from abfe import calculate_abfe, __version__
 from abfe.utils import tools
 import logging
+
+
 loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
 for logger in loggers:
     logger.setLevel(logging.NOTSET)
@@ -56,5 +58,14 @@ def abfe_run():
 def abfe_dag():
     tools.run("snakemake --dag | dot -Tpng -o dag.png", interactive=True)
 
+def abfe_check_results():
+    from abfe.scripts.free_energy import gather_results
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        dest = 'root_folder_path',
+        help='Input protein pdb file path',
+        type=str)
+    args = parser.parse_args()
 
+    print(gather_results.get_all_dgs(root_folder_path=args.root_folder_path))
 if __name__ == "__main__":...

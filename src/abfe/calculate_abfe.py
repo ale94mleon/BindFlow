@@ -4,7 +4,7 @@ from typing import List
 from abfe.utils.tools import config_validator
 
 from abfe.orchestration.flow_builder import ligand_flows, approach_flow
-from abfe.scripts import final_receptor_results
+from abfe.scripts.free_energy import gather_results
 def calculate_abfe(
         protein_pdb_path: str,
         ligand_mol_paths: List[str],
@@ -46,7 +46,8 @@ def calculate_abfe(
 
     global_config["hmr_factor"] = hmr_factor
     
-    global_config["out_approach_path"] = os.path.abspath(out_root_folder_path)
+    out_root_folder_path = os.path.abspath(out_root_folder_path)
+    global_config["out_approach_path"] = out_root_folder_path
 
     
 
@@ -71,7 +72,7 @@ def calculate_abfe(
 
     print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
     expected_out_paths = int(replicas) * len(global_config["ligand_names"])
-    # TODO, check this part
+
     result_paths = glob.glob(global_config["out_approach_path"] + "/*/*/dG*csv")
 
     # Only if there is something missing
@@ -84,8 +85,7 @@ def calculate_abfe(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        # TODO: fix this function.
-        # final_receptor_results.get_final_results(out_dir=out_root_folder_path, in_root_dir=out_root_folder_path)
+        gather_results.get_all_dgs(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results.csv'))
 
     print()
     os.chdir(orig_dir)
