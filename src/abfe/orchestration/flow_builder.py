@@ -96,6 +96,14 @@ def ligand_flows(global_config:dict):
             },
         },
     }
+
+    # Specify the complex type
+    if global_config["inputs"]["membrane_pdb_path"]:
+        ligand_config["complex_type"] = 'membrane'
+    else:
+        ligand_config["complex_type"] = 'soluble'
+    
+    # Add extra mdp options if provided
     try:
         ligand_config['mdp'] = global_config['mdp']
     except KeyError:

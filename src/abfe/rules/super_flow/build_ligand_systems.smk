@@ -1,6 +1,12 @@
 from abfe.scripts.preparation import system_builder as sb
 import os
 #Final Check Job
+# TODO. I have to run seperatdlu, because if some inhibitor already
+# finished adn I add more inhibitors, becasuase, the initial files change
+# probably only in their timestamp
+# The whole workflow runs again, I have to
+# because the rule runs over all the sytems
+# separeate the rule
 out_approach_path = config["out_approach_path"]
 input_protein_pdb_path = config["inputs"]["protein_pdb_path"]
 input_membrane_pdb_path = config["inputs"]["membrane_pdb_path"]

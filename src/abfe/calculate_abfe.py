@@ -86,7 +86,8 @@ def calculate_abfe(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        final_receptor_results.get_final_results(out_dir=out_root_folder_path, in_root_dir=out_root_folder_path)
+        # TODO: fix this function.
+        # final_receptor_results.get_final_results(out_dir=out_root_folder_path, in_root_dir=out_root_folder_path)
 
     print()
     os.chdir(orig_dir)

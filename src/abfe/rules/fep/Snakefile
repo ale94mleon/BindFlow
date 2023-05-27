@@ -1,0 +1,34 @@
+#Setup: FEP dir structure and make mdp files from templates
+if config["complex_type"] == 'soluble':
+    include: 'ligand/setup.smk' 
+    include: 'complex/soluble/setup.smk' 
+    
+    #RUN: FEP 
+    include: 'ligand/simulation.smk' 
+    include: 'complex/soluble/simulation.smk' 
+    
+    #ANA: FEP
+    include: 'ligand/ana.smk' 
+    include: 'complex/soluble/ana.smk' 
+
+elif config["complex_type"] == 'membrane':
+    # Rule informing the user that the 'membrane' functionality is not implemented yet
+    rule not_implemented:
+        output:
+            run_path+"/equi_not_implemented.txt"
+        shell:
+            "echo 'FEP simulations for complex_type == membrane is not implemented yet' > {output}"
+else:
+    raise ValueError("complex_type must be 'soluble' or 'membrane'")
+
+# Continue with common rules
+
+# Final Result:
+include: "calculate_result.smk"
+
+#Final Check Job
+run_path = config["run_path"]
+
+rule fep_results:
+    input:
+        dG_path=run_path+"/dG_results.csv",

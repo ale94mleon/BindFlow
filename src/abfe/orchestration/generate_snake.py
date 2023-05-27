@@ -2,11 +2,10 @@ from abfe import rules
 
 
 def get_eq_res():
-    equil_snake = rules.ligand_equilibration_workflow_path
 
     cmd = [
         "#Do Equilibration",
-        "include: \'" + equil_snake + "\'",
+        "include: \'" + rules.equi + "\'",
         "rule check_equilib:",
         "   input:",
         "       gro_complex=run_path+\"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro\",",
@@ -20,11 +19,10 @@ def get_eq_res():
 
 
 def get_fep_res() -> str:
-    fep_snake = rules.ligand_fep_workflow_path
 
     cmd = [
         "#Do FEP",
-        "include: \'" + fep_snake + "\'",
+        "include: \'" + rules.fep + "\'",
         "rule all:",
         "    input:",
         "        dG_path=run_path+\"/dG_results.csv\"",
@@ -37,10 +35,10 @@ def get_all_eq_fep_res() -> str:
     cmd = [
         "#DO",
         "## Do Equilibration",
-        "include: \'" + rules.ligand_equilibration_workflow_path + "\'",
+        "include: \'" + rules.equi + "\'",
         "",
         "## Do FEP",
-        "include: \'" + rules.ligand_fep_workflow_path + "\'",
+        "include: \'" + rules.fep + "\'",
         "",
         "## Do Check all results",
         "rule abfe_ligand_result:",
@@ -55,7 +53,7 @@ def get_superFlow() -> str:
     cmd = [
         "#DO",
         "## Start the launching process",
-        "include: \'" + rules.receptor_workflow_path + "\'",
+        "include: \'" + rules.super_flow + "\'",
         "",
         "## Do Check all results",
         "rule abfe_recptor_result:",

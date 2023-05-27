@@ -1,0 +1,31 @@
+#Final Check Job
+run_path = config["run_path"]
+
+if config["complex_type"] == 'soluble':
+
+    #Setup: Build dir structure of equil
+    include: 'ligand/setup.smk'
+    include: 'complex/soluble/setup.smk'
+        
+    #RUN: Equil
+    include: 'ligand/simulation.smk'
+    include: 'complex/soluble/simulation.smk'
+    
+
+    rule equil_results:
+        input:
+            gro_complex=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
+            top_complex=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
+            dG_off_complex=run_path+"/complex/equil-mdsim/boreschcalc/dG_off.dat",
+            gro_ligand=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.gro",
+            cpt_ligand=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.cpt"
+
+elif config["complex_type"] == 'membrane':
+    # Rule informing the user that the 'membrane' functionality is not implemented yet
+    rule not_implemented:
+        output:
+            run_path+"/equi_not_implemented.txt"
+        shell:
+            "echo 'Equilibration simulations for complex_type == membrane is not implemented yet' > {output}"
+else:
+    raise ValueError("complex_type must be 'soluble' or 'membrane'")
