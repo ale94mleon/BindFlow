@@ -167,8 +167,31 @@ def ligand_flows(global_config:dict):
             
             scheduler.build_snakemake(jobs = global_config["jobs_per_ligand_job"])
 
-def approach_flow(global_config: dict, submit=False):
-    
+def approach_flow(global_config:dict, submit:bool = False) -> str:
+    """This is the main workflow, it controls the rest of the workflows
+    that make the actual calculations. It will only hang and wait till the rest
+    subprocess finish. In case that cluster/options/job is defined in global_config,
+    those options will be used to create the proper cluster submit script, if not
+    cluster/option/calculation will be used instead
+
+    Parameters
+    ----------
+    global_config : dict
+        The global configuration. It must contain:
+        out_approach_path[PathLike], inputs[dict[PathLike]],
+        ligand_names[list[str]], replicas[float], threads[int],
+        hmr_factor[float], cluster/type[str], cluster/options/calculation[dict]
+        cluster/options/job[dict]. The last is optional and will override cluster/options/calculation[dict]
+        during submit
+    submit : bool, optional
+        Submit to the workload manager, by default False
+
+    Returns
+    -------
+    str
+        Some identification of the submitted job. It will depend in how
+        the submit method of the corresponded Schedular (:meth:`abfe.orchestration.generate_scheduler.Scheduler`) was implemented
+    """
     out_path = global_config["out_approach_path"]
     snake_path = out_path + "/Snakefile"
     approach_conf_path = out_path + "/snake_conf.json"
@@ -191,6 +214,8 @@ def approach_flow(global_config: dict, submit=False):
     # I think that in this case we should use the resources of job, but I have to take a look
     scheduler = generate_scheduler.create_scheduler(
         scheduler_type = global_config["cluster"]["type"],
+        # by default, run with the main cluster options
+        # only if global_config["cluster"]["options"]["job"] is defined it will change during submit
         cluster_config = global_config["cluster"]["options"]["calculation"],
         out_dir = out_path,
         prefix_name = "Ligand",
@@ -207,5 +232,6 @@ def approach_flow(global_config: dict, submit=False):
         only_build = False
     else:
         only_build = True
+    # if global_config["cluster"]["options"]["job"] changes during submit the cluster options
     job_id = scheduler.submit(new_cluster_config = job_cluster_config, only_build = only_build)
     return job_id
