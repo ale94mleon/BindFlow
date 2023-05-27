@@ -9,7 +9,6 @@ def calculate_abfe(
         protein_pdb_path: str,
         ligand_mol_paths: List[str],
         out_root_folder_path: str,
-        approach_name: str = "",
         cofactor_mol_path: str = None,
         membrane_pdb_path: str = None,
         hmr_factor: float = 3.0,
@@ -47,7 +46,6 @@ def calculate_abfe(
 
     global_config["hmr_factor"] = hmr_factor
     
-    global_config["approach_name"] = approach_name
     global_config["out_approach_path"] = os.path.abspath(out_root_folder_path)
 
     

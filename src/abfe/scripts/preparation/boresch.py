@@ -23,7 +23,7 @@ def gen_restraint(topology:PathLike,
     ligand_selection : str, optional
         MDAnalysis selection to define the ligand, by default 'resname LIG and not name H*'
     host_selection : str, optional
-        MDAnalysis selection to define the host (recpetor), by default 'protein and name CA'
+        MDAnalysis selection to define the host (receptor), by default 'protein and name CA'
     outpath : PathLike, optional
         Where the output files will be written out, by default './'
     """

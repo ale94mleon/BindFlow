@@ -16,7 +16,6 @@ calculate_abfe(
     protein_pdb_path='inputs/protein.pdb',
     ligand_mol_paths=ligand_mols,
     out_root_folder_path="abfe",
-    approach_name = 'I_do_not_know',
     cofactor_mol_path = 'inputs/dummy_cofactor_30.mol',
     membrane_pdb_path = None,
     hmr_factor = 2.5,
