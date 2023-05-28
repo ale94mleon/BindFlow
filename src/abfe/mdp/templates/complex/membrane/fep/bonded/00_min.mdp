@@ -1,0 +1,84 @@
+;TITLE: Bromosporine setup - GROMACS 2019 - PME Order 4, Long Range Cutoff
+
+;====================================================
+; Energy minimisation
+;====================================================
+
+;----------------------------------------------------
+; RUN CONTROL & MINIMIZATION
+;----------------------------------------------------
+define                 = -DFLEXIBLE
+integrator             = steep
+nsteps                 = 10000
+emtol                  = 100
+emstep                 = 0.01
+nstcomm                = 100
+pbc                    = xyz
+
+;----------------------------------------------------
+; OUTPUT CONTROL
+;----------------------------------------------------
+nstxout                = 250        ; save coordinates to .trr every 250 steps
+nstvout                = 0          ; don't save velocities to .trr
+nstfout                = 0          ; don't save forces to .trr
+
+nstxout-compressed     = 500        ; xtc compressed trajectory output every 500 steps
+compressed-x-precision = 1000
+nstlog                 = 500        ; update log file every 500 steps
+nstenergy              = 500        ; save energies every 500 steps
+nstcalcenergy          = 100
+
+;----------------------------------------------------
+; NEIGHBOR SEARCHING
+;----------------------------------------------------
+cutoff-scheme          = Verlet
+ns-type                = grid
+nstlist                = 1
+rlist                  = 1.2
+
+;----------------------------------------------------
+; BONDS
+;----------------------------------------------------
+constraints            = none
+
+;----------------------------------------------------
+; ELECTROSTATICS
+;----------------------------------------------------
+coulombtype            = PME
+rcoulomb               = 1.0
+pme-order              = 4
+fourierspacing         = 0.10
+ewald-rtol             = 1e-6
+
+;----------------------------------------------------
+; VDW
+;----------------------------------------------------
+vdwtype                 = Cut-off
+vdw-modifier            = Potential-shift-Verlet
+verlet-buffer-tolerance = 0.005
+rvdw                    = 1.0          ; short-range van der Waals cutoff (in nm)
+DispCorr                = EnerPres     ; apply long range dispersion corrections for Energy and Pressure
+
+;----------------------------------------------------
+; TEMPERATURE & PRESSURE COUPL
+;----------------------------------------------------
+tcoupl              = no
+pcoupl              = no
+gen-vel             = no
+
+; FREE ENERGY
+;----------------------------------------------------
+free-energy              = yes
+couple-moltype           = LIG
+couple-lambda0           = vdw-q
+couple-lambda1           = vdw-q
+sc-alpha                 = 0.5
+sc-power                 = 1
+sc-sigma                 = 0.3
+init-lambda-state        = <state>
+bonded-lambdas           = <lamRange>
+nstdhdl                  = 100
+dhdl-print-energy        = total
+calc-lambda-neighbors    = -1
+separate-dhdl-file       = yes
+couple-intramol          = yes

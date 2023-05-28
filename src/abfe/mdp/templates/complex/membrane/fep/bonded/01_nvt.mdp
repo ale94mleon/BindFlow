@@ -1,0 +1,93 @@
+;TITLE: Bromosporine setup - GROMACS 2019 - PME Order 4, Long Range Cutoff
+
+;====================================================
+; NVT equilibration
+;====================================================
+
+; RUN CONTROL
+;----------------------------------------------------
+define       = -DPOSRES -DPOSRES_FC_BB=1000.0 -DPOSRES_FC_SC=500.0 -DPOSRES_FC_LIPID=400.0 -DPOSRES_LIG=1000.0
+integrator   = sd            ; stochastic leap-frog integrator
+nsteps       = 2500          ; 4 * 2,500 fs = 10 ps
+dt           = 0.004         ; 4 fs
+comm-mode    = Linear        ; remove center of mass translation
+nstcomm      = 50            ; frequency for center of mass motion removal
+
+; OUTPUT CONTROL
+;----------------------------------------------------
+nstxout          = 25000      ; save coordinates to .trr every 100 ps
+nstvout          = 0          ; don't save velocities to .trr
+nstfout          = 0          ; don't save forces to .trr
+
+nstxout-compressed     = 500        ; xtc compressed trajectory output every 2 ps
+compressed-x-precision = 1000       ; precision with which to write to the compressed trajectory file
+nstlog                 = 500        ; update log file every 2 ps
+nstenergy              = 500        ; save energies every 2 ps
+nstcalcenergy          = 50         ; calculate energies every 200 fs
+
+; BONDS
+;----------------------------------------------------
+constraint_algorithm   = lincs    ; holonomic constraints
+constraints            = all-bonds ; all bonds are constrained (HMR)
+lincs-iter             = 1        ; accuracy of LINCS (1 is default)
+lincs-order            = 6        ; also related to accuracy (4 is default)
+lincs-warnangle        = 30       ; maximum angle that a bond can rotate before LINCS will complain (30 is default)
+continuation           = no       ; formerly known as 'unconstrained-start' - useful for exact continuations and reruns
+
+; NEIGHBOR SEARCHING
+;----------------------------------------------------
+cutoff-scheme       = Verlet
+ns-type             = grid   ; search neighboring grid cells
+nstlist             = 10     ; 20 fs (default is 10)
+rlist               = 1.2    ; short-range neighborlist cutoff (in nm)
+pbc                 = xyz    ; 3D PBC
+
+; ELECTROSTATICS & EWALD
+;----------------------------------------------------
+coulombtype      = PME      ; Particle Mesh Ewald for long-range electrostatics
+rcoulomb         = 1.0      ; short-range electrostatic cutoff (in nm)
+ewald_geometry   = 3d       ; Ewald sum is performed in all three dimensions
+pme-order        = 4        ; interpolation order for PME (default is 4)
+fourierspacing   = 0.10     ; grid spacing for FFT
+ewald-rtol       = 1e-6     ; relative strength of the Ewald-shifted direct potential at rcoulomb
+
+; VAN DER WAALS
+;----------------------------------------------------
+vdwtype                 = Cut-off
+vdw-modifier            = Potential-shift-Verlet
+verlet-buffer-tolerance = 0.005
+rvdw                    = 1.0          ; short-range van der Waals cutoff (in nm)
+DispCorr                = EnerPres     ; apply long range dispersion corrections for Energy and Pressure
+
+; TEMPERATURE COUPLING (SD ==> Langevin dynamics)
+;----------------------------------------------------
+tc_grps                 = SOLU MEMB SOLV
+tau_t                   = 2.0 2.0 2.0
+ref_t                   = 298.15 298.15 298.15
+
+; PRESSURE COUPLING
+;----------------------------------------------------
+pcoupl           = no
+
+; VELOCITY GENERATION
+;----------------------------------------------------
+gen-vel      = yes      ; Velocity generation is on (if gen_vel is 'yes', continuation should be 'no')
+gen-seed     = -1       ; Use random seed
+gen-temp     = 298.15
+
+; FREE ENERGY
+;----------------------------------------------------
+free-energy              = yes
+couple-moltype           = LIG
+couple-lambda0           = vdw-q
+couple-lambda1           = vdw-q
+sc-alpha                 = 0.5
+sc-power                 = 1
+sc-sigma                 = 0.3
+init-lambda-state        = <state>
+bonded-lambdas           = <lamRange>
+nstdhdl                  = 100
+dhdl-print-energy        = total
+calc-lambda-neighbors    = -1
+separate-dhdl-file       = yes
+couple-intramol          = yes
