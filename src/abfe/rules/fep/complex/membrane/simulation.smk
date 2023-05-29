@@ -12,9 +12,9 @@ mdrun_extra = config['extra_directives']['mdrun']
 rule fep_complex_min:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
+        ndx=run_path+"/complex/fep/topology/index.ndx",
         mdp=run_path+"/complex/fep/simulation/{state}/00_min/00_min.mdp",
         gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
-        
     params:
         run_dir=run_path+"/complex/fep/simulation/{state}/00_min/",
     output:
@@ -26,6 +26,7 @@ rule fep_complex_min:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
@@ -35,6 +36,7 @@ rule fep_complex_min:
 rule fep_complex_nvt:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
+        ndx=run_path+"/complex/fep/topology/index.ndx",
         mdp=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro"
     params:
@@ -49,6 +51,7 @@ rule fep_complex_nvt:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
@@ -58,6 +61,7 @@ rule fep_complex_nvt:
 rule fep_complex_npt:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
+        ndx=run_path+"/complex/fep/topology/index.ndx",
         mdp=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt"
@@ -73,6 +77,7 @@ rule fep_complex_npt:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
@@ -83,6 +88,7 @@ rule fep_complex_npt:
 rule fep_complex_npt_norest:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
+        ndx=run_path+"/complex/fep/topology/index.ndx",
         mdp=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt"
@@ -98,6 +104,7 @@ rule fep_complex_npt_norest:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
@@ -108,6 +115,7 @@ rule fep_complex_npt_norest:
 rule fep_complex_prod:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
+        ndx=run_path+"/complex/fep/topology/index.ndx",
         mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",
         gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt"
@@ -123,6 +131,7 @@ rule fep_complex_prod:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,

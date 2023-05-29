@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from abfe.home import home
-from abfe.scripts.preparation.gmx_topology import fix_topology, add_water_ions_param
+from abfe.scripts.preparation.gmx_topology import fix_topology, add_water_ions_param, index_for_membrane_system
 from abfe.utils.tools import run, PathLike
 
 from toff import Parameterize
@@ -242,14 +242,14 @@ def make_abfe_dir(out_dir:PathLike, ligand_dir:PathLike, sys_dir:PathLike):
     if (not os.path.exists(complex_out)): os.makedirs(complex_out)
     if (not os.path.exists(ligand_out)): os.makedirs(ligand_out)
 
-    for itp_file in glob.glob(os.path.join(ligand_dir, "*.itp")):
-        shutil.copy(src=itp_file, dst=ligand_out)
+    for itp_ndx_file in glob.glob(os.path.join(ligand_dir, "*.itp")) + glob.glob(os.path.join(ligand_dir, "*.ndx")):
+        shutil.copy(src=itp_ndx_file, dst=ligand_out)
 
     shutil.copyfile(src=os.path.join(ligand_dir, "solvated.gro"), dst=os.path.join(ligand_out, "ligand.gro"))
     shutil.copyfile(src=os.path.join(ligand_dir, "solvated_fix.top"), dst=os.path.join(ligand_out, "ligand.top"))
 
-    for itp_file in glob.glob(os.path.join(sys_dir, "*.itp")):
-        shutil.copy(src=itp_file, dst=complex_out)
+    for itp_ndx_file in glob.glob(os.path.join(sys_dir, "*.itp")) + glob.glob(os.path.join(sys_dir, "*.ndx")):
+        shutil.copy(src=itp_ndx_file, dst=complex_out)
 
     shutil.copyfile(src=os.path.join(sys_dir, "solvated.gro"), dst=os.path.join(complex_out, "complex.gro"))
     # The last one in be copy, this will be used in the snake rule
@@ -330,6 +330,7 @@ class MakeInputs:
             protein_pdb:PathLike = None,
             membrane_pdb:PathLike = None,
             cofactor_mol:PathLike = None,
+            cofactor_on_protein:bool = True,
             hmr_factor:float = None,
             builder_dir:PathLike = 'builder'):
         """This class is used for building the systems for ABFE calculation.
@@ -347,6 +348,10 @@ class MakeInputs:
             Topology will be generated from SLipid2020. by default None
         cofactor_mol : PathLike, optional
             Path of the mol cofactor file. Topology will be generated from OpenFF, by default None
+        cofactor_on_protein : bool
+            It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
+            If True, the cofactor will be part of the protein and the ligand
+            if False will be part of the solvent and ions, bt default True
         hmr_factor : float, optional
             The Hydrogen Mass Factor to use, by default None
         builder_dir : PathLike, optional
@@ -355,6 +360,7 @@ class MakeInputs:
         self.protein_pdb = protein_pdb
         self.membrane_pdb = membrane_pdb
         self.cofactor_mol = cofactor_mol
+        self.cofactor_on_protein = cofactor_on_protein
         self.hmr_factor = hmr_factor
         self.wd = os.path.abspath(builder_dir)
         self.__self_was_called = False
@@ -573,8 +579,29 @@ class MakeInputs:
             bss_solvate(self.sys_ligand, out_dir=ligand_dir)
 
         print("\t* Fixing topologies")
-        fix_topology(input_topology=os.path.join(system_dir,'solvated.top'), out_dir=system_dir)
-        fix_topology(input_topology=os.path.join(ligand_dir,'solvated.top'), out_dir=ligand_dir)
+        # TODO, I am here!! in case of membrane system, create index file and specific restraints files
+        
+        # Set the propers constraints depending on the system
+        if self.membrane_pdb:
+            # TODO: this is the easiest way to implement the position restraints changing the restraints
+            # during different steps. However, we are not using different restraints for different molecules
+            # what might be needed for some systems. That will take some coding in order to identify the molecules
+            f_xyz = 3*['POSRES_DYNAMIC']
+        else:
+            f_xyz = 3*[2500]
+        fix_topology(input_topology=os.path.join(system_dir,'solvated.top'), out_dir=system_dir, f_xyz=f_xyz)
+        # For the ligand, I will keep the original f_xyz
+        fix_topology(input_topology=os.path.join(ligand_dir,'solvated.top'), out_dir=ligand_dir, f_xyz=3*[2500])
+        
+        # Make index file in case of membrane systems
+        if self.membrane_pdb:
+            index_for_membrane_system(
+                configuration_file = os.path.join(system_dir, "solvated.gro"),
+                ndxout = os.path.join(system_dir, "index.ndx"),
+                lignad_name = 'LIG',
+                cofactor_name = 'COF' if self.cofactor_mol else None,
+                cofactor_on_protein=self.cofactor_on_protein,
+            )
         
         # Construct ABFE system:
         print(f"\t* Final build of ABFE directory on: {self.out_dir}")

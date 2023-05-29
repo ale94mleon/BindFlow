@@ -27,7 +27,11 @@ rule fep_ana_get_dg_complex_contributions:
         # Make directory
         tools.makedirs(params.ana_loc)
         # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
-        temperature = float(mdp.MDP().from_file(input.mdp_vdw_0_prod).parameters['ref-t'].split()[0]) 
+        mdp_params = mdp.MDP().from_file(input.mdp_vdw_0_prod).parameters
+        if 'ref-t' in mdp_params:
+            temperature = float(mdp_params['ref-t'].split()[0])
+        elif 'ref_t' in mdp_params:
+            temperature = float(mdp_params['ref_t'].split()[0])
         analysis.get_dG_contributions(
             boresch_data = None,
             out_json_path = output.complex_json,

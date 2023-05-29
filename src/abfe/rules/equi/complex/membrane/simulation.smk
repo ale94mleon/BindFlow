@@ -12,6 +12,7 @@ mdrun_extra = config['extra_directives']['mdrun']
 rule equil_complex_min0:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=input_path+"/complex/complex.gro",
         mdp=run_path+"/complex/equil-mdsim/00_min/00_min.mdp"
     params:
@@ -25,6 +26,7 @@ rule equil_complex_min0:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
@@ -34,6 +36,7 @@ rule equil_complex_min0:
 rule equil_complex_nvt1:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=run_path+"/complex/equil-mdsim/00_min/00_min.gro",
         mdp=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.mdp",
     params:
@@ -48,6 +51,7 @@ rule equil_complex_nvt1:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
@@ -57,6 +61,7 @@ rule equil_complex_nvt1:
 rule equil_complex_npt2:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.gro",
         cpt=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.cpt",
         mdp=run_path+"/complex/equil-mdsim/02_npt/02_npt.mdp",
@@ -72,6 +77,7 @@ rule equil_complex_npt2:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
@@ -82,6 +88,7 @@ rule equil_complex_npt2:
 rule equil_complex_npt3:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=run_path+"/complex/equil-mdsim/02_npt/02_npt.gro",
         cpt=run_path+"/complex/equil-mdsim/02_npt/02_npt.cpt",
         mdp=run_path+"/complex/equil-mdsim/03_npt/03_npt.mdp",
@@ -97,6 +104,7 @@ rule equil_complex_npt3:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
@@ -107,6 +115,7 @@ rule equil_complex_npt3:
 rule equil_complex_npt4:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=run_path+"/complex/equil-mdsim/03_npt/03_npt.gro",
         cpt=run_path+"/complex/equil-mdsim/03_npt/03_npt.cpt",
         mdp=run_path+"/complex/equil-mdsim/04_npt/04_npt.mdp",
@@ -122,6 +131,7 @@ rule equil_complex_npt4:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
@@ -132,6 +142,7 @@ rule equil_complex_npt4:
 rule equil_complex_npt5:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=run_path+"/complex/equil-mdsim/04_npt/04_npt.gro",
         cpt=run_path+"/complex/equil-mdsim/04_npt/04_npt.cpt",
         mdp=run_path+"/complex/equil-mdsim/05_npt/05_npt.mdp",
@@ -147,6 +158,7 @@ rule equil_complex_npt5:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
@@ -156,6 +168,7 @@ rule equil_complex_npt5:
 rule equil_complex_npt6:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=run_path+"/complex/equil-mdsim/05_npt/05_npt.gro",
         cpt=run_path+"/complex/equil-mdsim/05_npt/05_npt.cpt",
         mdp=run_path+"/complex/equil-mdsim/06_npt/06_npt.mdp",
@@ -171,6 +184,7 @@ rule equil_complex_npt6:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
@@ -181,6 +195,7 @@ rule equil_complex_npt6:
 rule equil_complex_prod:
     input:
         top=input_path+"/complex/complex.top",
+        ndx=input_path+"/complex/index.ndx",
         gro=run_path+"/complex/equil-mdsim/06_npt/06_npt.gro",
         cpt=run_path+"/complex/equil-mdsim/06_npt/06_npt.cpt",
         mdp=run_path+"/complex/equil-mdsim/prod/prod.mdp",
@@ -198,6 +213,7 @@ rule equil_complex_prod:
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
+            index = input.ndx,
             checkpoint = input.cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,

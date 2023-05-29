@@ -114,7 +114,7 @@ def gmx_command(load_dependencies:List[str] = None, interactive:bool = False, st
         return wrapper
     return decorator
 
-def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:PathLike = None, nthreads:int = 12, load_dependencies:List[str] = None, run_dir:PathLike = '.', **mdrun_extra):
+def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:PathLike = None, index:PathLike = None, nthreads:int = 12, load_dependencies:List[str] = None, run_dir:PathLike = '.', **mdrun_extra):
     """This function create the tpr file based on the input provided
     And run the simulation.
     Note: During the tpr creation maxwarn = 2 (TODO: remove it in the future)
@@ -141,6 +141,8 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
         The PDB, GRO, etc structure of the system
     checkpoint : PathLike
         Full precision trajectory: trr cpt tng, by default None> if given will be used on grompp with the flag `-t {checkpoint}`
+    index : PathLike
+        A GMX index to be used on grompp, by default None
     nthreads : int, optional
         Number of threads to run, by default 12
     load_dependencies : List[str], optional
@@ -177,10 +179,12 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
     cwd = os.getcwd()
     os.chdir(run_dir)
     
+    grompp_extra = {}
     if checkpoint:
-        grompp_extra = {'t':checkpoint}
-    else:
-        grompp_extra = {}
+        grompp_extra['t'] = checkpoint
+    if index:
+        grompp_extra['n'] = index
+
     # TODO, I do not like to use the maxwarn keyword hardcoded.
     grompp(f = f"{mdp}", c = structure, r = structure, p = topology, o = f"{name}.tpr", maxwarn = 2, **grompp_extra)
     

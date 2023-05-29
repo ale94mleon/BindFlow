@@ -12,14 +12,22 @@ if config["complex_type"] == 'soluble':
     include: 'complex/soluble/ana.smk' 
 
 elif config["complex_type"] == 'membrane':
-    # Rule informing the user that the 'membrane' functionality is not implemented yet
-    rule not_implemented:
-        output:
-            run_path+"/equi_not_implemented.txt"
-        shell:
-            "echo 'FEP simulations for complex_type == membrane is not implemented yet' > {output}"
+    include: 'ligand/setup.smk' 
+    include: 'complex/membrane/setup.smk' 
+    
+    #RUN: FEP 
+    include: 'ligand/simulation.smk' 
+    include: 'complex/membrane/simulation.smk' 
+    
+    #ANA: FEP
+    include: 'ligand/ana.smk' 
+    include: 'complex/membrane/ana.smk' 
 else:
-    raise ValueError("complex_type must be 'soluble' or 'membrane'")
+    rule fep_not_implemented:
+        output:
+            run_path+"/fep_not_implemented.txt"
+        shell:
+            "echo 'fep simulations, you must give complex_type = soluble or membrane' > {output}"
 
 # Continue with common rules
 

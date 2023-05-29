@@ -1,8 +1,9 @@
 #!/user/bin python
 import os
-from typing import Union, Iterable
-PathLike = Union[os.PathLike, str, bytes]
-from dataclasses import dataclass
+import tempfile
+from abfe.utils import tools
+from abfe.utils.tools import PathLike
+from typing import Iterable
 
 def get_molecule_names(input_topology:PathLike, section:str = 'molecules') -> list:
     """It gets the molecule names specified inside input_topology
@@ -54,7 +55,7 @@ def add_posres_section(input_topology:PathLike, molecules:Iterable[str], out_fil
     input_topology : PathLike
         The path of the input topology
     molecules : Iterable[str]
-        The list of name of the molecules for which the topology section will be add
+        The list of name of the molecules for which the topology section will be added
     out_file : PathLike, optional
         The path to output the modified topology file, by default "topol2.top"
     """
@@ -83,10 +84,9 @@ def add_posres_section(input_topology:PathLike, molecules:Iterable[str], out_fil
         for line in out_line:
             w.write(line)
 
-def make_posres_files(input_topology:PathLike, molecules:Iterable[str], out_dir:PathLike):
+def make_posres_files(input_topology:PathLike, molecules:Iterable[str], out_dir:PathLike, f_xyz:tuple = (2500, 2500, 2500)):
     """Make a position restraint file out of input_topology for all the molecules specified
-    on molecules. The force constant used will be: fx = 2500; fy = 2500; fz = 2500
-    for all atoms (included hydrogens, TODO: Check if this is what is expected, or only on heavy atoms)
+    on molecules. Taking only the heavy atoms into account
 
     Parameters
     ----------
@@ -96,6 +96,9 @@ def make_posres_files(input_topology:PathLike, molecules:Iterable[str], out_dir:
         The list of name of the molecules for which the posres file will be created
     out_dir : PathLike
         The path where the posres files will be written
+    f_xyz : tuple
+        The x, y, z components of the restraint force to be used. It could 
+        be a float number of a string to be then defined on the mdp file, by default (2500, 2500, 2500)
     """
     for molecule in molecules:
         atom_flag = False
@@ -121,8 +124,9 @@ def make_posres_files(input_topology:PathLike, molecules:Iterable[str], out_dir:
                             break
                         if atom_flag and not bonds_flag:
                             if not "[" in top_lines[j] and not top_lines[j].startswith("\n") and not top_lines[j].startswith(";"):
+                                # Check if heavy atom based on the mass. In case of use of HMR, for that reason 3
                                 if float(top_lines[j].split()[7]) > 3:
-                                    posres_str = f"{top_lines[j].split()[0]} 1 2500 2500 2500\n"
+                                    posres_str = f"{top_lines[j].split()[0]} 1 {f_xyz[0]} {f_xyz[1]} {f_xyz[2]}\n"
                                     posres_file.write(posres_str)
 
 def make_ion_moleculetype_section(ion_name:str) -> str:
@@ -306,7 +310,10 @@ def add_water_ions_param(input_topology:PathLike, output_topology:PathLike):
         for line in new_lines:
             out.write(line)
 
-def fix_topology(input_topology: PathLike, out_dir: PathLike, exclusion_list:list = ["SOL", "NA", "CL", "MG", "ZN"]):
+def fix_topology(input_topology: PathLike,
+                 out_dir: PathLike,
+                 exclusion_list:list = ["SOL", "NA", "CL", "MG", "ZN"],
+                 f_xyz:tuple = (2500, 2500, 2500)):
     """It will go through input_topology, create the posres files for the identified molecules
     not in exclusion list, and finally add the corresponded include statements in the topology file.
     on out_topology_path you will have
@@ -329,30 +336,79 @@ def fix_topology(input_topology: PathLike, out_dir: PathLike, exclusion_list:lis
         Where the fixed and generated itp posres files will be written
     exclusion_list : list, optional
         Molecules names to do not take into account during the posres file generation, by default ["SOL", "NA", "CL", "MG", "ZN"]
+    f_xyz : tuple
+        The x, y, z components of the restraint force to be used. It could 
+        be a float number of a string to be then defined on the mdp file, by default (2500, 2500, 2500)
     """
     name, ext = os.path.splitext(os.path.basename(input_topology))
     out_topology = os.path.join(out_dir, f"{name}_fix{ext}")
     molecules = list(set(get_molecule_names(input_topology)) - set(exclusion_list))
-    make_posres_files(input_topology, out_dir = out_dir, molecules = molecules)
+    make_posres_files(input_topology, out_dir = out_dir, molecules = molecules, f_xyz = f_xyz)
     add_posres_section(input_topology, molecules, out_file=out_topology)
     # In case that everything is fine, add_ions_moleculetype will not modify the topology
     add_ions_moleculetype(out_topology, out_topology)
 
+def index_for_membrane_system(
+        configuration_file:PathLike,
+        ndxout:PathLike = "index.ndx",
+        lignad_name:str = 'LIG',
+        cofactor_name:str = None,
+        cofactor_on_protein:bool = True):
+    """Make the index file for membrane systems with SOLU, MEMB and SOLV. It uses gmx make_ndx and select internally.
+    One examples selection that can be created with ligand_name = LIG; cofactor_name = COF and cofactor_on_protein = True is:
+        #. "SOLU" group Protein or resname LIG or resname COF;
+        #. "MEMB" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname LIG) and ! (resname COF);
+        #. "SOLV" group Water_and_ions;
+
+
+    Parameters
+    ----------
+    configuration_file : PathLike
+        PDb or GRO file of the system.
+    ndxout : PathLike
+        Path to output the index file.
+    lignad_name : str
+        The residue name for the ligand in the configuration file, bt default LIG.
+    cofactor_name : str
+        The residue name for the cofactor in the configuration file, bt default None
+    cofactor_on_protein : bool
+        It only works if cofactor_name is provided. If True, the cofactor will be part of the protein and the lignad
+        if False will be part of the solvent and ions, bt default True
+    """
+    tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
+    tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
+    # Nice use of gmx select, see the use of the parenthesis
+    sele_MEMB = f"\"MEMB\" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname {lignad_name})"
+    sele_SOLU = f"\"SOLU\" group Protein or resname {lignad_name}"
+    sele_SOLV = f"\"SOLV\" group Water_and_ions"
+    if cofactor_name:
+        sele_MEMB += f" and ! (resname {cofactor_name})"
+        if cofactor_on_protein:
+            sele_SOLU += f" or resname {cofactor_name}"
+        else:
+            sele_SOLV += f" or resname {cofactor_name}"          
+
+    sele_SOLU += ";\n"
+    sele_MEMB += ";\n"
+    sele_SOLV += ";\n"
+    print(sele_SOLU + sele_MEMB + sele_SOLV)
+    with open(tmpopt.name, "w") as opt:
+        opt.write(sele_SOLU + sele_MEMB + sele_SOLV)
+    tools.run(f"""
+                export GMX_MAXBACKUP=-1
+                echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
+                gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
+                """)
+
+    #deleting the line _f0_t0.000 in the file
+    with open(ndxout, "r") as index:
+        data = index.read()
+        data = data.replace("_f0_t0.000","")
+    with open(ndxout, "w") as index:
+        index.write(data)
+
+    tmpopt.close()
+    tmpndx.close()
+
 
 if __name__ == "__main__":...
-    # input_topology = '/home/users/alejandro/GIT/ABFE_workflow/examples/prepearing_system/abfe/abc/input/complex/complex.top'
-    
-    # add_ions_moleculetype(input_topology, 'top.top')
-
-
-    # # input_topology_path = sys.argv[1]
-    # # out_topology_path = sys.argv[2]
-    # exclusion_list = ["SOL", "NA", "CL", "MG", "ZN"]
-    # fix_topology(
-    #     input_topology = '/home/users/alejandro/GIT/ABFE_workflow/examples/prepearing_system/abfe/abc/input/complex/complex.top',
-    #     out_dir='test',
-    #     exclusion_list=exclusion_list,
-
-    # )
-
-    # # fix_topology(input_topology_path=input_topology_path, out_topology_path=out_topology_path, exclusion_list=exclusion_list)

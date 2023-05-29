@@ -10,6 +10,7 @@ def calculate_abfe(
         ligand_mol_paths: List[str],
         out_root_folder_path: str,
         cofactor_mol_path: str = None,
+        cofactor_on_protein:bool = True,
         membrane_pdb_path: str = None,
         hmr_factor: float = 3.0,
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
@@ -25,8 +26,8 @@ def calculate_abfe(
     check_config = config_validator(global_config=global_config)
     if not check_config[0]:
         raise ValueError(check_config[1])
-    if hmr_factor < 2:
-        raise ValueError(f'hmr_factor must be equal or higher than 2 (provided {hmr_factor}) to avoid instability during MD simulations. ABFE_workflow uses dt = 4 fs')
+    if hmr_factor < 2 or hmr_factor > 3:
+        raise ValueError(f'hmr_factor must be in the range of [2; 3] (provided {hmr_factor}) to avoid instability during MD simulations. The workflow uses dt = 4 fs by default')
     # IO:
     # Initialize inputs on config
     global_config["inputs"] = {}
@@ -40,6 +41,7 @@ def calculate_abfe(
         global_config["inputs"]["cofactor_mol_path"] = os.path.abspath(cofactor_mol_path)
     else:
         global_config["inputs"]["cofactor_mol_path"] = None
+    global_config["cofactor_on_protein"] = cofactor_on_protein
     if membrane_pdb_path:
         global_config["inputs"]["membrane_pdb_path"] = os.path.abspath(membrane_pdb_path)
     else:
@@ -51,7 +53,7 @@ def calculate_abfe(
     global_config["out_approach_path"] = out_root_folder_path
 
     # This will only be needed for developing propose.
-    os.environ['abfe_debug'] = debug
+    os.environ['abfe_debug'] = str(debug)
 
     ## Generate output folders
     for dir_path in [global_config["out_approach_path"]]:

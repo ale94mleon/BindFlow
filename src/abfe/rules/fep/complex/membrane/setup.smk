@@ -25,6 +25,7 @@ rule fep_setup_complex:
         mdp_coul=expand(run_path+"/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.membrane.fep+"/coul", ext='mdp')]),
         mdp_bonded=expand(run_path+"/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[os.path.splitext(step)[0] for step in list_if_file(TemplatePath.complex.membrane.fep+"/bonded", ext='mdp')]),
         fep_top=run_path+"/complex/fep/topology/complex_boresch.top",
+        ndx=run_path+"/complex/fep/topology/index.ndx",
     run:
 
         # TODO In case of user defined MDP keywords, take those from the config

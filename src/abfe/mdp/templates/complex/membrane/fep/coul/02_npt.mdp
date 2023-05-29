@@ -6,7 +6,7 @@
 
 ; RUN CONTROL
 ;----------------------------------------------------
-define       = -DPOSRES -DPOSRES_FC_BB=500.0 -DPOSRES_FC_SC=250.0 -DPOSRES_FC_LIPID=200.0 -DPOSRES_LIG=500.0
+define       =  -DPOSRES -DPOSRES_DYNAMIC=2500;-DPOSRES -DPOSRES_FC_BB=500.0 -DPOSRES_FC_SC=250.0 -DPOSRES_FC_LIPID=200.0 -DPOSRES_LIG=500.0
 integrator   = sd            ; stochastic leap-frog integrator
 nsteps       = 25000         ; 4 * 25,000 fs = 100 ps
 dt           = 0.004         ; 4 fs

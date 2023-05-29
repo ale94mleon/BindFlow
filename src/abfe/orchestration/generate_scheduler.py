@@ -132,7 +132,7 @@ class SlurmScheduler(Scheduler):
         """
         # TODO, For DEBUG Only
         if 'abfe_debug' in os.environ:
-            if os.environ['abfe_debug']:
+            if bool(os.environ['abfe_debug']):
                 verbose = True
                 debug_dag = True
                 keep_going = False

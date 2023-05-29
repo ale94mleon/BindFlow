@@ -1,4 +1,4 @@
-define                  = -DPOSRES -DPOSRES_FC_BB=200.0 -DPOSRES_FC_SC=50.0 -DPOSRES_FC_LIPID=40.0 -DPOSRES_LIG=200.0
+define                  = -DPOSRES -DPOSRES_DYNAMIC=200; -DPOSRES -DPOSRES_FC_BB=200.0 -DPOSRES_FC_SC=50.0 -DPOSRES_FC_LIPID=40.0 -DPOSRES_LIG=200.0
 integrator              = md
 dt                      = 0.002
 nsteps                  = 250000

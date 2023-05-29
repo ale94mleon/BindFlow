@@ -199,6 +199,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     approach_config = {
         "out_approach_path": global_config["out_approach_path"],
         "inputs": global_config["inputs"],
+        "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],
         'threads': global_config["threads"],
