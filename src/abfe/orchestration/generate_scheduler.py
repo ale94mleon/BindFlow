@@ -132,11 +132,10 @@ class SlurmScheduler(Scheduler):
         """
         # TODO, For DEBUG Only
         if 'abfe_debug' in os.environ:
-            if bool(os.environ['abfe_debug']):
+            if os.environ['abfe_debug'] == 'True':
                 verbose = True
                 debug_dag = True
                 keep_going = False
-
         command = f"snakemake --jobs {jobs} --latency-wait {latency_wait} --cluster-cancel {self.cancel_command} "
         if verbose: command += "--verbose "
         if debug_dag: command += "--debug-dag "

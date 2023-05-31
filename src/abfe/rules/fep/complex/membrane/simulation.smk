@@ -9,7 +9,7 @@ load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
 
-rule fep_complex_min:
+rule fep_complex_00_min:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
@@ -33,7 +33,7 @@ rule fep_complex_min:
             **mdrun_extra['complex']
         )
 
-rule fep_complex_nvt:
+rule fep_complex_01_nvt:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
@@ -58,7 +58,7 @@ rule fep_complex_nvt:
             **mdrun_extra['complex']
         )
 
-rule fep_complex_npt:
+rule fep_complex_02_npt:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
@@ -85,7 +85,7 @@ rule fep_complex_npt:
             **mdrun_extra['complex']
         )
 
-rule fep_complex_npt_norest:
+rule fep_complex_03_npt_norest:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",

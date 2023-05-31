@@ -9,15 +9,15 @@ num_retries = config['num_retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
-rule equil_complex_emin:
+rule equil_complex_00_min:
     input:
         top=input_path+"/complex/complex.top",
         gro=input_path+"/complex/complex.gro",
-        mdp=run_path+"/complex/equil-mdsim/emin/emin.mdp"
+        mdp=run_path+"/complex/equil-mdsim/00_min/00_min.mdp"
     params:
-        run_dir=run_path+"/complex/equil-mdsim/emin"
+        run_dir=run_path+"/complex/equil-mdsim/00_min"
     output:
-        gro=run_path+"/complex/equil-mdsim/emin/emin.gro"
+        gro=run_path+"/complex/equil-mdsim/00_min/00_min.gro"
     threads: threads
     retries: num_retries
     run:
@@ -31,16 +31,16 @@ rule equil_complex_emin:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_nvt_heat:
+rule equil_complex_01_nvt:
     input:
         top=input_path+"/complex/complex.top",
-        gro=run_path+"/complex/equil-mdsim/emin/emin.gro",
-        mdp=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.mdp",
+        gro=run_path+"/complex/equil-mdsim/00_min/00_min.gro",
+        mdp=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.mdp",
     params:
-        run_dir=run_path+"/complex/equil-mdsim/nvt_heat"
+        run_dir=run_path+"/complex/equil-mdsim/01_nvt"
     output:
-        gro=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.gro",
-        cpt=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.cpt"
+        gro=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.gro",
+        cpt=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -54,42 +54,17 @@ rule equil_complex_nvt_heat:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_npt_eq1:
+rule equil_complex_02_npt:
     input:
         top=input_path+"/complex/complex.top",
-        gro=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.gro",
-        cpt=run_path+"/complex/equil-mdsim/nvt_heat/nvt_heat.cpt",
-        mdp=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.mdp",
+        gro=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.gro",
+        cpt=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.cpt",
+        mdp=run_path+"/complex/equil-mdsim/02_npt/02_npt.mdp",
     params:
-        run_dir=run_path+"/complex/equil-mdsim/npt_equil1"
+        run_dir=run_path+"/complex/equil-mdsim/02_npt"
     output:
-        gro=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.gro",
-        cpt=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.cpt"
-    threads: threads
-    retries: num_retries
-    run:
-        gmx_runner(
-            mdp = input.mdp,
-            topology = input.top,
-            structure = input.gro,
-            checkpoint = input.cpt,
-            nthreads = threads,
-            load_dependencies = load_dependencies,
-            run_dir = params.run_dir,
-            **mdrun_extra['complex']
-        )
-
-rule equil_complex_npt_eq2:
-    input:
-        top=input_path+"/complex/complex.top",
-        gro=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.gro",
-        cpt=run_path+"/complex/equil-mdsim/npt_equil1/npt_equil1.cpt",
-        mdp=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.mdp",
-    params:
-        run_dir=run_path+"/complex/equil-mdsim/npt_equil2"
-    output:
-        gro=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.gro",
-        cpt=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.cpt"
+        gro=run_path+"/complex/equil-mdsim/02_npt/02_npt.gro",
+        cpt=run_path+"/complex/equil-mdsim/02_npt/02_npt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -104,19 +79,44 @@ rule equil_complex_npt_eq2:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_npt_prod:
+rule equil_complex_03_npt:
     input:
         top=input_path+"/complex/complex.top",
-        gro=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.gro",
-        cpt=run_path+"/complex/equil-mdsim/npt_equil2/npt_equil2.cpt",
-        mdp=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.mdp",
+        gro=run_path+"/complex/equil-mdsim/02_npt/02_npt.gro",
+        cpt=run_path+"/complex/equil-mdsim/02_npt/02_npt.cpt",
+        mdp=run_path+"/complex/equil-mdsim/03_npt/03_npt.mdp",
     params:
-        run_dir=run_path+"/complex/equil-mdsim/npt_prod",
+        run_dir=run_path+"/complex/equil-mdsim/03_npt"
     output:
-        gro=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.gro",
-        cpt=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.cpt",
-        tpr=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.tpr",
-        xtc=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.xtc",
+        gro=run_path+"/complex/equil-mdsim/03_npt/03_npt.gro",
+        cpt=run_path+"/complex/equil-mdsim/03_npt/03_npt.cpt"
+    threads: threads
+    retries: num_retries
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = threads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            **mdrun_extra['complex']
+        )
+
+rule equil_complex_prod:
+    input:
+        top=input_path+"/complex/complex.top",
+        gro=run_path+"/complex/equil-mdsim/03_npt/03_npt.gro",
+        cpt=run_path+"/complex/equil-mdsim/03_npt/03_npt.cpt",
+        mdp=run_path+"/complex/equil-mdsim/prod/prod.mdp",
+    params:
+        run_dir=run_path+"/complex/equil-mdsim/prod",
+    output:
+        gro=run_path+"/complex/equil-mdsim/prod/prod.gro",
+        cpt=run_path+"/complex/equil-mdsim/prod/prod.cpt",
+        tpr=run_path+"/complex/equil-mdsim/prod/prod.tpr",
+        xtc=run_path+"/complex/equil-mdsim/prod/prod.xtc",
     threads: threads
     retries: num_retries
     run:
@@ -133,12 +133,12 @@ rule equil_complex_npt_prod:
 
 rule equil_run_complex_trjconv:
     input:
-        tpr=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.tpr",
-        xtc=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.xtc"
+        tpr=run_path+"/complex/equil-mdsim/prod/prod.tpr",
+        xtc=run_path+"/complex/equil-mdsim/prod/prod.xtc"
     params:
         run_dir=run_path+"/complex/equil-mdsim/boreschcalc/"
     output:
-        xtc=run_path+"/complex/equil-mdsim/boreschcalc/npt_prod_center.xtc"
+        xtc=run_path+"/complex/equil-mdsim/boreschcalc/prod_center.xtc"
     shell:
         '''
             mkdir -p {params.run_dir}
@@ -154,8 +154,8 @@ rule equil_run_complex_trjconv:
 
 rule equil_run_complex_get_boresch_restraints:
     input:
-        tpr=run_path+"/complex/equil-mdsim/npt_prod/npt_prod.tpr",
-        xtc=run_path+"/complex/equil-mdsim/boreschcalc/npt_prod_center.xtc"
+        tpr=run_path+"/complex/equil-mdsim/prod/prod.tpr",
+        xtc=run_path+"/complex/equil-mdsim/boreschcalc/prod_center.xtc"
     params:
         run_dir=run_path+"/complex/equil-mdsim/boreschcalc/",
     output:

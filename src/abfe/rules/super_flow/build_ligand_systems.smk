@@ -14,6 +14,9 @@ cofactor_on_protein = config["cofactor_on_protein"]
 hmr_factor = float(config['hmr_factor'])
 
 # TODO, build a sanakemake-base parallelizable rule
+
+# It is still not working as expected, if you add new ligands
+# it starts the jobs of the already got it results.
 rule make_ligand_system_dirs:
     input:
         input_ligand_mol_paths=input_ligand_mol_paths
@@ -36,6 +39,10 @@ rule build_ligand_systems:
         out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
     threads: config["threads"]
     run:
+
+        out_ligand_path = os.path.join(out_approach_path, wildcards.ligand_name)
+        out_ligand_input_path = os.path.join(out_ligand_path, 'input')
+
         # Initialize the files builder
         builder = sb.MakeInputs(
             protein_pdb=input_protein_pdb_path,
@@ -43,10 +50,8 @@ rule build_ligand_systems:
             cofactor_mol=input_cofactor_mol_path,
             cofactor_on_protein=cofactor_on_protein,
             hmr_factor = hmr_factor,
+            builder_dir = os.path.join(out_ligand_path, "builder")
         )
-
-        out_ligand_path = os.path.join(out_approach_path, wildcards.ligand_name)
-        out_ligand_input_path = os.path.join(out_ligand_path, 'input')
 
         # Create topologies and input files
         new_input_ligand_mol_path = glob.glob(input.mol_dir+"/*")[0]

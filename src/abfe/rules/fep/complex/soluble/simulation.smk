@@ -9,16 +9,16 @@ load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
 
-rule fep_complex_emin:
+rule fep_complex_00_min:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/emin/emin.mdp",
+        mdp=run_path+"/complex/fep/simulation/{state}/00_min/00_min.mdp",
         gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
         
     params:
-        run_dir=run_path+"/complex/fep/simulation/{state}/emin/",
+        run_dir=run_path+"/complex/fep/simulation/{state}/00_min/",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/emin/emin.gro",
+        gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro",
     threads: threads
     retries: num_retries
     run:
@@ -32,16 +32,16 @@ rule fep_complex_emin:
             **mdrun_extra['complex']
         )
 
-rule fep_complex_nvt:
+rule fep_complex_01_nvt:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/nvt/nvt.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/emin/emin.gro"
+        mdp=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.mdp",
+        gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro"
     params:
-        run_dir=run_path+"/complex/fep/simulation/{state}/nvt",
+        run_dir=run_path+"/complex/fep/simulation/{state}/01_nvt",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/nvt/nvt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/nvt/nvt.cpt"
+        gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -55,17 +55,17 @@ rule fep_complex_nvt:
             **mdrun_extra['complex']
         )
 
-rule fep_complex_npt:
+rule fep_complex_02_npt:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/npt/npt.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/nvt/nvt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/nvt/nvt.cpt"
+        mdp=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.mdp",
+        gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt"
     params:
-        run_dir=run_path+"/complex/fep/simulation/{state}/npt",
+        run_dir=run_path+"/complex/fep/simulation/{state}/02_npt",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/npt/npt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt/npt.cpt"
+        gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -80,17 +80,17 @@ rule fep_complex_npt:
             **mdrun_extra['complex']
         )
 
-rule fep_complex_npt_norest:
+rule fep_complex_03_npt_norest:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
-        mdp=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/npt/npt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt/npt.cpt"
+        mdp=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.mdp",
+        gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt"
     params:
-        run_dir=run_path+"/complex/fep/simulation/{state}/npt_norest",
+        run_dir=run_path+"/complex/fep/simulation/{state}/03_npt_norest",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.cpt"
+        gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -109,8 +109,8 @@ rule fep_complex_prod:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/npt_norest/npt_norest.cpt"
+        gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt"
     params:
         run_dir=run_path+"/complex/fep/simulation/{state}/prod",
     output:

@@ -8,15 +8,15 @@ num_retries = config['num_retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
-rule equil_ligand_emin:
+rule equil_ligand_00_min:
     input:
         top=input_path+"/ligand/ligand.top",
         gro=input_path+"/ligand/ligand.gro",
-        mdp=run_path+"/ligand/equil-mdsim/emin/emin.mdp"
+        mdp=run_path+"/ligand/equil-mdsim/00_min/00_min.mdp"
     params:
-        run_dir=run_path+"/ligand/equil-mdsim/emin"
+        run_dir=run_path+"/ligand/equil-mdsim/00_min"
     output:
-        gro=run_path+"/ligand/equil-mdsim/emin/emin.gro"
+        gro=run_path+"/ligand/equil-mdsim/00_min/00_min.gro"
     threads: threads
     retries: num_retries
     run:
@@ -30,16 +30,16 @@ rule equil_ligand_emin:
             **mdrun_extra['ligand']
         )
 
-rule equil_ligand_nvt_heat:
+rule equil_ligand_01_nvt:
     input:
         top=input_path+"/ligand/ligand.top",
-        gro=run_path+"/ligand/equil-mdsim/emin/emin.gro",
-        mdp=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.mdp",
+        gro=run_path+"/ligand/equil-mdsim/00_min/00_min.gro",
+        mdp=run_path+"/ligand/equil-mdsim/01_nvt/01_nvt.mdp",
     params:
-        run_dir=run_path+"/ligand/equil-mdsim/nvt_heat"
+        run_dir=run_path+"/ligand/equil-mdsim/01_nvt"
     output:
-        gro=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.gro",
-        cpt=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.cpt"
+        gro=run_path+"/ligand/equil-mdsim/01_nvt/01_nvt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/01_nvt/01_nvt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -53,17 +53,17 @@ rule equil_ligand_nvt_heat:
             **mdrun_extra['ligand']
         )
 
-rule equil_ligand_npt_eq1:
+rule equil_ligand_02_npt:
     input:
         top=input_path+"/ligand/ligand.top",
-        gro=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.gro",
-        cpt=run_path+"/ligand/equil-mdsim/nvt_heat/nvt_heat.cpt",
-        mdp=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.mdp",
+        gro=run_path+"/ligand/equil-mdsim/01_nvt/01_nvt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/01_nvt/01_nvt.cpt",
+        mdp=run_path+"/ligand/equil-mdsim/02_npt/02_npt.mdp",
     params:
-        run_dir=run_path+"/ligand/equil-mdsim/npt_equil1"
+        run_dir=run_path+"/ligand/equil-mdsim/02_npt"
     output:
-        gro=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.gro",
-        cpt=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.cpt"
+        gro=run_path+"/ligand/equil-mdsim/02_npt/02_npt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/02_npt/02_npt.cpt"
     threads: threads
     retries: num_retries
     run:
@@ -78,17 +78,17 @@ rule equil_ligand_npt_eq1:
             **mdrun_extra['ligand']
         )
 
-rule equil_ligand_npt_eq2:
+rule equil_ligand_03_npt:
     input:
         top=input_path+"/ligand/ligand.top",
-        gro=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.gro",
-        cpt=run_path+"/ligand/equil-mdsim/npt_equil1/npt_equil1.cpt",
-        mdp=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.mdp",
+        gro=run_path+"/ligand/equil-mdsim/02_npt/02_npt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/02_npt/02_npt.cpt",
+        mdp=run_path+"/ligand/equil-mdsim/03_npt/03_npt.mdp",
     params:
-        run_dir=run_path+"/ligand/equil-mdsim/npt_equil2"
+        run_dir=run_path+"/ligand/equil-mdsim/03_npt"
     output:
-        gro=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.gro",
-        cpt=run_path+"/ligand/equil-mdsim/npt_equil2/npt_equil2.cpt",
+        gro=run_path+"/ligand/equil-mdsim/03_npt/03_npt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/03_npt/03_npt.cpt",
     threads: threads
     retries: num_retries
     run:

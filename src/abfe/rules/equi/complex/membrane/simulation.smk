@@ -9,7 +9,7 @@ num_retries = config['num_retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
-rule equil_complex_min0:
+rule equil_complex_00_min:
     input:
         top=input_path+"/complex/complex.top",
         ndx=input_path+"/complex/index.ndx",
@@ -33,7 +33,7 @@ rule equil_complex_min0:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_nvt1:
+rule equil_complex_01_nvt:
     input:
         top=input_path+"/complex/complex.top",
         ndx=input_path+"/complex/index.ndx",
@@ -58,7 +58,7 @@ rule equil_complex_nvt1:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_npt2:
+rule equil_complex_02_npt:
     input:
         top=input_path+"/complex/complex.top",
         ndx=input_path+"/complex/index.ndx",
@@ -85,7 +85,7 @@ rule equil_complex_npt2:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_npt3:
+rule equil_complex_03_npt:
     input:
         top=input_path+"/complex/complex.top",
         ndx=input_path+"/complex/index.ndx",
@@ -112,7 +112,7 @@ rule equil_complex_npt3:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_npt4:
+rule equil_complex_04_npt:
     input:
         top=input_path+"/complex/complex.top",
         ndx=input_path+"/complex/index.ndx",
@@ -139,7 +139,7 @@ rule equil_complex_npt4:
             **mdrun_extra['complex']
         )
 
-rule equil_complex_npt5:
+rule equil_complex_05_npt:
     input:
         top=input_path+"/complex/complex.top",
         ndx=input_path+"/complex/index.ndx",
@@ -165,7 +165,7 @@ rule equil_complex_npt5:
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
-rule equil_complex_npt6:
+rule equil_complex_06_npt:
     input:
         top=input_path+"/complex/complex.top",
         ndx=input_path+"/complex/index.ndx",
