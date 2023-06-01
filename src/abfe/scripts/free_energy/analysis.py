@@ -12,10 +12,12 @@ from alchemlyb import concat
 from alchemlyb.estimators import TI, MBAR
 from alchemlyb.parsing.gmx import extract_dHdl, extract_u_nk
 from alchemlyb.preprocessing import statistical_inefficiency, slicing
+from alchemlyb.visualisation import plot_convergence
+from alchemlyb.convergence import forward_backward_convergence
 from alchemlyb.postprocessors import units
 from abfe.utils.tools import PathLike
 
-def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples: int = 500, temperature: float = 298.15):
+def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples: int = 500, temperature: float = 298.15, convergency_plots_prefix:str = None):
     """
     Function to get MBAR and TI estimates using alchemlyb from an input set of
     xvgs
@@ -41,6 +43,8 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
         instead [500]
     temperature : float
         simulation temperature [298.15]
+    convergency_plots_prefix : str
+        If gives, it will plot the convergency to {convergency_plots_prefix}convergence_TI.pdf and {convergency_plots_prefix}convergence_MBAR.pdf, by default None
 
     Returns
     -------
@@ -93,12 +97,18 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
 
     print(f"number of samples per window: {[int(len(df) / sub_step) for sub_step in sub_steps]}")
 
-    dhdls = concat([slicing(extract_dHdl(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)])
-    u_nks = concat([slicing(extract_u_nk(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)])
+    dhdls_data = [slicing(extract_dHdl(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)]
+    u_nks_data = [slicing(extract_u_nk(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)]
+    if convergency_plots_prefix:
+        ax = plot_convergence(forward_backward_convergence(dhdls_data, 'TI'))
+        ax.figure.savefig(f'{convergency_plots_prefix}convergence_TI.pdf')
+        
+        ax = plot_convergence(forward_backward_convergence(u_nks_data, 'TI'))
+        ax.figure.savefig(f'{convergency_plots_prefix}convergence_MBAR.pdf') 
 
     # Get estimations
-    mbar = MBAR(maximum_iterations=1000000).fit(u_nks)
-    ti = TI().fit(dhdls)
+    mbar = MBAR(maximum_iterations=1000000).fit(concat(u_nks_data))
+    ti = TI().fit(concat(dhdls_data))
 
     # TODO And print some images that show some convergence related factors
     # Convert values and errors to kcal/mol, and access the free energy difference between the states at lambda 0.0 and 1.0
@@ -122,9 +132,10 @@ def get_dG_contributions(
         upper: int = None,
         min_samples: int = 500,
         temperature: float = 298.15,
+        convergency_plots_prefix:str = None,
         **kwargs):
-    """It calculate and gather the vdw, could and bonded (in case of a complex) dG' contributions.
-    It also adds the analytical correction due to the ligand restriants.
+    """It calculate and gather the vdw, coul and bonded (in case of a complex) dG' contributions.
+    It also adds the analytical correction due to the ligand restraints.
 
     Parameters
     ----------
@@ -142,6 +153,8 @@ def get_dG_contributions(
         Minimum number of samples to use, by default 500
     temperature : float, optional
         Temperature of the simulation, by default 298.15
+    convergency_plots_prefix : str
+        If gives, it will plot the convergency to {convergency_plots_prefix}{<kwargs_name>}_convergence_TI.pdf and {convergency_plots_prefix}{<kwargs_name>}_convergence_MBAR.pdf, by default None
     **kwargs : optional
         Only vdw = <List[PathLike]>, coul = <List[PathLike]> and bonded = <List[PathLike]> are valid extra keywords.
         Those are the path to the xvg files of the corresponded lambda type.
@@ -170,8 +183,9 @@ def get_dG_contributions(
             # Check that all xvg files exist
             if not os.path.isfile(xvg_file):
                 raise FileNotFoundError(f"Provided xvg file: {xvg_file} for lambda_type = {lambda_type} ")
-
-        dG = run_alchemlyb(xvgs = kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples, temperature=temperature)
+        if convergency_plots_prefix:
+            convergency_plots_prefix = f"{convergency_plots_prefix}{lambda_type}_"
+        dG = run_alchemlyb(xvgs = kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples, temperature=temperature, convergency_plots_prefix=convergency_plots_prefix)
         
         ddG_estimator = abs(dG['MBAR']['value'] - dG['TI']['value'])
         if ddG_estimator > 0.5:

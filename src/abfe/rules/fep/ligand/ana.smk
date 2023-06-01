@@ -40,6 +40,7 @@ rule fep_ana_get_dg_ligand_contributions:
             upper = None,
             min_samples = 500,
             temperature = temperature,
+            convergency_plots_prefix = params.ana_loc + "/ligand",
             # Sort the paths
             vdw = sorted(input.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
             coul = sorted(input.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),

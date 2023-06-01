@@ -3,6 +3,13 @@ import os
 from typing import List
 from abfe.utils.tools import config_validator
 
+# TODO: Ligand and RuleThemAll is using CPUs  and they are only waiting
+# THink in a way to connect RuleThemAll to Ligand to avoid the use of its CPUs on
+# each Ligand simulation
+# Think also about in reduce disk space of the simulation
+# Maybe at the end of the simulation one command that tar the files
+# Do not export so many frames in the xtc file, their are not needed for the analysis.
+# For sure not during equilibration phase, keep a realitive small number of frames
 from abfe.orchestration.flow_builder import ligand_flows, approach_flow
 from abfe.scripts.free_energy import gather_results
 def calculate_abfe(
