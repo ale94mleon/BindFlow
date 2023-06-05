@@ -99,12 +99,6 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
 
     dhdls_data = [slicing(extract_dHdl(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)]
     u_nks_data = [slicing(extract_u_nk(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)]
-    if convergency_plots_prefix:
-        ax = plot_convergence(forward_backward_convergence(dhdls_data, 'TI'))
-        ax.figure.savefig(f'{convergency_plots_prefix}convergence_TI.pdf')
-        
-        ax = plot_convergence(forward_backward_convergence(u_nks_data, 'TI'))
-        ax.figure.savefig(f'{convergency_plots_prefix}convergence_MBAR.pdf') 
 
     # Get estimations
     mbar = MBAR(maximum_iterations=1000000).fit(concat(u_nks_data))
@@ -122,6 +116,17 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
             'error': units.to_kcalmol(ti.d_delta_f_).iloc[0, -1]
         }       
     }
+    # # Evaluate convergency
+    # # TODO: On MBAR I am getting LLVM ERROR: pthread_create failed: Resource temporarily unavailable Aborted
+    # # And I can not capture this error
+    # if convergency_plots_prefix:
+    #     try:
+    #         ax = plot_convergence(forward_backward_convergence(dhdls_data, 'TI'))
+    #         ax.figure.savefig(f'{convergency_plots_prefix}convergence_TI.pdf')
+    #         # ax = plot_convergence(forward_backward_convergence(u_nks_data, 'MBAR'))
+    #         # ax.figure.savefig(f'{convergency_plots_prefix}convergence_MBAR.pdf')
+    #     except Exception as e:
+    #         print(f"Not possible to evaluate convergency on: {xvgs}\n. Exception {e} was got it")
     return deltaG
 
 # Used on complex(ligand)_fep_ana.smk
@@ -184,8 +189,8 @@ def get_dG_contributions(
             if not os.path.isfile(xvg_file):
                 raise FileNotFoundError(f"Provided xvg file: {xvg_file} for lambda_type = {lambda_type} ")
         if convergency_plots_prefix:
-            convergency_plots_prefix = f"{convergency_plots_prefix}{lambda_type}_"
-        dG = run_alchemlyb(xvgs = kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples, temperature=temperature, convergency_plots_prefix=convergency_plots_prefix)
+            convergency_plots_prefix_to_use = f"{convergency_plots_prefix}{lambda_type}_"
+        dG = run_alchemlyb(xvgs = kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples, temperature=temperature, convergency_plots_prefix=convergency_plots_prefix_to_use)
         
         ddG_estimator = abs(dG['MBAR']['value'] - dG['TI']['value'])
         if ddG_estimator > 0.5:
@@ -249,55 +254,62 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
 
 if __name__ == "__main__":
     pass
-    # from abfe.utils import mdp
+    # import glob
+    # from abfe.mdp import mdp
     
     # # Parameters complex
-    # mdp_vdw_0_prod = "/home/uds_alma015/GIT/BindFlow/examples/internal_example/CyclophilinD/abfe/inhibitor_2/3/complex/fep/simulation/vdw.0/prod/prod.mdp"
-    # xvg_dir = "/home/uds_alma015/GIT/BindFlow/examples/internal_example/CyclophilinD/abfe/inhibitor_2/3/complex/fep/ana/xvgs"
-    # vdw_windows = 6
-    # coul_windows = 3
-    # bonded_windows = 3 
+    # run_path = "/scratch/uds_alma015/smaug/data/users/alejandro/simulation/BindFlow_simulations/biotin-streptavidin/abfe/"
+    # mdp_vdw_0_prod = run_path + "/biotin_a/1/complex/fep/simulation/vdw.0/prod/prod.mdp"
+
+    # xvg_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/vdw.*")]
+    # coul_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/coul.*")]
+    # bonded_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/bonded.*")]
+
+
     # boresch_data = None
     # # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
     # temperature = float(mdp.MDP().from_file(mdp_vdw_0_prod).parameters['ref-t'].split()[0]) 
     # get_dG_contributions(
-    #     root_xvg_path = xvg_dir,
+
     #     boresch_data = boresch_data,
-    #     out_json_path = 'dg_complex_contributions.json',
+    #     out_json_path = 'results/dg_complex_contributions.json',
     #     # Check if it is necessary to remove some initial burning simulation time
-    #     lower = None,
+    #     lower = 4000,
     #     upper = None,
     #     min_samples = 500,
     #     temperature = temperature,
-    #     vdw = vdw_windows,
-    #     coul = coul_windows,
-    #     bonded = bonded_windows,
+    #     convergency_plots_prefix = 'results/complex_',
+    #     vdw = sorted(xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+    #     coul = sorted(coul_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+    #     bonded = sorted(bonded_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
     # )
 
 
     # # Parameters ligand
-    # mdp_vdw_0_prod = "/home/uds_alma015/GIT/BindFlow/examples/internal_example/CyclophilinD/abfe/inhibitor_2/3/ligand/fep/simulation/vdw.0/prod/prod.mdp"
-    # xvg_dir = "/home/uds_alma015/GIT/BindFlow/examples/internal_example/CyclophilinD/abfe/inhibitor_2/3/ligand/fep/ana/xvgs"
-    # vdw_windows = 3
-    # coul_windows = 3
-    # boresch_data = "/home/uds_alma015/GIT/BindFlow/examples/internal_example/CyclophilinD/abfe/inhibitor_2/3/complex/equil-mdsim/boreschcalc/dG_off.dat"
+    # mdp_vdw_0_prod = run_path + "/biotin_a/1/ligand/fep/simulation/vdw.0/prod/prod.mdp"
+
+    # xvg_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/ligand/fep/simulation/vdw.*")]
+    # coul_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/ligand/fep/simulation/coul.*")]
+
+    # boresch_data = run_path + "/biotin_a/1/complex/equil-mdsim/boreschcalc/dG_off.dat"
     # # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
     # temperature = float(mdp.MDP().from_file(mdp_vdw_0_prod).parameters['ref-t'].split()[0]) 
     # get_dG_contributions(
-    #     root_xvg_path = xvg_dir,
     #     boresch_data = boresch_data,
-    #     out_json_path = 'dg_ligand_contributions.json',
+    #     out_json_path = 'results/dg_ligand_contributions.json',
     #     # Check if it is necessary to remove some initial burning simulation time
-    #     lower = None,
+    #     lower = 4000,
     #     upper = None,
     #     min_samples = 500,
     #     temperature = temperature,
-    #     vdw = vdw_windows,
-    #     coul = coul_windows,
+    #     convergency_plots_prefix = 'results/ligand_',
+    #     vdw = sorted(xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+    #     coul = sorted(coul_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
     # )
 
 
     # get_dg_cycle(
-    #     ligand_contributions='dg_ligand_contributions.json',
-    #     complex_contributions='dg_complex_contributions.json',
+    #     ligand_contributions='results/dg_ligand_contributions.json',
+    #     complex_contributions='results/dg_complex_contributions.json',
+    #     out_csv='results/dG_results.csv'
     # )
