@@ -22,14 +22,14 @@ pbc                    = xyz   ; Periodic boundary conditions (all directions)
 ; OUTPUT CONTROL
 ;----------------------------------------------------
 ; TRR control
-nstxout                = 250    ; .trr write frequency [steps | 0 is never] 
+nstxout                = 0    ; .trr write frequency [steps | 0 is never] 
 nstvout                = 0      ; .trr vel frequency [steps | 0 is never]
 nstfout                = 0      ; .trr frc frequency [steps | 0 is never]
 ; XTC control
-nstxout-compressed     = 500    ; .xtc write frequency [steps]
-compressed-x-precision = 1000   ; .xtc precision [default = 1000]
-nstlog                 = 500    ; .log write frequency
-nstenergy              = 500    ; energy write frequency
+nstxout-compressed     = 0    ; .xtc write frequency [steps]
+compressed-x-precision = 0   ; .xtc precision [default = 1000]
+nstlog                 = 0    ; .log write frequency
+nstenergy              = 0    ; energy write frequency
 nstcalcenergy          = 100    ; energy calc frequency [only relevant in MD]
 
 ;----------------------------------------------------

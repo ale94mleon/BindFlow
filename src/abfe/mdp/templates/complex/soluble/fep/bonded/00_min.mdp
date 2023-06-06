@@ -18,14 +18,14 @@ pbc                    = xyz
 ;----------------------------------------------------
 ; OUTPUT CONTROL
 ;----------------------------------------------------
-nstxout                = 250        ; save coordinates to .trr every 250 steps
+nstxout                = 0        ; save coordinates to .trr every 250 steps
 nstvout                = 0          ; don't save velocities to .trr
 nstfout                = 0          ; don't save forces to .trr
 
-nstxout-compressed     = 500        ; xtc compressed trajectory output every 500 steps
-compressed-x-precision = 1000
-nstlog                 = 500        ; update log file every 500 steps
-nstenergy              = 500        ; save energies every 500 steps
+nstxout-compressed     = 0        ; xtc compressed trajectory output every 500 steps
+compressed-x-precision = 0
+nstlog                 = 0        ; update log file every 500 steps
+nstenergy              = 0        ; save energies every 500 steps
 nstcalcenergy          = 100
 
 ;----------------------------------------------------
@@ -77,7 +77,7 @@ sc-power                 = 1
 sc-sigma                 = 0.3
 init-lambda-state        = <state>
 bonded-lambdas           = <lamRange>
-nstdhdl                  = 100
+nstdhdl                  = 0
 dhdl-print-energy        = total
 calc-lambda-neighbors    = -1
 separate-dhdl-file       = yes

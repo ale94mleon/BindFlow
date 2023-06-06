@@ -29,8 +29,8 @@ nstfout                = 0          ; don't save forces to .trr
 nstxout-compressed     = 1250       ; xtc write frequency [steps]
 compressed-x-precision = 1000       ; xtc precision [1000]
 ; Log & energy file options
-nstlog                 = 1250       ; log update frequency [steps]
-nstenergy              = 1250       ; energy update frequency [steps]
+nstlog                 = 0       ; log update frequency [steps]
+nstenergy              = 1000       ; energy update frequency [steps]
 nstcalcenergy          = 50         ; calculate energies every 100 steps
 
 ;----------------------------------------------------

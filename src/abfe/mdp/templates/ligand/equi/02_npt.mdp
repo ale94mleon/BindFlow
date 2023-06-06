@@ -27,11 +27,11 @@ nstxout                = 0          ; don't save coordinates to .trr
 nstvout                = 0          ; don't save velocities to .trr
 nstfout                = 0          ; don't save forces to .trr
 ; XTC options
-nstxout-compressed     = 2500       ; xtc write frequency [steps]
-compressed-x-precision = 1000       ; xtc precision [1000]
+nstxout-compressed     = 0       ; xtc write frequency [steps]
+compressed-x-precision = 0       ; xtc precision [1000]
 ; Log & energy file options
-nstlog                 = 2500       ; log update frequency [steps]
-nstenergy              = 2500       ; energy update frequency [steps]
+nstlog                 = 0       ; log update frequency [steps]
+nstenergy              = 0       ; energy update frequency [steps]
 nstcalcenergy          = 50         ; calculate energies every 50 steps
 
 ;----------------------------------------------------

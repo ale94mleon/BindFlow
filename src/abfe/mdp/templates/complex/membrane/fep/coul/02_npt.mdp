@@ -15,14 +15,14 @@ nstcomm      = 50            ; frequency for center of mass motion removal
 
 ; OUTPUT CONTROL
 ;----------------------------------------------------
-nstxout          = 25000      ; save coordinates to .trr every 100 ps
+nstxout          = 0      ; save coordinates to .trr every 100 ps
 nstvout          = 0          ; don't save velocities to .trr
 nstfout          = 0          ; don't save forces to .trr
 
-nstxout-compressed     = 500        ; xtc compressed trajectory output every 2 ps
-compressed-x-precision = 1000       ; precision with which to write to the compressed trajectory file
-nstlog                 = 500        ; update log file every 2 ps
-nstenergy              = 500        ; save energies every 2 ps
+nstxout-compressed     = 0        ; xtc compressed trajectory output every 2 ps
+compressed-x-precision = 0       ; precision with which to write to the compressed trajectory file
+nstlog                 = 0        ; update log file every 2 ps
+nstenergy              = 0        ; save energies every 2 ps
 nstcalcenergy          = 50         ; calculate energies every 200 fs
 
 ; BONDS
@@ -89,7 +89,7 @@ sc-sigma                 = 0.3
 init-lambda-state        = <state>
 bonded-lambdas           = <lamRangeOfOnes>
 coul-lambdas             = <lamRange>
-nstdhdl                  = 100
+nstdhdl                  = 0
 dhdl-print-energy        = total
 calc-lambda-neighbors    = -1
 separate-dhdl-file       = yes
