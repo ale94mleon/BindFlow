@@ -90,6 +90,8 @@ def calculate_abfe(
     if (len(result_paths) != expected_out_paths):
         print("\tBuild approach struct")
         job_id = approach_flow(global_config=global_config, submit=submit,)
+    else:
+        job_id = None
     print("Do")
     print("\tSubmit Job - ID: ", job_id)
     # Final gathering
@@ -97,6 +99,4 @@ def calculate_abfe(
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
         gather_results.get_all_dgs(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results.csv'))
-
-    print()
     os.chdir(orig_dir)

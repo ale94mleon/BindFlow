@@ -232,12 +232,9 @@ rule equil_run_complex_trjconv:
     shell:
         '''
             mkdir -p {params.run_dir}
-            echo 0 | gmx trjconv -s {input.tpr} -f {input.xtc} -o {params.run_dir}/whole.xtc -pbc whole
-            echo 0 | gmx trjconv -s {input.tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump
-            gmx trjconv -s {input.tpr} -f {params.run_dir}/nojump.xtc -o {output.xtc} -pbc mol -center -ur compact << EOF
-            1
-            0
-            EOF
+            echo 'System' | gmx trjconv -s {input.tpr} -f {input.xtc} -o {params.run_dir}/whole.xtc -pbc whole
+            echo 'System' | gmx trjconv -s {input.tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump
+            echo 'Protein System' | gmx trjconv -s {input.tpr} -f {params.run_dir}/nojump.xtc -o {output.xtc} -pbc mol -center -ur compact
             rm {params.run_dir}/whole.xtc {params.run_dir}/nojump.xtc
         '''
         # TODO: the rm is not working

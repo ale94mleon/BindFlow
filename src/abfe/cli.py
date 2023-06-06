@@ -56,7 +56,16 @@ def abfe_run():
                    )
 
 def abfe_dag():
-    tools.run("snakemake --dag | dot -Tpng -o dag.png", interactive=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', "--path", help = 'Input protein pdb file path', type=str, default = '.')
+    parser.add_argument('-o', "--out_name",  help = 'Input ligand(s) mol file path', default = 'dag', type = str) 
+    
+    args = parser.parse_args()
+    print(args)
+    cwd = os.getcwd()
+    os.chdir(args.path)
+    tools.run(f"snakemake --dag | dot -Tpng -o {args.out_name}.png", interactive=True)
+    os.chdir(cwd)
 
 def abfe_check_results():
     from abfe.scripts.free_energy import gather_results
