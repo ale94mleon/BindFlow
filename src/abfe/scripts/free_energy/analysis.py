@@ -77,7 +77,7 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
         else:
             ineff_step = 1
             wmsg = "statistical_inefficiency does not give data. This usually means that the sampling is too poor.\n"\
-                          f"xvg: {xvg}"
+                          f"{xvg = }"
             warnings.warn(wmsg)
 
         
@@ -85,8 +85,8 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
         step_cutoff = int(len(df) / min_samples)
         if step_cutoff == 0:
             step_cutoff = 1
-            wmsg = f"The number of raw data point ({len(df)}) is less than min_samples = {min_samples}. This usually means that the sampling is too poor\n"\
-                          f"xvg: {xvg}"
+            wmsg = f"The number of raw data point ({len(df)}) is less than {min_samples =}. This usually means that the sampling is too poor\n"\
+                          f"{xvg = }"
             warnings.warn(wmsg)
 
         # Select the proper step lag
@@ -190,6 +190,7 @@ def get_dG_contributions(
                 raise FileNotFoundError(f"Provided xvg file: {xvg_file} for lambda_type = {lambda_type} ")
         if convergency_plots_prefix:
             convergency_plots_prefix_to_use = f"{convergency_plots_prefix}{lambda_type}_"
+        print(f'Analyzing {lambda_type =}')
         dG = run_alchemlyb(xvgs = kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples, temperature=temperature, convergency_plots_prefix=convergency_plots_prefix_to_use)
         
         ddG_estimator = abs(dG['MBAR']['value'] - dG['TI']['value'])
@@ -232,13 +233,26 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
     with open(complex_contributions, 'r') as cc:
         complex_dict = json.load(cc)
 
-    # TODO WARNING!! I am not completely sure about the sign of boresch, and to be honest more or less for the rest either
-    # TODO, I can do this in a more dynamic way
-    dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) + ligand_dict["boresch"] + \
-        get_ufloat(complex_dict["vdw"]["MBAR"]) + get_ufloat(complex_dict["coul"]["MBAR"]) + get_ufloat(complex_dict["bonded"]["MBAR"])
+    # TODO: I made a small test with reverse True or False in the during sort of xvgs and I am always getting the same value, 
+    # So that means that the order should not be a problem, the lambda values are guessing from the xvg file itself
+    # The cycle is based on 10.1038/s42004-022-00721-4
+    # And all the mdp are build in such a way that the last state is at lambda 1 and the first one at 0
+    # The only exception is with the bonded
+    # These bonded are based on the boresch restraints and works based on the [ intermolecular_interactions ]
+    # Here 1 means restraints turned on and 0 off. because of that the thermodynamic cycle goes from:
+    # ligand+restraint(bonded) in the complex [lambda = 1] --> ligand in the complex [lambda = 0]
+    # And becasue what we are getting is [lambda = 1] - [lambda = 0] we must use the opposite sign
+    # Also for this on the could and vdw bonded-lambda is set to [1]*number of states
+    # TODO: maybe is a good idea to add it with the opposite sign on the previous steps anyways
+    # ligand_dict["boresch"] https://github.com/IAlibay/MDRestraintsGenerator/blob/fa97e5f7032e40327d9d9520091ea5c194aebb86/MDRestraintsGenerator/datatypes.py#L993
+    # Is the energy to release the restraint, so, we have to subtract, because on the cycle we are activating that restraint
+    # the equation used in: MDRestraintsGenerator.MDRestraintsGenerator.datatypes.BoreschRestraint._analytical_energy
+    # Is the same exposed on: https://chemrxiv.org/engage/chemrxiv/article-details/63cb0e401fb2a897c6dafbd8
+    dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) - ligand_dict["boresch"] + \
+        get_ufloat(complex_dict["vdw"]["MBAR"]) + get_ufloat(complex_dict["coul"]["MBAR"]) - get_ufloat(complex_dict["bonded"]["MBAR"])
 
-    dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) + ligand_dict["boresch"] + \
-        get_ufloat(complex_dict["vdw"]["TI"]) + get_ufloat(complex_dict["coul"]["TI"]) + get_ufloat(complex_dict["bonded"]["TI"])
+    dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) - ligand_dict["boresch"] + \
+        get_ufloat(complex_dict["vdw"]["TI"]) + get_ufloat(complex_dict["coul"]["TI"]) - get_ufloat(complex_dict["bonded"]["TI"])
     
     deltaG = {
         'MBAR': {
@@ -258,7 +272,7 @@ if __name__ == "__main__":
     # from abfe.mdp import mdp
     
     # # Parameters complex
-    # run_path = "/scratch/uds_alma015/smaug/data/users/alejandro/simulation/BindFlow_simulations/biotin-streptavidin/abfe/"
+    # run_path = "/scratch/uds_alma015/smaug/data/users/alejandro/simulation/BindFlow_simulations/biotin-streptavidin/abfe-gpu1-files-reduction/"
     # mdp_vdw_0_prod = run_path + "/biotin_a/1/complex/fep/simulation/vdw.0/prod/prod.mdp"
 
     # xvg_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/vdw.*")]
@@ -279,9 +293,9 @@ if __name__ == "__main__":
     #     min_samples = 500,
     #     temperature = temperature,
     #     convergency_plots_prefix = 'results/complex_',
-    #     vdw = sorted(xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-    #     coul = sorted(coul_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-    #     bonded = sorted(bonded_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+    #     vdw = sorted(xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1]), reverse=True),
+    #     coul = sorted(coul_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1]), reverse=True),
+    #     bonded = sorted(bonded_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1]), reverse=True),
     # )
 
 
@@ -298,7 +312,7 @@ if __name__ == "__main__":
     #     boresch_data = boresch_data,
     #     out_json_path = 'results/dg_ligand_contributions.json',
     #     # Check if it is necessary to remove some initial burning simulation time
-    #     lower = 4000,
+    #     lower = None,
     #     upper = None,
     #     min_samples = 500,
     #     temperature = temperature,
