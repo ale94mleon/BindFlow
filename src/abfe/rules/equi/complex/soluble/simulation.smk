@@ -1,5 +1,6 @@
 from abfe.utils.tools import gmx_runner
 from abfe.scripts.preparation import boresch
+from abfe.mdp import mdp
 
 # Common to all the sub-workflows ligand/replica
 input_path = config['input_data_path']
@@ -152,7 +153,8 @@ rule equil_run_complex_trjconv:
 rule equil_run_complex_get_boresch_restraints:
     input:
         tpr=run_path+"/complex/equil-mdsim/prod/prod.tpr",
-        xtc=run_path+"/complex/equil-mdsim/boreschcalc/prod_center.xtc"
+        xtc=run_path+"/complex/equil-mdsim/boreschcalc/prod_center.xtc",
+        mdp=run_path+"/complex/equil-mdsim/prod/prod.mdp",
     params:
         run_dir=run_path+"/complex/equil-mdsim/boreschcalc/",
     output:
@@ -160,8 +162,14 @@ rule equil_run_complex_get_boresch_restraints:
         top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
         boresch_dG_off=run_path+"/complex/equil-mdsim/boreschcalc/dG_off.dat"
     run:
+        mdp_params = mdp.MDP().from_file(input.mdp).parameters
+        if 'ref-t' in mdp_params:
+            temperature = float(mdp_params['ref-t'].split()[0])
+        elif 'ref_t' in mdp_params:
+            temperature = float(mdp_params['ref_t'].split()[0])
         boresch.gen_restraint(
             topology = input.tpr,
             trajectory = input.xtc,
             outpath = params.run_dir,
+            temperature = temperature
         )

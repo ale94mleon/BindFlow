@@ -10,6 +10,7 @@ def gen_restraint(topology:PathLike,
                   trajectory:PathLike,
                   ligand_selection:str = 'resname LIG and not name H*',
                   host_selection:str = 'protein and name CA',
+                  temperature:float = 298.15,
                   outpath:PathLike = './'):
     """It will generate the Boresch restraints. It use MDAnalysis and MDRestraintsGenerator.
     It defines restraints for ligand in protein during the uncoupling.
@@ -24,6 +25,8 @@ def gen_restraint(topology:PathLike,
         MDAnalysis selection to define the ligand, by default 'resname LIG and not name H*'
     host_selection : str, optional
         MDAnalysis selection to define the host (receptor), by default 'protein and name CA'
+    temperature : float
+        simulation temperature [298.15]
     outpath : PathLike, optional
         Where the output files will be written out, by default './'
     """
@@ -50,7 +53,7 @@ def gen_restraint(topology:PathLike,
     # boresch.restraint.plot(path=args.outpath) #this is not necessary and might lead to qt errors. (can be turned on if needed)
     boresch.restraint.write(path = outpath)
 
-    dG = boresch.restraint.standard_state()
+    dG = boresch.restraint.standard_state(temperature = temperature)
 
     with open(f'{outpath}/dG_off.dat', 'w') as writer:
         writer.write(f'{dG}')
