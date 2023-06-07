@@ -1,5 +1,5 @@
 from abfe.utils.tools import gmx_runner
-from abfe.scripts.preparation import boresch
+from abfe.preparation import boresch
 from abfe.mdp import mdp
 
 # Common to all the sub-workflows ligand/replica

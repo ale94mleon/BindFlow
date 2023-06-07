@@ -319,9 +319,9 @@ def fix_topology(input_topology: PathLike,
     on out_topology_path you will have
     It will call, sequentially, to:
 
-    #. :meth:`abfe.scripts.preparation.gmx_topology.get_molecule_names`
-    #. :meth:`abfe.scripts.preparation.gmx_topology.make_posres_files`
-    #. :meth:`abfe.scripts.preparation.gmx_topology.add_posres_section`
+    #. :meth:`abfe.preparation.gmx_topology.get_molecule_names`
+    #. :meth:`abfe.preparation.gmx_topology.make_posres_files`
+    #. :meth:`abfe.preparation.gmx_topology.add_posres_section`
 
     In out_dir you will have:
 

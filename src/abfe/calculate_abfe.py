@@ -11,7 +11,7 @@ from abfe.utils.tools import config_validator
 # Do not export so many frames in the xtc file, their are not needed for the analysis.
 # For sure not during equilibration phase, keep a realitive small number of frames
 from abfe.orchestration.flow_builder import ligand_flows, approach_flow
-from abfe.scripts.free_energy import gather_results
+from abfe.free_energy import gather_results
 def calculate_abfe(
         protein_pdb_path: str,
         ligand_mol_paths: List[str],

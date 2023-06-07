@@ -1,4 +1,4 @@
-from abfe.scripts.preparation import system_builder as sb
+from abfe.preparation import system_builder as sb
 import os
 import glob
 import shutil

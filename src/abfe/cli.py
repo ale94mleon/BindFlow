@@ -68,7 +68,7 @@ def abfe_dag():
     os.chdir(cwd)
 
 def abfe_check_results():
-    from abfe.scripts.free_energy import gather_results
+    from abfe.free_energy import gather_results
     parser = argparse.ArgumentParser()
     parser.add_argument(
         dest = 'root_folder_path',

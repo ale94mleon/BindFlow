@@ -23,7 +23,7 @@ def get_stats(replica_paths:List[PathLike]) -> dict:
             #. <estimator>: the value of the estimator
             #. <estimator>_sem: Standard error of the mean
             #. <estimator>_uncertainty_propagation: Propagate the uncertainties after the average.
-            This use the estimated uncertainties from alchemy (Check :meth:`abfe.scripts.free_energy.analysis.run_alchemlyb`)
+            This use the estimated uncertainties from alchemy (Check :meth:`abfe.free_energy.analysis.run_alchemlyb`)
             #. <estimator>_num_replicas: The number of replicas employed.
 
     """

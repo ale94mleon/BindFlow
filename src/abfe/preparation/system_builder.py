@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from abfe.home import home
-from abfe.scripts.preparation.gmx_topology import fix_topology, add_water_ions_param, index_for_membrane_system
+from abfe.preparation.gmx_topology import fix_topology, add_water_ions_param, index_for_membrane_system
 from abfe.utils.tools import run, PathLike
 
 from toff import Parameterize
@@ -613,7 +613,7 @@ class MakeInputs:
 
 def __system_builder_cmd():
     """
-    Command line implementation for :meth:`abfe.scripts.system_builder.MakeInputs`
+    Command line implementation for :meth:`abfe.system_builder.MakeInputs`
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(

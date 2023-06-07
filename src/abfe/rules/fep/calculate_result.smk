@@ -1,4 +1,4 @@
-from abfe.scripts.free_energy import analysis
+from abfe.free_energy import analysis
 run_path = config["run_path"]
 
 

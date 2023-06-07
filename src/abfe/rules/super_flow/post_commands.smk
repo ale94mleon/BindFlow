@@ -1,4 +1,4 @@
-from abfe.scripts.free_energy import gather_results
+from abfe.free_energy import gather_results
 
 #Final Check Job
 rule gather_receptor_results:
