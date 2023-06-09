@@ -4,7 +4,6 @@ channels:
 dependencies:
   - python >=3.8, <3.10 # biosimspace use this python definition
   - pip
-  - gromacs=2022.2
   - parmed
   - pdbfixer
   - openmm
