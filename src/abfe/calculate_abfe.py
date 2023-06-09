@@ -1,7 +1,8 @@
 import glob
 import os
 from typing import List
-from abfe.utils.tools import config_validator
+from abfe.utils import tools
+import copy
 
 # TODO: Ligand and RuleThemAll is using CPUs  and they are only waiting
 # THink in a way to connect RuleThemAll to Ligand to avoid the use of its CPUs on
@@ -26,70 +27,78 @@ def calculate_abfe(
         replicas: int = 3,
         submit: bool = False,
         debug:bool = False,
-        global_config: dict = {}):
+        job_prefix = None,
+        global_config: dict = {}
+        ):
     orig_dir = os.getcwd()
 
-    # Check the validity of the provided user configuration file
-    check_config = config_validator(global_config=global_config)
+    # Make internal copy of configuration
+    _global_config =copy.deepcopy(global_config)
+     # Check the validity of the provided user configuration file
+    check_config = tools.config_validator(global_config=_global_config)
     if not check_config[0]:
         raise ValueError(check_config[1])
     if hmr_factor < 2 or hmr_factor > 3:
         raise ValueError(f'hmr_factor must be in the range of [2; 3] (provided {hmr_factor}) to avoid instability during MD simulations. The workflow uses dt = 4 fs by default')
     # IO:
     # Initialize inputs on config
-    global_config["inputs"] = {}
-    global_config["inputs"]["protein_pdb_path"] = os.path.abspath(protein_pdb_path)
-    global_config["inputs"]["ligand_mol_paths"] = [os.path.abspath(ligand_mol_path) for ligand_mol_path in ligand_mol_paths]
+    _global_config["inputs"] = {}
+    _global_config["inputs"]["protein_pdb_path"] = os.path.abspath(protein_pdb_path)
+    _global_config["inputs"]["ligand_mol_paths"] = [os.path.abspath(ligand_mol_path) for ligand_mol_path in ligand_mol_paths]
 
-    if not global_config["inputs"]["ligand_mol_paths"]:
+    if not _global_config["inputs"]["ligand_mol_paths"]:
         raise ValueError(f'There were not any ligands or they are not accessible on: {ligand_mol_paths}')
 
     if cofactor_mol_path:
-        global_config["inputs"]["cofactor_mol_path"] = os.path.abspath(cofactor_mol_path)
+        _global_config["inputs"]["cofactor_mol_path"] = os.path.abspath(cofactor_mol_path)
     else:
-        global_config["inputs"]["cofactor_mol_path"] = None
-    global_config["cofactor_on_protein"] = cofactor_on_protein
+        _global_config["inputs"]["cofactor_mol_path"] = None
+    _global_config["cofactor_on_protein"] = cofactor_on_protein
     if membrane_pdb_path:
-        global_config["inputs"]["membrane_pdb_path"] = os.path.abspath(membrane_pdb_path)
+        _global_config["inputs"]["membrane_pdb_path"] = os.path.abspath(membrane_pdb_path)
     else:
-        global_config["inputs"]["membrane_pdb_path"] = None
+        _global_config["inputs"]["membrane_pdb_path"] = None
 
-    global_config["hmr_factor"] = hmr_factor
+    _global_config["hmr_factor"] = hmr_factor
     
     out_root_folder_path = os.path.abspath(out_root_folder_path)
-    global_config["out_approach_path"] = out_root_folder_path
+    _global_config["out_approach_path"] = out_root_folder_path
 
+    if job_prefix:
+        _global_config["job_prefix"] = f"{job_prefix}."
+    else:
+        _global_config["job_prefix"] = ""
+    
     # This will only be needed for developing propose.
     os.environ['abfe_debug'] = str(debug)
 
-    ## Generate output folders
-    for dir_path in [global_config["out_approach_path"]]:
-        if (not os.path.isdir(dir_path)):
-            os.mkdir(dir_path)
+    # Generate output folders
+    if not os.path.isdir(_global_config["out_approach_path"]):
+        tools.makedirs(_global_config["out_approach_path"])
 
     # Prepare Input / Parametrize
-    os.chdir(global_config["out_approach_path"])
+    os.chdir(_global_config["out_approach_path"])
 
-    global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol))[0] for mol in global_config["inputs"]["ligand_mol_paths"]]
-    global_config["ligand_jobs"] = ligand_jobs if (ligand_jobs is not None) else len(global_config["ligand_names"]) * replicas
-    global_config["jobs_per_ligand_job"] = jobs_per_ligand_job
-    global_config["replicas"] = replicas
-    global_config["threads"] = threads
+    _global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol))[0] for mol in _global_config["inputs"]["ligand_mol_paths"]]
+    _global_config["ligand_jobs"] = ligand_jobs if (ligand_jobs is not None) else len(_global_config["ligand_names"]) * replicas
+    _global_config["jobs_per_ligand_job"] = jobs_per_ligand_job
+    _global_config["replicas"] = replicas
+    _global_config["threads"] = threads
 
     print("Prepare")
     print("\tstarting preparing ABFE-ligand file structure")
 
-    ligand_flows(global_config)
+    ligand_flows(_global_config)
 
     print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
-    expected_out_paths = int(replicas) * len(global_config["ligand_names"])
+    expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
 
-    result_paths = glob.glob(global_config["out_approach_path"] + "/*/*/dG*csv")
+    result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/dG*csv")
 
     # Only if there is something missing
     if (len(result_paths) != expected_out_paths):
         print("\tBuild approach struct")
-        job_id = approach_flow(global_config=global_config, submit=submit,)
+        job_id = approach_flow(global_config=_global_config, submit=submit,)
     else:
         job_id = None
     print("Do")
