@@ -2,9 +2,6 @@
 
 import glob, os
 import argparse
-
-from abfe import calculate_abfe, __version__
-from abfe.utils import tools
 import logging
 
 
@@ -14,6 +11,8 @@ for logger in loggers:
 
 # TODO, fix this cli option is NOT UPDATE
 def abfe_run():
+    from abfe import calculate_abfe, __version__
+    
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', "--protein_pdb_path", help='Input protein pdb file path', required=True, type=str)
     parser.add_argument('-l', "--ligand_mol_dir",  help='Input ligand(s) mol file path', required=True, type=str) 
@@ -56,6 +55,8 @@ def abfe_run():
                    )
 
 def abfe_dag():
+    from abfe.utils import tools
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', "--path", help = 'Input protein pdb file path', type=str, default = '.')
     parser.add_argument('-o', "--out_name",  help = 'Input ligand(s) mol file path', default = 'dag', type = str) 

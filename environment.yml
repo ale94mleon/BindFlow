@@ -13,4 +13,4 @@ dependencies:
   - bioconda::snakemake
   # - nvidia::cuda-toolkit=11.4.2
   - pip:
-    - git+https://github.com/ale94mleon/ABFE_workflow.git@dev
+    - git+https://github.com/ale94mleon/BindFlow.git

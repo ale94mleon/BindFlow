@@ -272,7 +272,7 @@ if __name__ == "__main__":
     # from abfe.mdp import mdp
     
     # # Parameters complex
-    # run_path = "/scratch/uds_alma015/smaug/data/users/alejandro/simulation/BindFlow_simulations/biotin-streptavidin/abfe-gpu1-files-reduction/"
+    # run_path = "/scratch/uds_alma015/smaug/data/users/alejandro/simulation/BindFlow_simulations/biotin-streptavidin/abfe-complex-coul-21coul/"
     # mdp_vdw_0_prod = run_path + "/biotin_a/1/complex/fep/simulation/vdw.0/prod/prod.mdp"
 
     # xvg_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/vdw.*")]
@@ -288,7 +288,7 @@ if __name__ == "__main__":
     #     boresch_data = boresch_data,
     #     out_json_path = 'results/dg_complex_contributions.json',
     #     # Check if it is necessary to remove some initial burning simulation time
-    #     lower = 4000,
+    #     lower = None,
     #     upper = None,
     #     min_samples = 500,
     #     temperature = temperature,

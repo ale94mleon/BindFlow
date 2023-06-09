@@ -486,4 +486,4 @@ dependencies:
     - tabulate==0.8.10
     - toff==0.0.2
     # The workflow from the repo
-    - git+https://github.com/ale94mleon/ABFE_workflow.git@dev
+    - git+https://github.com/ale94mleon/BindFlow.git

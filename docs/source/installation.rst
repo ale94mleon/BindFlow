@@ -1,7 +1,8 @@
 Installation
 ============
 
-We will use `mamba <https://mamba.readthedocs.io/en/latest/>`__. First, you must download `environment.yml <https://github.com/bigginlab/ABFE_workflow/blob/main/environment.yml>`__.
+We will use `mamba <https://mamba.readthedocs.io/en/latest/>`__. First, you must download `environment.yml <https://github.com/ale94mleon/BindFlow/blob/main/environment.yml>`__.
+In case some problems happens, you can use `environment.yml <https://github.com/ale94mleon/BindFlow/blob/main/environment_pinned.yml>`__
 
 If you do not have ``mamba`` installed, then:
 

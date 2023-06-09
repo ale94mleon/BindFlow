@@ -20,8 +20,8 @@ from jupyter_client import kernelspec
 
 # -- Project information -----------------------------------------------------
 
-project = 'ABFE_workflow'
-copyright = '2023, Name LastName'
+project = 'BindFlow'
+copyright = '2023, Alejandro Marínez León'
 author = ' Name LastName'
 
 # # The full version, including alpha/beta/rc tags
