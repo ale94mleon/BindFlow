@@ -108,6 +108,10 @@ def ligand_flows(global_config:dict):
         ligand_config['mdp'] = global_config['mdp']
     except KeyError:
         pass
+    
+    # Just to save the prefix
+    if global_config["job_prefix"]:
+        ligand_config["job_prefix"] = global_config["job_prefix"]
 
     for input_ligand_path in global_config["inputs"]["ligand_mol_paths"]:
         ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
@@ -136,7 +140,7 @@ def ligand_flows(global_config:dict):
 
         # Build the replicas
         for num_replica in range(1, global_config["replicas"] + 1):
-            ligand_rep_name = f"{ligand_name}.rep{num_replica}"
+            ligand_rep_name = f"{global_config['job_prefix']}{ligand_name}.rep{num_replica}"
             out_replica_path = os.path.join(out_ligand_path, str(num_replica))
 
             if (not os.path.isdir(out_replica_path)):
@@ -220,7 +224,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         # only if global_config["cluster"]["options"]["job"] is defined it will change during submit
         cluster_config = global_config["cluster"]["options"]["calculation"],
         out_dir = out_path,
-        prefix_name = "Ligand",
+        prefix_name = f"{global_config['job_prefix']}Ligand",
         snake_executor_file = 'job.sh')
     
     scheduler.build_snakemake(jobs = global_config["ligand_jobs"])
@@ -235,5 +239,5 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     else:
         only_build = True
     # if global_config["cluster"]["options"]["job"] changes during submit the cluster options
-    job_id = scheduler.submit(new_cluster_config = job_cluster_config, only_build = only_build)
+    job_id = scheduler.submit(new_cluster_config = job_cluster_config, only_build = only_build, job_prefix = global_config["job_prefix"])
     return job_id

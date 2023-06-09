@@ -156,7 +156,7 @@ class SlurmScheduler(Scheduler):
             os.chmod(os.path.join(self.out_dir, self.snake_executor_file), stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
         return command
 
-    def submit(self, new_cluster_config:dict = None, only_build:bool = False) -> str:
+    def submit(self, new_cluster_config:dict = None, only_build:bool = False, job_prefix:str = "") -> str:
         """Used to submit to the cluster the created job
 
         Parameters
@@ -169,7 +169,8 @@ class SlurmScheduler(Scheduler):
             will be used, by default None
         only_build : bool, optional
             Only create the file to submit to the cluster but it will not be executed, by default False
-
+        job_prefix : bool, optional
+            It will be added as {job_prefix}RuleThemAll , by default False
         Returns
         -------
         str
@@ -195,9 +196,9 @@ class SlurmScheduler(Scheduler):
         tools.makedirs(cluster_log_path)
         cluster_to_work.update({
             # Clear naming
-            "job-name": "RuleThemAll",
-            "output": os.path.join(cluster_log_path, "RuleThemAll.out"),
-            "error": os.path.join(cluster_log_path, "RuleThemAll.err"),
+            "job-name": f"{job_prefix}RuleThemAll",
+            "output": os.path.join(cluster_log_path, f"{job_prefix}RuleThemAll.out"),
+            "error": os.path.join(cluster_log_path, f"{job_prefix}RuleThemAll.err"),
         })
 
         # Create the sbatch section of the script
