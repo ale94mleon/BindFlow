@@ -6,7 +6,7 @@ from abfe.mdp import mdp
 input_path = config['input_data_path']
 run_path = config["run_path"]
 threads = config['threads']
-num_retries = config['num_retries']
+retries = config['retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
@@ -20,7 +20,7 @@ rule equil_complex_00_min:
     output:
         gro=run_path+"/complex/equil-mdsim/00_min/00_min.gro"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -43,7 +43,7 @@ rule equil_complex_01_nvt:
         gro=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.gro",
         cpt=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -67,7 +67,7 @@ rule equil_complex_02_npt:
         gro=run_path+"/complex/equil-mdsim/02_npt/02_npt.gro",
         cpt=run_path+"/complex/equil-mdsim/02_npt/02_npt.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -92,7 +92,7 @@ rule equil_complex_03_npt:
         gro=run_path+"/complex/equil-mdsim/03_npt/03_npt.gro",
         cpt=run_path+"/complex/equil-mdsim/03_npt/03_npt.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -119,7 +119,7 @@ rule equil_complex_prod:
         tpr=run_path+"/complex/equil-mdsim/prod/prod.tpr",
         xtc=run_path+"/complex/equil-mdsim/prod/prod.xtc",
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,

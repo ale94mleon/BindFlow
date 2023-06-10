@@ -4,7 +4,7 @@ from abfe.utils.tools import gmx_runner
 # Common to all the sub-workflows ligand/replica
 run_path = config["run_path"]
 threads = config['threads']
-num_retries = config['num_retries']
+retries = config['retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
@@ -20,7 +20,7 @@ rule fep_complex_00_min:
     output:
         gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro",
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -43,7 +43,7 @@ rule fep_complex_01_nvt:
         gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -67,7 +67,7 @@ rule fep_complex_02_npt:
         gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -92,7 +92,7 @@ rule fep_complex_03_npt_norest:
         gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
         cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -117,7 +117,7 @@ rule fep_complex_prod:
         gro=run_path+"/complex/fep/simulation/{state}/prod/prod.gro",
         xvg=run_path+"/complex/fep/simulation/{state}/prod/prod.xvg"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,

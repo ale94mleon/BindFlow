@@ -5,7 +5,7 @@ run_path = config["run_path"]
 input_path = config['input_data_path']
 simulation_dir = run_path+"/ligand/fep/simulation"
 threads = config['threads']
-num_retries = config['num_retries']
+retries = config['retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 
@@ -19,7 +19,7 @@ rule fep_ligand_00_min:
     output:
         gro=run_path+"/ligand/fep/simulation/{state}/00_min/00_min.gro"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -42,7 +42,7 @@ rule fep_ligand_01_nvt:
         gro=run_path+"/ligand/fep/simulation/{state}/01_nvt/01_nvt.gro",
         cpt=run_path+"/ligand/fep/simulation/{state}/01_nvt/01_nvt.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -66,7 +66,7 @@ rule fep_ligand_02_npt:
         gro=run_path+"/ligand/fep/simulation/{state}/02_npt/02_npt.gro",
         cpt=run_path+"/ligand/fep/simulation/{state}/02_npt/02_npt.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -91,7 +91,7 @@ rule fep_ligand_03_npt_norest:
         gro=run_path+"/ligand/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
         cpt=run_path+"/ligand/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
@@ -116,7 +116,7 @@ rule fep_ligand_prod:
         gro=run_path+"/ligand/fep/simulation/{state}/prod/prod.gro",
         xvg=run_path+"/ligand/fep/simulation/{state}/prod/prod.xvg"
     threads: threads
-    retries: num_retries
+    retries: retries
     run:
         gmx_runner(
             mdp = input.mdp,
