@@ -2,35 +2,34 @@ from abfe.preparation import system_builder as sb
 import os
 import glob
 import shutil
-from abfe.utils.tools import makedirs
+from abfe.utils import tools
 
 out_approach_path = config["out_approach_path"]
 input_protein_pdb_path = config["inputs"]["protein_pdb_path"]
 input_membrane_pdb_path = config["inputs"]["membrane_pdb_path"]
+
 input_ligand_mol_paths = config["inputs"]["ligand_mol_paths"]
-ligand_names = config['ligand_names']
+ligand_basenames = [os.path.basename(path) for path in input_ligand_mol_paths]
+ligand_names = names = [os.path.splitext(ligand_basename)[0] for ligand_basename in ligand_basenames]
+# Create a dictionary to map name to basename
+ligand_basename_dict = {ligand_name: ligand_basename for ligand_name, ligand_basename in zip(ligand_names, ligand_basenames)}
+
 input_cofactor_mol_path = config["inputs"]["cofactor_mol_path"]
 cofactor_on_protein = config["cofactor_on_protein"]
 hmr_factor = float(config['hmr_factor'])
 
-# TODO, build a sanakemake-base parallelizable rule
-
-# It is still not working as expected, if you add new ligands
-# it starts the jobs of the already got it results.
-rule make_ligand_system_dirs:
+rule make_ligand_copies:
     input:
         input_ligand_mol_paths=input_ligand_mol_paths
     output:
-        directory(expand(out_approach_path+"/{ligand_name}/input/mol", ligand_name=ligand_names))
+        ligand_copies = expand(out_approach_path+"/{ligand_name}/input/mol/{ligand_basename}", zip, ligand_name=ligand_names, ligand_basename = ligand_basenames)
     run:
-        for ligand_name, input_ligand_mol_path in zip(ligand_names, input.input_ligand_mol_paths):
-            makedirs(out_approach_path+f"/{ligand_name}/input/mol/")
-            # This is the way that I found to make the next rule parallelizable.
-            shutil.copy(input_ligand_mol_path, out_approach_path+f"/{ligand_name}/input/mol/")
+        for ligand_name, input_ligand_mol_path, ligand_copy in zip(ligand_names, input.input_ligand_mol_paths, output.ligand_copies):
+            shutil.copy(input_ligand_mol_path, ligand_copy)
 
-rule build_ligand_systems:
+rule build_ligand_system:
     input:
-        mol_dir = out_approach_path+"/{ligand_name}/input/mol/"
+        mol_file = lambda wildcards: out_approach_path + "/{ligand_name}/input/mol/" + ligand_basename_dict[wildcards.ligand_name]
     output:
         out_approach_path+"/{ligand_name}/input/complex/complex.gro",
         out_approach_path+"/{ligand_name}/input/complex/complex.top",
@@ -39,7 +38,6 @@ rule build_ligand_systems:
         out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
     threads: config["threads"]
     run:
-
         out_ligand_path = os.path.join(out_approach_path, wildcards.ligand_name)
         out_ligand_input_path = os.path.join(out_ligand_path, 'input')
 
@@ -54,6 +52,5 @@ rule build_ligand_systems:
         )
 
         # Create topologies and input files
-        new_input_ligand_mol_path = glob.glob(input.mol_dir+"/*")[0]
-        builder(ligand_mol=new_input_ligand_mol_path,out_dir=out_ligand_input_path)
+        builder(ligand_mol=input.mol_file,out_dir=out_ligand_input_path)
         builder.clean()
