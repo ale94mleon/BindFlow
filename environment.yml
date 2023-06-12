@@ -11,5 +11,5 @@ dependencies:
   - michellab/label/dev::biosimspace
   - bioconda::snakemake
   # - nvidia::cuda-toolkit=11.4.2
-  - pip:
-    - git+https://github.com/ale94mleon/BindFlow.git
+  # - pip:
+  #   - git+https://github.com/ale94mleon/BindFlow.git

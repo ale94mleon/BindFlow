@@ -218,7 +218,7 @@ def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[floa
             vectors, angles = bss.Box.truncatedOctahedron(box_length.value() * bss.Units.Length.angstrom)
         
         # TODO, ion concentration is not used, only neutralize
-        solvated = bss.Solvent.tip3p(bss_system, box=vectors, angles=angles)
+        solvated = bss.Solvent.tip3p(bss_system, box=vectors, angles=angles)#, ion_conc=)
         
         cwd = os.getcwd()
         os.chdir(out_dir)

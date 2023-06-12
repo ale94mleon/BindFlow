@@ -5,14 +5,15 @@
 ;----------------------------------------------------
 ; HEADER
 ;----------------------------------------------------
-title        = NPT-equil-unconstrained
+title        = NPT-equil-constrained
 
 ;----------------------------------------------------
 ; RUN CONTROL
 ;----------------------------------------------------
+define       = -DPOSRES
 integrator   = sd            ; Langevin integrator
 ld-seed      = -1            ; Langevin seed [-1]
-nsteps       = 1250000       ; 4 * 1,250,000 fs = 5 ns
+nsteps       = 250000        ; 4 * 250,000 fs = 1ns
 dt           = 0.004         ; 4 fs
 pbc          = xyz           ; Periodic boundary conditions
 comm-mode    = Linear        ; remove center of mass translation
@@ -30,7 +31,7 @@ nstxout-compressed     = 0       ; xtc write frequency [steps]
 compressed-x-precision = 0       ; xtc precision [1000]
 ; Log & energy file options
 nstlog                 = 0       ; log update frequency [steps]
-nstenergy              = 2500       ; energy update frequency [steps]
+nstenergy              = 0       ; energy update frequency [steps]
 nstcalcenergy          = 50         ; calculate energies every 50 steps
 
 ;----------------------------------------------------
@@ -48,7 +49,7 @@ continuation           = yes        ; formerly known as 'unconstrained-start' - 
 ;----------------------------------------------------
 cutoff-scheme   = Verlet
 ns-type         = grid   ; search neighboring grid cells
-nstlist         = 10     ; with very let this is a minimum
+nstlist         = 20     ; with very let this is a minimum
 rlist           = 1.2    ; short-range neighborlist cutoff (in nm)
 
 ;----------------------------------------------------
@@ -75,11 +76,12 @@ DispCorr                = EnerPres ; Apply long range dispersion corr for Ener a
 tc-grps          = System   ; Treat everything as a single group
 tau-t            = 2.0      ; Inverse friction with sd
 ref-t            = 298.15   ; Set temp at 298.15 K
-pcoupl           = Parrinello-Rahman ; Correct ensemble method
+pcoupl           = Berendsen ; Berendsen for initial equilibration
 pcoupltype       = isotropic ; Not in a membrane
-tau-p            = 2.0       ; time constant [ps] (PR works better with a longer tau allegedly?)
-ref-p            = 1.01325   ; reference pressure [bar] (1 atm)
-compressibility  = 4.5e-05   ; isothermal compressibility of water [bar^-1]
+tau-p            = 1.0       ; time constant (ps)
+ref-p            = 1.01325   ; reference pressure (bar)
+compressibility  = 4.5e-05   ; isothermal compressibility of water (bar^-1)
+refcoord-scaling = all       ; scale restraint positions by pres scaling matrix
 
 ;----------------------------------------------------
 ; VELOCITY GENERATION
