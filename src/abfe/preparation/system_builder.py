@@ -123,7 +123,7 @@ def parmed_solvate(
         cs:str = "spc216",
         pname:str = "NA",
         nname:str = "CL",
-        ion_conc:float = 150E-6,
+        ion_conc:float = 150E-3,
         rmin:float = 1.0,
         out_dir:PathLike = '.') -> None:
     """Make box, solvate and add ions to the system
@@ -149,8 +149,8 @@ def parmed_solvate(
         Name of the positive ion, by default NA
     nname : str, optional
         Name of the negative ion, by default CL
-    ion_conc : Iterable[float], optional
-        Ion concentration used during neutralization of the system, by default 150E-6
+    ion_conc : float, optional
+        Ion concentration used during neutralization of the system, by default 150E-3
     rmin : float, optional
         Minimum distance between ions and non-solvent, by default 1.0
     out_dir : PathLike, optional
@@ -205,7 +205,7 @@ def parmed_solvate(
 
 
 # TODO, check what is the type of the bss_systems to add it as a HintType
-def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[float] = None, angles:Iterable[float] = None, ion_conc:float = 150E-6):
+def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[float] = None, angles:Iterable[float] = None, ion_conc:float = 150E-3):
     """Solvate and add ions to the system, if vectors and angles are not provided,
     the system will be solvated as a truncated octahedron with a padding of 15 Angstroms.
 
@@ -219,8 +219,8 @@ def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[floa
         This is the vectors of the bos in ANGSTROMS. It is important that the provided vector has the correct units, by default None
     angles : Iterable[float], optional
         This is the angles between the components of the vector in DEGREES. It is important that the provided vector has the correct units, by default None
-    ion_conc : Iterable[float], optional
-        Ion concentration used during neutralization of the system, by default 150E-6
+    ion_conc : float, optional
+        Ion concentration used during neutralization of the system, by default 150E-3
     Raises
     ------
     ValueError
