@@ -104,7 +104,9 @@ class SlurmScheduler(Scheduler):
 
     def build_snakemake(self, jobs:int = 100000, latency_wait:int = 360,
                       verbose:bool = False, debug_dag:bool = False,
-                      rerun_incomplete:bool = True, keep_going: bool = True) -> str:
+                      rerun_incomplete:bool = True, keep_incomplete:bool = True,
+                      keep_going: bool = True,
+                      ) -> str:
         """Build the snakemake command
 
         Parameters
@@ -122,6 +124,9 @@ class SlurmScheduler(Scheduler):
             Print candidate and selected jobs (including their wildcards) while inferring DAG. This can help to debug unexpected DAG topology or errors, by default False
         rerun_incomplete : bool, optional
             Re-run all jobs the output of which is recognized as incomplete, by default True
+        keep_incomplete : bool, optional
+            TODO !!! This could let to undesired effects but it is needed for GROMACS continuation
+            Do not remove incomplete output files by failed jobs, by default True.
         keep_going : bool, optional
             Go on with independent jobs if a job fails, by default True
         Returns
@@ -140,6 +145,7 @@ class SlurmScheduler(Scheduler):
         if verbose: command += "--verbose "
         if debug_dag: command += "--debug-dag "
         if rerun_incomplete: command += "--rerun-incomplete "
+        if keep_incomplete: command += "--keep-incomplete "
         if keep_going: command += "--keep-going "
         # Construct the cluster configuration
         command += f"--cluster '{self.submit_command}"
