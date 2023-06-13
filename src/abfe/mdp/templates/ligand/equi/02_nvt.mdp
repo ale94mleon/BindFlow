@@ -1,19 +1,20 @@
 ;====================================================
-; NPT equilibration
+; NVT equilibration
 ;====================================================
 
 ;----------------------------------------------------
 ; HEADER
 ;----------------------------------------------------
-title        = NPT-equil-constrained
+title        = NVT-heat
 
 ;----------------------------------------------------
 ; RUN CONTROL
 ;----------------------------------------------------
-define       = -DPOSRES
+define       = -DPOSRES      ; Enable restraints
 integrator   = sd            ; Langevin integrator
 ld-seed      = -1            ; Langevin seed [-1]
-nsteps       = 250000        ; 4 * 250,000 fs = 1ns
+nsteps       = 250000        ; 4 * 250,000 fs = 1 ns (system is big)
+tinit        = 0             ; Start time
 dt           = 0.004         ; 4 fs
 pbc          = xyz           ; Periodic boundary conditions
 comm-mode    = Linear        ; remove center of mass translation
@@ -28,28 +29,28 @@ nstvout                = 0          ; don't save velocities to .trr
 nstfout                = 0          ; don't save forces to .trr
 ; XTC options
 nstxout-compressed     = 0       ; xtc write frequency [steps]
-compressed-x-precision = 0       ; xtc precision [1000]
+compressed-x-precision = 0       ; xtc precision [default]
 ; Log & energy file options
 nstlog                 = 0       ; log update frequency [steps]
 nstenergy              = 0       ; energy update frequency [steps]
-nstcalcenergy          = 50         ; calculate energies every 50 steps
+nstcalcenergy          = 50         ; calculate energies every 100 steps
 
 ;----------------------------------------------------
 ; BONDS
 ;----------------------------------------------------
 constraint_algorithm   = lincs      ; holonomic constraints
 constraints            = all-bonds  ; hydrogens only are constrained
-lincs_iter             = 1          ; lincs corr iterations [1]
-lincs_order            = 6          ; highest order in expansions [4]
-lincs-warnangle        = 30         ; max angle rot of bond [4]
-continuation           = yes        ; formerly known as 'unconstrained-start' - useful for exact continuations and reruns
+lincs-iter             = 1          ; lincs corr iterations [1]
+lincs-order            = 6          ; highest order in expansions [4]
+lincs-warnangle        = 30         ; maximum angle rot of bond [30]
+continuation           = no         ; formerly known as 'unconstrained-start' - useful for exact continuations and reruns
 
 ;----------------------------------------------------
 ; NEIGHBOR SEARCHING
 ;----------------------------------------------------
 cutoff-scheme   = Verlet
 ns-type         = grid   ; search neighboring grid cells
-nstlist         = 10     ; with very let this is a minimum
+nstlist         = 10     ; with verlet this is a minimum
 rlist           = 1.2    ; short-range neighborlist cutoff (in nm)
 
 ;----------------------------------------------------
@@ -67,24 +68,21 @@ ewald-rtol       = 1e-6     ; relative strength of the Ewald-shifted direct pote
 ;----------------------------------------------------
 vdwtype                 = Cut-off  ; Type of VDW handling
 rvdw                    = 1.0      ; Cutoff distance [nm]
-vdw-modifier            = Potential-Shift-Verlet ; Shift potential so zero energy at cutoff
+vdw-modifier            = Potential-Shift-Verlet  ; Shift potential so zero energy at cutoff
 DispCorr                = EnerPres ; Apply long range dispersion corr for Ener and Pres
 
 ;----------------------------------------------------
 ; TEMPERATURE & PRESSURE COUPL
 ;----------------------------------------------------
-tc-grps          = System   ; Treat everything as a single group
-tau-t            = 2.0      ; Inverse friction with sd
-ref-t            = 298.15   ; Set temp at 298.15 K
-pcoupl           = Berendsen ; Berendsen for initial equilibration
-pcoupltype       = isotropic ; Not in a membrane
-tau-p            = 1.0       ; time constant (ps)
-ref-p            = 1.01325   ; reference pressure (bar)
-compressibility  = 4.5e-05   ; isothermal compressibility of water (bar^-1)
-refcoord-scaling = all       ; scale restraint positions by pres scaling matrix
+tc-grps          = System ; Treat everything as a single group
+tau-t            = 2.0    ; Inverse friction with sd
+ref-t            = 298.15 ; Set temp at 298.15 K
+pcoupl           = no    ; No pressure coupling
 
 ;----------------------------------------------------
 ; VELOCITY GENERATION
 ;----------------------------------------------------
-gen_vel      = no      ; Velocity generation is off
+gen-vel      = yes      ; Velocity generation is on (if gen_vel is 'yes', continuation should be 'no')
+gen-seed     = -1       ; Use random seed
+gen-temp     = 10       ; Start temp low and let the system catch up
 

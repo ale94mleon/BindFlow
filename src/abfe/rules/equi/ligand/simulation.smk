@@ -53,17 +53,17 @@ rule equil_ligand_01_nvt:
             **mdrun_extra['ligand']
         )
 
-rule equil_ligand_02_npt:
+rule equil_ligand_02_nvt:
     input:
         top=input_path+"/ligand/ligand.top",
         gro=run_path+"/ligand/equil-mdsim/01_nvt/01_nvt.gro",
         cpt=run_path+"/ligand/equil-mdsim/01_nvt/01_nvt.cpt",
-        mdp=run_path+"/ligand/equil-mdsim/02_npt/02_npt.mdp",
+        mdp=run_path+"/ligand/equil-mdsim/02_nvt/02_nvt.mdp",
     params:
-        run_dir=run_path+"/ligand/equil-mdsim/02_npt"
+        run_dir=run_path+"/ligand/equil-mdsim/02_nvt"
     output:
-        gro=run_path+"/ligand/equil-mdsim/02_npt/02_npt.gro",
-        cpt=run_path+"/ligand/equil-mdsim/02_npt/02_npt.cpt"
+        gro=run_path+"/ligand/equil-mdsim/02_nvt/02_nvt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/02_nvt/02_nvt.cpt"
     threads: threads
     retries: retries
     run:
@@ -81,14 +81,39 @@ rule equil_ligand_02_npt:
 rule equil_ligand_03_npt:
     input:
         top=input_path+"/ligand/ligand.top",
-        gro=run_path+"/ligand/equil-mdsim/02_npt/02_npt.gro",
-        cpt=run_path+"/ligand/equil-mdsim/02_npt/02_npt.cpt",
+        gro=run_path+"/ligand/equil-mdsim/02_nvt/02_nvt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/02_nvt/02_nvt.cpt",
         mdp=run_path+"/ligand/equil-mdsim/03_npt/03_npt.mdp",
     params:
         run_dir=run_path+"/ligand/equil-mdsim/03_npt"
     output:
         gro=run_path+"/ligand/equil-mdsim/03_npt/03_npt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/03_npt/03_npt.cpt"
+    threads: threads
+    retries: retries
+    run:
+        gmx_runner(
+            mdp = input.mdp,
+            topology = input.top,
+            structure = input.gro,
+            checkpoint = input.cpt,
+            nthreads = threads,
+            load_dependencies = load_dependencies,
+            run_dir = params.run_dir,
+            **mdrun_extra['ligand']
+        )
+
+rule equil_ligand_04_npt:
+    input:
+        top=input_path+"/ligand/ligand.top",
+        gro=run_path+"/ligand/equil-mdsim/03_npt/03_npt.gro",
         cpt=run_path+"/ligand/equil-mdsim/03_npt/03_npt.cpt",
+        mdp=run_path+"/ligand/equil-mdsim/04_npt/04_npt.mdp",
+    params:
+        run_dir=run_path+"/ligand/equil-mdsim/04_npt"
+    output:
+        gro=run_path+"/ligand/equil-mdsim/04_npt/04_npt.gro",
+        cpt=run_path+"/ligand/equil-mdsim/04_npt/04_npt.cpt",
     threads: threads
     retries: retries
     run:

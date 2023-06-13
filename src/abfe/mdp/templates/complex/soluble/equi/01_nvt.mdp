@@ -13,9 +13,9 @@ title        = NVT-heat
 define       = -DPOSRES      ; Enable restraints
 integrator   = sd            ; Langevin integrator
 ld-seed      = -1            ; Langevin seed [-1]
-nsteps       = 250000        ; 4 * 250,000 fs = 1 ns (system is big)
+nsteps       = 250000        ; 2 * 250,000 fs = 500 ps (system is big)
 tinit        = 0             ; Start time
-dt           = 0.004         ; 4 fs
+dt           = 0.002         ; 4 fs
 pbc          = xyz           ; Periodic boundary conditions
 comm-mode    = Linear        ; remove center of mass translation
 nstcomm      = 50            ; frequency for center of mass motion removal
