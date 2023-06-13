@@ -116,17 +116,46 @@ def system_combiner(**md_elements):
 def parmed_solvate(
         parmed_system:Structure,
         bt:str = "triclinic",
-        box:list[float] = None, # in nm, PDB are in Angstroms
-        angles:list[float] = None, # In degrees (90,90,60) for membrane systems
+        box:list[float] = None,
+        angles:list[float] = None,
         d:float = None,
         c:bool = False,
         cs:str = "spc216",
-        pname:str = "K",
+        pname:str = "NA",
         nname:str = "CL",
+        ion_conc:float = 150E-6,
         rmin:float = 1.0,
-        out_dir:PathLike = '.'):
-    
-    # TODO, ion concentration is not used, only neutralize
+        out_dir:PathLike = '.') -> None:
+    """Make box, solvate and add ions to the system
+
+    Parameters
+    ----------
+    parmed_system : object
+        The ParmED system to solvate
+    bt : str, optional
+        Box type for -box and -d: triclinic, cubic, dodecahedron, octahedron, by default triclinic
+    box : str, optional
+        Box vector lengths (a,b,c) in nm (remember that PDB are in Angstroms), by default None. Which means that gmx editconf will use (0 0 0)  
+    angles : Iterable[float], optional
+        This is the angles between the components of the vector in DEGREES. It is important that the provided vector has the correct units, by default None.
+        For membrane systems (90,90,60) is advisable.
+    d : float, optional
+        Distance between the solute and the box, by default None. Which means that gmx editconf will use 0
+    c : bool, optional
+        Center molecule in box (implied by -box and -d), by default False
+    cs : str, optional
+        Solvent configuration, by default spc216
+    pname : str, optional
+        Name of the positive ion, by default NA
+    nname : str, optional
+        Name of the negative ion, by default CL
+    ion_conc : Iterable[float], optional
+        Ion concentration used during neutralization of the system, by default 150E-6
+    rmin : float, optional
+        Minimum distance between ions and non-solvent, by default 1.0
+    out_dir : PathLike, optional
+        Where the files will be written: solvated.gro, solvated.top, by default '.'
+    """
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -164,7 +193,7 @@ def parmed_solvate(
         add_water_ions_param('non_water_ions_system.top', 'system.top')
         run(f"""    
             gmx grompp -f ions.mdp -c system_solvated.gro -p system.top -o ions.tpr
-            echo "SOL" | gmx genion -s ions.tpr -p system.top -o system_solvated_ions.gro -neutral -pname {pname} -nname {nname} -rmin {rmin}
+            echo "SOL" | gmx genion -s ions.tpr -p system.top -o system_solvated_ions.gro -neutral -pname {pname} -nname {nname} -rmin {rmin} -conc {ion_conc}
         """)
         final_top = os.path.abspath('system.top')
         final_gro = os.path.abspath('system_solvated_ions.gro')
@@ -176,7 +205,7 @@ def parmed_solvate(
 
 
 # TODO, check what is the type of the bss_systems to add it as a HintType
-def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[float] = None, angles:Iterable[float] = None):
+def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[float] = None, angles:Iterable[float] = None, ion_conc:float = 150E-6):
     """Solvate and add ions to the system, if vectors and angles are not provided,
     the system will be solvated as a truncated octahedron with a padding of 15 Angstroms.
 
@@ -190,7 +219,8 @@ def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[floa
         This is the vectors of the bos in ANGSTROMS. It is important that the provided vector has the correct units, by default None
     angles : Iterable[float], optional
         This is the angles between the components of the vector in DEGREES. It is important that the provided vector has the correct units, by default None
-
+    ion_conc : Iterable[float], optional
+        Ion concentration used during neutralization of the system, by default 150E-6
     Raises
     ------
     ValueError
@@ -217,8 +247,8 @@ def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[floa
             box_length = (max(box_size) + 1.5 * padding)
             vectors, angles = bss.Box.truncatedOctahedron(box_length.value() * bss.Units.Length.angstrom)
         
-        # TODO, ion concentration is not used, only neutralize
-        solvated = bss.Solvent.tip3p(bss_system, box=vectors, angles=angles)#, ion_conc=)
+        # It looks like in this case it use the default ions of gmx genions which are Na and Cl
+        solvated = bss.Solvent.tip3p(bss_system, box=vectors, angles=angles, ion_conc=ion_conc, is_neutral=True)
         
         cwd = os.getcwd()
         os.chdir(out_dir)
