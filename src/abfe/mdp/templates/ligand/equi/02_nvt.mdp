@@ -43,7 +43,7 @@ constraints            = all-bonds  ; hydrogens only are constrained
 lincs-iter             = 1          ; lincs corr iterations [1]
 lincs-order            = 6          ; highest order in expansions [4]
 lincs-warnangle        = 30         ; maximum angle rot of bond [30]
-continuation           = no         ; formerly known as 'unconstrained-start' - useful for exact continuations and reruns
+continuation           = yes         ; formerly known as 'unconstrained-start' - useful for exact continuations and reruns
 
 ;----------------------------------------------------
 ; NEIGHBOR SEARCHING
@@ -82,7 +82,5 @@ pcoupl           = no    ; No pressure coupling
 ;----------------------------------------------------
 ; VELOCITY GENERATION
 ;----------------------------------------------------
-gen-vel      = yes      ; Velocity generation is on (if gen_vel is 'yes', continuation should be 'no')
-gen-seed     = -1       ; Use random seed
-gen-temp     = 10       ; Start temp low and let the system catch up
+gen-vel      = no      ; Velocity generation is on (if gen_vel is 'yes', continuation should be 'no')
 

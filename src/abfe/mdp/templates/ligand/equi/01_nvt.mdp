@@ -13,7 +13,7 @@ title        = NVT-heat
 define       = -DPOSRES      ; Enable restraints
 integrator   = sd            ; Langevin integrator
 ld-seed      = -1            ; Langevin seed [-1]
-nsteps       = 250000        ; 2 * 250,000 fs = 500 ps (system is big)
+nsteps       = 500000        ; 2 * 500,000 fs = 1 ns (system is big)
 tinit        = 0             ; Start time
 dt           = 0.002         ; 2 fs
 pbc          = xyz           ; Periodic boundary conditions
