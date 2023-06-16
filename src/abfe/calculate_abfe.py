@@ -21,6 +21,7 @@ def calculate_abfe(
         cofactor_on_protein:bool = True,
         membrane_pdb_path: str = None,
         hmr_factor: float = 3.0,
+        dt_max:float = 0.004, # The maximum integration time in ps for all the steps in the workflow. This will be overwrite by the definitions in the global_config
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
         ligand_jobs: int = None,# By defaults it will take number of ligands * replicas
         jobs_per_ligand_job: int = 10000, # On each ligand, how many jobs should run in parallel
@@ -38,8 +39,11 @@ def calculate_abfe(
     check_config = tools.config_validator(global_config=_global_config)
     if not check_config[0]:
         raise ValueError(check_config[1])
-    if hmr_factor < 2 or hmr_factor > 3:
-        raise ValueError(f'hmr_factor must be in the range of [2; 3] (provided {hmr_factor}) to avoid instability during MD simulations. The workflow uses dt = 4 fs by default')
+    if hmr_factor > 3:
+        raise ValueError(f"{hmr_factor =}. Must be lower than 3 to avoid instabilities")
+    elif hmr_factor < 2:
+        if dt_max > 0.002:
+            raise ValueError(f"{hmr_factor =} and {dt_max =}. Is not compatible. for hmr_factor < 2; dt_max must be <= 0.002 ps")
     # IO:
     # Initialize inputs on config
     _global_config["inputs"] = {}
@@ -60,6 +64,7 @@ def calculate_abfe(
         _global_config["inputs"]["membrane_pdb_path"] = None
 
     _global_config["hmr_factor"] = hmr_factor
+    _global_config["dt_max"] = dt_max
     
     out_root_folder_path = os.path.abspath(out_root_folder_path)
     _global_config["out_approach_path"] = out_root_folder_path

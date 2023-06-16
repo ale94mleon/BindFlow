@@ -103,10 +103,10 @@ class StepMDP(MDP):
             from abfe.mdp import mdp
             from abfe.mdp.templates import TemplatePath
             import os
-            my_mdp = mdp.StepMDP(step = 'emin', step_path = os.path.join(TemplatePath.ligand.fep, 'coul'))
+            my_mdp = mdp.StepMDP(step = '00_min', step_path = os.path.join(TemplatePath.ligand.fep, 'coul'))
             my_mdp.set_parameters(**{"init-lambda-state": "0", "coul-lambdas": "0 0.5 1",})
             print(my_mdp)
-            my_mdp.set_new_step(step='npt_norest')
+            my_mdp.set_new_step(step='02_npt')
             print(my_mdp.to_string())
         """
         super().__init__(**kwargs)
@@ -127,7 +127,7 @@ class StepMDP(MDP):
         self.from_file(os.path.join(self.step_path, f"{self.step}.mdp"))
 
 
-def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_values:List[float], lambda_type:str, sys_type:str, mdp_extra_kwargs:dict = None):
+def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_values:List[float], lambda_type:str, sys_type:str, dt_max:float, mdp_extra_kwargs:dict = None):
     """This function is mean to be used on ligand_fep_setup and complex_fet_setup.
     It will create the structure of the simulation directory: {sim_dir}/simulation/{lambda_type}.{i}/{step}/{step}.mdp
     Where:
@@ -190,6 +190,11 @@ def make_fep_dir_structure(sim_dir:PathLike, template_dir:PathLike, lambda_value
         
         # Update MDP step
         mdp_template.set_new_step(step)
+
+        # Check dt and set dt_max if needed, this will be overwrite by the parameters provided in the mdp section of the config
+        if 'dt' in mdp_template.parameters: # Avoid min step, it assumes that the rest of the mdp templates steps have dt defined.
+            if float(mdp_template.parameters['dt'].split(';')[0]) > dt_max:
+                mdp_template.set_parameters(dt = dt_max)
 
         # Set, if any, the user MDP options
         if mdp_extra_kwargs:

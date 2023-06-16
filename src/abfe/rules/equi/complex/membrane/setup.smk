@@ -25,7 +25,13 @@ rule equil_setup_complex:
             makedirs(params.sim_dir+f"/{step}")
             # Update MDP step
             mdp_template.set_new_step(step)
-            # TODO In case of user defined MDP keywords, take those from the config
+            
+            # Check dt and set dt_max if needed, this will be overwrite by the parameters provided in the mdp section of the config
+            if 'dt' in mdp_template.parameters: # Avoid min step, it assumes that the rest of the mdp templates steps have dt defined.
+                if float(mdp_template.parameters['dt'].split(';')[0]) > config["dt_max"]:
+                    mdp_template.set_parameters(dt = config["dt_max"])
+                
+            # In case of user defined MDP keywords, take those from the config
             try:
                 # TODO sanity check on the passed MDP options
                 mdp_template.set_parameters(**config['mdp']['complex']['equi'][step])

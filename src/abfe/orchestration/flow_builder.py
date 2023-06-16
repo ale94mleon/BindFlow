@@ -84,6 +84,7 @@ def ligand_flows(global_config:dict):
         'threads': global_config['threads'],
         'extra_directives': global_config['extra_directives'],
         'retries':3,
+        'dt_max': global_config['dt_max'],
         'lambdas': {
             'ligand': {
                 'vdw': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['vdw']), 2)),

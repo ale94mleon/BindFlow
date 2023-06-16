@@ -59,6 +59,7 @@ rule fep_setup_complex:
             lambda_values = params.vdw_lambdas,
             lambda_type = 'vdw',
             sys_type = 'complex',
+            dt_max = config["dt_max"],
             mdp_extra_kwargs = mdp_extra_kwargs,
         )
 
@@ -69,6 +70,7 @@ rule fep_setup_complex:
             lambda_values = params.coul_lambdas,
             lambda_type = 'coul',
             sys_type = 'complex',
+            dt_max = config["dt_max"],
             mdp_extra_kwargs = mdp_extra_kwargs,
         )
 
@@ -79,5 +81,6 @@ rule fep_setup_complex:
             lambda_values = params.bonded_lambdas,
             lambda_type = 'bonded',
             sys_type = 'complex',
+            dt_max = config["dt_max"],
             mdp_extra_kwargs = mdp_extra_kwargs,
         )
