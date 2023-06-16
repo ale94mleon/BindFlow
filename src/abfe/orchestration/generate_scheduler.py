@@ -108,6 +108,7 @@ class SlurmScheduler(Scheduler):
                       keep_going: bool = True,
                       ) -> str:
         """Build the snakemake command
+        TODO Consider to put it in the parent class
 
         Parameters
         ----------
@@ -149,6 +150,7 @@ class SlurmScheduler(Scheduler):
         if keep_going: command += "--keep-going "
         # Construct the cluster configuration
         command += f"--cluster '{self.submit_command}"
+        # Here is the only possible difference, maybe it could be creates an abstract method that return cluster_config to a string representation valid to execute the jobs
         for key in self.cluster_config:
             command += f" --{key}={self.cluster_config[key]}"
         command += "'"
