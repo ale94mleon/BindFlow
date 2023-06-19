@@ -362,7 +362,8 @@ class MakeInputs:
             cofactor_mol:PathLike = None,
             cofactor_on_protein:bool = True,
             hmr_factor:float = None,
-            builder_dir:PathLike = 'builder'):
+            builder_dir:PathLike = 'builder',
+            fix_protein:bool = True):
         """This class is used for building the systems for ABFE calculation.
         It will create the necessary topology and configuration files, as well the
         correct directory trees.
@@ -386,6 +387,8 @@ class MakeInputs:
             The Hydrogen Mass Factor to use, by default None
         builder_dir : PathLike, optional
             Where all the building files. After completion you can safely remove calling the method clean, by default builder
+        fix_protein: bool, optional
+            If True, pdbfixer will be used. It should only set to False when total certainty that the atoms name convention for AMBER is fullfil, by default True
         """
         self.protein_pdb = protein_pdb
         self.membrane_pdb = membrane_pdb
@@ -393,6 +396,7 @@ class MakeInputs:
         self.cofactor_on_protein = cofactor_on_protein
         self.hmr_factor = hmr_factor
         self.wd = os.path.abspath(builder_dir)
+        self.fix_protein = fix_protein
         self.__self_was_called = False
 
         # Initialize vectors and angles based on the information of the PDB only if a membrane system
@@ -451,7 +455,7 @@ class MakeInputs:
             bss_system = bss.IO.readMolecules([top_file, gro_file])
             return bss_system
 
-    def gmx_process(self, pdb_file:PathLike, pH:float = 7.0, is_membrane = False):
+    def gmx_process(self, pdb_file:PathLike, pH:float = 7.0, is_membrane:bool = False):
         """Used to process those biomolecules compatibles with amber99sb-ildn (protein, DNA, ..)
         and membrane compatibles with Slipid2020
 
@@ -463,7 +467,6 @@ class MakeInputs:
             pH for protonation (not working at the moment), by default 7.0
         is_membrane : bool, optional
             If True, Slipid2020 will be used instead of amber99sb-ildn, by default False
-
         Returns
         -------
         object
@@ -509,8 +512,11 @@ class MakeInputs:
             run(f"gmx pdb2gmx -f {pdb_file} -ff Slipids_2020 -water none -o {gro_out} -p {top_out} -i {posre_out}")
             os.chdir(cwd)
         else:
-            fixed_pdb = os.path.join(self.wd,f"{name}_fixed.pdb")
-            run(f"{env_prefix}/bin/pdbfixer {pdb_file} --output={fixed_pdb} --add-atoms=all")# TODO delete this feature for now --replace-nonstandard")
+            if self.fix_protein:
+                fixed_pdb = os.path.join(self.wd,f"{name}_fixed.pdb")
+                run(f"{env_prefix}/bin/pdbfixer {pdb_file} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
+            else:
+                fixed_pdb = pdb_file
             run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff amber99sb-ildn -water tip3p -o {gro_out} -p {top_out} -i {posre_out} -ignh")
 
         if self.membrane_pdb:

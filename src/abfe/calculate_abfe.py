@@ -10,7 +10,7 @@ import copy
 # Think also about in reduce disk space of the simulation
 # Maybe at the end of the simulation one command that tar the files
 # Do not export so many frames in the xtc file, their are not needed for the analysis.
-# For sure not during equilibration phase, keep a realitive small number of frames
+# For sure not during equilibration phase, keep a relative small number of frames
 from abfe.orchestration.flow_builder import ligand_flows, approach_flow
 from abfe.free_energy import gather_results
 def calculate_abfe(
@@ -20,6 +20,7 @@ def calculate_abfe(
         cofactor_mol_path: str = None,
         cofactor_on_protein:bool = True,
         membrane_pdb_path: str = None,
+        fix_protein:bool = True,
         hmr_factor: float = 3.0,
         dt_max:float = 0.004, # The maximum integration time in ps for all the steps in the workflow. This will be overwrite by the definitions in the global_config
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
@@ -63,6 +64,7 @@ def calculate_abfe(
     else:
         _global_config["inputs"]["membrane_pdb_path"] = None
 
+    _global_config["fix_protein"] = fix_protein
     _global_config["hmr_factor"] = hmr_factor
     _global_config["dt_max"] = dt_max
     

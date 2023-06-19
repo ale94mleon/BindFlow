@@ -16,6 +16,9 @@ ligand_basename_dict = {ligand_name: ligand_basename for ligand_name, ligand_bas
 
 input_cofactor_mol_path = config["inputs"]["cofactor_mol_path"]
 cofactor_on_protein = config["cofactor_on_protein"]
+
+fix_protein = config["fix_protein"]
+
 hmr_factor = float(config['hmr_factor'])
 
 rule make_ligand_copies:
@@ -48,7 +51,8 @@ rule build_ligand_system:
             cofactor_mol=input_cofactor_mol_path,
             cofactor_on_protein=cofactor_on_protein,
             hmr_factor = hmr_factor,
-            builder_dir = os.path.join(out_ligand_path, "builder")
+            builder_dir = os.path.join(out_ligand_path, "builder"),
+            fix_protein = fix_protein
         )
 
         # Create topologies and input files
