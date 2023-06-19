@@ -510,7 +510,7 @@ class MakeInputs:
             os.chdir(cwd)
         else:
             fixed_pdb = os.path.join(self.wd,f"{name}_fixed.pdb")
-            run(f"{env_prefix}/bin/pdbfixer {pdb_file} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
+            run(f"{env_prefix}/bin/pdbfixer {pdb_file} --output={fixed_pdb} --add-atoms=all")# TODO delete this feature for now --replace-nonstandard")
             run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff amber99sb-ildn -water tip3p -o {gro_out} -p {top_out} -i {posre_out} -ignh")
 
         if self.membrane_pdb:
