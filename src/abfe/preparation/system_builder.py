@@ -455,7 +455,10 @@ class MakeInputs:
                 'path': None,
             }
         }
-        recursive_update_dict(dict_to_work, mol_definition)
+        if mol_definition:
+            recursive_update_dict(dict_to_work, mol_definition)
+        else:
+            return None
         if dict_to_work['conf']:
             print(f"\t\t- Getting OpenFF parameters for: {dict_to_work['conf']}")
         else:
@@ -469,7 +472,6 @@ class MakeInputs:
                 warnings.warn(f"For safety reasons, if top is provided for small molecule; the gro file must be provided. Provided: {dict_to_work['conf']}. This small molecule will be ignored!")
                 return None
         else:
-
             parameterizer = Parameterize(
                 force_field_code = dict_to_work['ff']['code'],
                 ext_types = ['top', 'gro'],
@@ -518,7 +520,10 @@ class MakeInputs:
                 'path': None,
             }
         }
-        recursive_update_dict(dict_to_work, mol_definition)
+        if mol_definition:
+            recursive_update_dict(dict_to_work, mol_definition)
+        else:
+            return None
         if dict_to_work['conf']:
             dict_to_work['conf'] = os.path.abspath(dict_to_work['conf'])
             name, ext = os.path.splitext(os.path.basename(dict_to_work['conf']))
@@ -528,7 +533,7 @@ class MakeInputs:
 
         # Convert to absolute paths
         if dict_to_work['top']:
-            dict_to_work['top']  = os.path.abspath(dict_to_work['conf'])
+            dict_to_work['top']  = os.path.abspath(dict_to_work['top'])
 
         if dict_to_work['ff']['path']:
             dict_to_work['ff']['path'] = os.path.abspath(dict_to_work['ff']['path'])

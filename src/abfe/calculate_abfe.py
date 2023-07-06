@@ -2,6 +2,7 @@ import glob
 import os
 from typing import List, Union
 from abfe.utils import tools
+from abfe._version import __version__
 import copy
 
 # TODO: Ligand and RuleThemAll is using CPUs  and they are only waiting
@@ -65,6 +66,7 @@ def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], de
         if isinstance(user_input, dict):
             tools.recursive_update_dict(internal_dict, user_input)
 
+            # Convert to absolute paths
             if internal_dict['conf']:
                 if not os.path.exists(internal_dict['conf']):
                     raise FileNotFoundError(f"{internal_dict['conf'] = } is not accessible.")
@@ -72,7 +74,17 @@ def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], de
             else:
                 if not optional:
                     raise ValueError(f'conf must be provided on the `{arg_name}` entry when a dictionary is used')
-            
+
+            if internal_dict['top']:
+                if not os.path.exists(internal_dict['top']):
+                    raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
+                internal_dict['top'] = os.path.abspath(internal_dict['top'])
+
+            if internal_dict['ff']['path']:
+                if not os.path.exists(internal_dict['ff']['path']):
+                    raise FileNotFoundError(f"{internal_dict['ff']['path'] = } is not accessible.")
+                internal_dict['ff']['path'] = os.path.abspath(internal_dict['ff']['path'])
+
             # Check if it is needed to copy the force field. the .ff suffix will be added and if the path exist
             # then it will be copy
             possible_path = f"{internal_dict['ff']}.ff"
@@ -107,6 +119,7 @@ def calculate_abfe(
         job_prefix = None,
         global_config: dict = {}
         ):
+    print(f"You are using BindFlow: {__version__}.")
     orig_dir = os.getcwd()
 
 

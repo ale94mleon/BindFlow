@@ -5,7 +5,6 @@ import shutil
 from abfe.utils import tools
 
 out_approach_path = config["out_approach_path"]
-input_protein_pdb_path = 
 
 ligand_paths = [mol['conf'] for mol in config["inputs"]["ligands"]]
 ligand_basenames = [os.path.basename(path) for path in ligand_paths]
@@ -37,8 +36,6 @@ rule build_ligand_system:
         # optional(out_approach_path+"/{ligand_name}/input/complex/index.ndx"),
         out_approach_path+"/{ligand_name}/input/ligand/ligand.gro",
         out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
-    params:
-        ligand_definition = ligand_dict[wildcards.ligand_name]['definition']
     threads: config["threads"]
     run:
         out_ligand_path = os.path.join(out_approach_path, wildcards.ligand_name)
@@ -57,5 +54,5 @@ rule build_ligand_system:
 
         # Create topologies and input files
         # Here We will use the ligand definition
-        builder(ligand_mol=params.ligand_definition,out_dir=out_ligand_input_path)
+        builder(ligand_definition = ligand_dict[wildcards.ligand_name]['definition'], out_dir = out_ligand_input_path)
         builder.clean()

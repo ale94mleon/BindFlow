@@ -11,8 +11,10 @@ for logger in loggers:
 
 # TODO, fix this cli option is NOT UPDATE
 def abfe_run():
-    from abfe import calculate_abfe, __version__
+    from abfe._version import __version__
+    from abfe import calculate_abfe
     
+    # TODO Extend all the features included in calculate_abfe
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', "--protein_pdb_path", help='Input protein pdb file path', required=True, type=str)
     parser.add_argument('-l', "--ligand_mol_dir",  help='Input ligand(s) mol file path', required=True, type=str) 
@@ -40,11 +42,11 @@ def abfe_run():
     print(args)
     mol_paths = [f for pattern in ["*.mol", "*.sdf"] for f in glob.glob(os.path.join(args.ligand_mol_dir, pattern))]
     
-    calculate_abfe(protein_pdb_path = args.protein_pdb_path,
-                   ligand_mol_paths = mol_paths,
+    calculate_abfe(protein = args.protein_pdb_path,
+                   ligands = mol_paths,
                    out_root_folder_path=args.output_dir_path,
-                   cofactor_mol_path = args.cofactor_mol_path,
-                   membrane_pdb_path = args.membrane_pdb_path,
+                   cofactor = args.cofactor_mol_path,
+                   membrane = args.membrane_pdb_path,
                    hmr_factor = args.hmr_factor,
                    threads = args.threads,
                    ligand_jobs = args.ligand_jobs,
@@ -58,8 +60,8 @@ def abfe_dag():
     from abfe.utils import tools
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', "--path", help = 'Input protein pdb file path', type=str, default = '.')
-    parser.add_argument('-o', "--out_name",  help = 'Input ligand(s) mol file path', default = 'dag', type = str) 
+    parser.add_argument('-p', "--path", help = 'Where should the dag be executed (where the Snakefile is located)', type=str, default = '.')
+    parser.add_argument('-o', "--out_name",  help = 'Where the image will be saved', default = 'dag', type = str) 
     
     args = parser.parse_args()
     print(args)
