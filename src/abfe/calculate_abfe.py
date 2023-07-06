@@ -1,6 +1,6 @@
 import glob
 import os
-from typing import List
+from typing import List, Union
 from abfe.utils import tools
 import copy
 
@@ -13,15 +13,90 @@ import copy
 # For sure not during equilibration phase, keep a relative small number of frames
 from abfe.orchestration.flow_builder import ligand_flows, approach_flow
 from abfe.free_energy import gather_results
+
+
+def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], default_ff:Union[tools.PathLike, str], optional:bool = False) -> dict:
+    """This helper function is called inside abfe.calculate_ABFE to check for the inputs: protein, ligands, membrane and cofactor
+
+    Parameters
+    ----------
+    arg_name : str
+        The name of the part of the system. It is just used for to print information in case of error
+    user_input : Union[tools.PathLike, dict, None]
+        The user input provided
+    default_ff : Union[tools.PathLike, str]
+        A code of the force field. Internally it will be check if [default_ff].ff exist as a directory. This allow a much bigger flexibility
+        on the use of different force fields that do not come with the GROMACS distribution by default
+    optional : bool, optional
+        if the arguments under analysis is optional or not, by default False
+
+    Returns
+    -------
+    dict
+        A dictionary with keywords: conf[configuration file], top[GROMACS topology file], ff:code[force field code], path[absolute path in case the directory exists]
+
+    Raises
+    ------
+    ValueError
+        if user_input is None but optional is False
+    FileNotFoundError
+        The configuration file is not found even when some path was provided
+    ValueError
+        In case conf is not provided when user_input is a dict and optional is False
+    FileNotFoundError
+        The configuration file is not found when user_input is suppose to be a path
+    """
+
+    if not user_input:
+        if optional:
+            return None
+        else:
+            raise ValueError(f"{arg_name =} was set with {user_input = } but {optional =}")
+    else:
+        internal_dict = {
+            'conf': None,
+            'top': None, # This must be a single file topology with all the force field information without positional restraint definition for the heavy atoms, thi will be generated internally.
+            'ff': {
+                'code': default_ff,
+                'path': None,
+            }
+        }
+
+        if isinstance(user_input, dict):
+            tools.recursive_update_dict(internal_dict, user_input)
+
+            if internal_dict['conf']:
+                if not os.path.exists(internal_dict['conf']):
+                    raise FileNotFoundError(f"{internal_dict['conf'] = } is not accessible.")
+                internal_dict['conf'] = os.path.abspath(internal_dict['conf'])
+            else:
+                if not optional:
+                    raise ValueError(f'conf must be provided on the `{arg_name}` entry when a dictionary is used')
+            
+            # Check if it is needed to copy the force field. the .ff suffix will be added and if the path exist
+            # then it will be copy
+            possible_path = f"{internal_dict['ff']}.ff"
+            if os.path.isdir(possible_path):
+                internal_dict['ff']['path'] = os.path.abspath(possible_path)
+        # This is the case that only a path was provided
+        else:
+            if not os.path.exists(user_input):
+                raise FileNotFoundError(f"On {arg_name} entry; {user_input = } is not accessible")
+            internal_dict['conf'] = os.path.abspath(user_input)
+        return copy.deepcopy(internal_dict)
+
+
+
+
 def calculate_abfe(
-        protein_pdb_path: str,
-        ligand_mol_paths: List[str],
-        out_root_folder_path: str,
-        cofactor_mol_path: str = None,
-        cofactor_on_protein:bool = True,
-        membrane_pdb_path: str = None,
-        fix_protein:bool = True,
+        protein: Union[tools.PathLike, dict], # conf, top, ff
+        ligands: Union[tools.PathLike, List[dict]],
+        out_root_folder_path: tools.PathLike,
+        cofactor: Union[tools.PathLike, dict, None] = None,
+        cofactor_on_protein:bool = True, # this is to the correct group on the thermostat
+        membrane: Union[tools.PathLike, dict, None] = None,
         hmr_factor: float = 3.0,
+        # water_model:str = 'tip3p',
         dt_max:float = 0.004, # The maximum integration time in ps for all the steps in the workflow. This will be overwrite by the definitions in the global_config
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
         ligand_jobs: int = None,# By defaults it will take number of ligands * replicas
@@ -33,6 +108,8 @@ def calculate_abfe(
         global_config: dict = {}
         ):
     orig_dir = os.getcwd()
+
+
 
     # Make internal copy of configuration
     _global_config =copy.deepcopy(global_config)
@@ -48,24 +125,15 @@ def calculate_abfe(
     # IO:
     # Initialize inputs on config
     _global_config["inputs"] = {}
-    _global_config["inputs"]["protein_pdb_path"] = os.path.abspath(protein_pdb_path)
-    _global_config["inputs"]["ligand_mol_paths"] = [os.path.abspath(ligand_mol_path) for ligand_mol_path in ligand_mol_paths]
+    _global_config["inputs"]["protein"] = input_helper(arg_name = 'protein',user_input = protein,default_ff = 'amber99sb-ildn',optional = False)
+    _global_config["inputs"]["ligands"] = [input_helper(arg_name = 'ligand',user_input = ligand, default_ff = 'openff_unconstrained-2.0.0.offxml',optional = False) for ligand in ligands]
+    _global_config["inputs"]["cofactor"] = input_helper(arg_name = 'cofactor',user_input = cofactor, default_ff = 'openff_unconstrained-2.0.0.offxml',optional = True)
+    _global_config["inputs"]["membrane"] = input_helper(arg_name = 'membrane',user_input = membrane, default_ff = 'Slipids_2020',optional = True)
 
-    if not _global_config["inputs"]["ligand_mol_paths"]:
-        raise ValueError(f'There were not any ligands or they are not accessible on: {ligand_mol_paths}')
-
-    if cofactor_mol_path:
-        _global_config["inputs"]["cofactor_mol_path"] = os.path.abspath(cofactor_mol_path)
-    else:
-        _global_config["inputs"]["cofactor_mol_path"] = None
     _global_config["cofactor_on_protein"] = cofactor_on_protein
-    if membrane_pdb_path:
-        _global_config["inputs"]["membrane_pdb_path"] = os.path.abspath(membrane_pdb_path)
-    else:
-        _global_config["inputs"]["membrane_pdb_path"] = None
-
-    _global_config["fix_protein"] = fix_protein
     _global_config["hmr_factor"] = hmr_factor
+    # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology
+    _global_config["water_model"] = 'tip3p'# water_model
     _global_config["dt_max"] = dt_max
     
     out_root_folder_path = os.path.abspath(out_root_folder_path)
@@ -86,7 +154,7 @@ def calculate_abfe(
     # Prepare Input / Parametrize
     os.chdir(_global_config["out_approach_path"])
 
-    _global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol))[0] for mol in _global_config["inputs"]["ligand_mol_paths"]]
+    _global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol['conf']))[0] for mol in _global_config["inputs"]["ligands"]]
     _global_config["ligand_jobs"] = ligand_jobs if (ligand_jobs is not None) else len(_global_config["ligand_names"]) * replicas
     _global_config["jobs_per_ligand_job"] = jobs_per_ligand_job
     _global_config["replicas"] = replicas

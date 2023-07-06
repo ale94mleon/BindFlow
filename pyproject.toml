@@ -92,4 +92,3 @@ abfe = [
 abfe-run = "abfe.cli:abfe_run"
 abfe-dag = "abfe.cli:abfe_dag"
 abfe-check_results = "abfe.cli:abfe_check_results"
-abfe-build_sys = "abfe.preparation.system_builder:__system_builder_cmd"

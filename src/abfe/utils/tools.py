@@ -229,6 +229,13 @@ def makedirs(path):
     else:
         os.makedirs(path,exist_ok=True)
 
+def recursive_update_dict(original_dict:dict, update_dict:dict) -> None:
+    for key, value in update_dict.items():
+        if isinstance(value, dict) and key in original_dict and isinstance(original_dict[key], dict):
+            recursive_update_dict(original_dict[key], value)
+        else:
+            original_dict[key] = value
+
 def config_validator(global_config:dict) -> List:
     """It checks for the validity of the global config.
     This dictionary is usually passed to :meth:`abfe.calculate_abfe.calculate_abfe`

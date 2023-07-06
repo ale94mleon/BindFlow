@@ -66,10 +66,10 @@ def ligand_flows(global_config:dict):
         out_approach_path: PathLike: The path where the ligands, their replicas and main configuration files will be written.
         num_jobs: int: Maximum number of jobs to run in parallel (TODO, on the ligands??)
         inputs: {
-            'ligand_mol_paths': List[PathLike],
-            'protein_pdb_path': PathLike,
-            'cofactor_mol_path': PathLike,
-            'membrane_pdb_path': PathLike
+            'ligands': List[dict],
+            'protein': dict,
+            'cofactor': dict,
+            'membrane': dict
         }
 
         Usually this dictionary is created by first invoking :meth:`abfe.calculate_abfe.calculate_abfe`
@@ -99,7 +99,7 @@ def ligand_flows(global_config:dict):
     }
 
     # Specify the complex type
-    if global_config["inputs"]["membrane_pdb_path"]:
+    if global_config["inputs"]["membrane"]:
         ligand_config["complex_type"] = 'membrane'
     else:
         ligand_config["complex_type"] = 'soluble'
@@ -114,7 +114,7 @@ def ligand_flows(global_config:dict):
     if global_config["job_prefix"]:
         ligand_config["job_prefix"] = global_config["job_prefix"]
 
-    for input_ligand_path in global_config["inputs"]["ligand_mol_paths"]:
+    for input_ligand_path in global_config["inputs"]["ligands"]:
         ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
         out_ligand_path = os.path.join(global_config["out_approach_path"],  str(ligand_name))
 
@@ -129,11 +129,11 @@ def ligand_flows(global_config:dict):
         # Archive original files      
         with tarfile.open(os.path.join(out_ligand_input_path, 'orig_in.tar.gz'), "w:gz") as tar:
             tar.add(input_ligand_path, arcname=os.path.basename(input_ligand_path))
-            tar.add(global_config["inputs"]["protein_pdb_path"],arcname=os.path.basename(global_config["inputs"]["protein_pdb_path"]))
-            if global_config["inputs"]["cofactor_mol_path"]:
-                tar.add(global_config["inputs"]["cofactor_mol_path"],arcname=os.path.basename(global_config["inputs"]["cofactor_mol_path"]))
-            if global_config["inputs"]["membrane_pdb_path"]:
-                tar.add(global_config["inputs"]["membrane_pdb_path"],arcname=os.path.basename(global_config["inputs"]["membrane_pdb_path"]))
+            tar.add(global_config["inputs"]["protein"]["conf"],arcname=os.path.basename(global_config["inputs"]["protein"]["conf"]))
+            if global_config["inputs"]["cofactor"]:
+                tar.add(global_config["inputs"]["cofactor"]["conf"],arcname=os.path.basename(global_config["inputs"]["cofactor"]["conf"]))
+            if global_config["inputs"]["membrane"]:
+                tar.add(global_config["inputs"]["membrane"]["conf"],arcname=os.path.basename(global_config["inputs"]["membrane"]["conf"]))
         
         # Update ligand configuration file
         tmp_ligand_config = ligand_config.copy()
@@ -183,7 +183,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     ----------
     global_config : dict
         The global configuration. It must contain:
-        out_approach_path[PathLike], inputs[dict[PathLike]],
+        out_approach_path[PathLike], inputs[dict[dict]],
         ligand_names[list[str]], replicas[float], threads[int],
         hmr_factor[float], cluster/type[str], cluster/options/calculation[dict]
         cluster/options/job[dict]. The last is optional and will override cluster/options/calculation[dict]
@@ -204,7 +204,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     approach_config = {
         "out_approach_path": global_config["out_approach_path"],
         "inputs": global_config["inputs"],
-        "fix_protein": global_config["fix_protein"],
+        "water_model": global_config["water_model"],
         "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],
