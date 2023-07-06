@@ -114,7 +114,8 @@ def ligand_flows(global_config:dict):
     if global_config["job_prefix"]:
         ligand_config["job_prefix"] = global_config["job_prefix"]
 
-    for input_ligand_path in global_config["inputs"]["ligands"]:
+    for ligand_definition in global_config["inputs"]["ligands"]:
+        input_ligand_path = ligand_definition['conf']
         ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
         out_ligand_path = os.path.join(global_config["out_approach_path"],  str(ligand_name))
 
