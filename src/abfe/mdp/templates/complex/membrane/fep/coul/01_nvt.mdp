@@ -8,8 +8,8 @@
 ;----------------------------------------------------
 define       =  -DPOSRES -DPOSRES_DYNAMIC=2500;-DPOSRES -DPOSRES_FC_BB=1000.0 -DPOSRES_FC_SC=500.0 -DPOSRES_FC_LIPID=400.0 -DPOSRES_LIG=1000.0
 integrator   = sd            ; stochastic leap-frog integrator
-nsteps       = 2500          ; 4 * 2,500 fs = 10 ps
-dt           = 0.004         ; 4 fs
+nsteps       = 5000          ; 2 * 5,000 fs = 10 ps
+dt           = 0.002         ; 2 fs
 comm-mode    = Linear        ; remove center of mass translation
 nstcomm      = 50            ; frequency for center of mass motion removal
 
