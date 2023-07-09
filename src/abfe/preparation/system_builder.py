@@ -411,6 +411,7 @@ class MakeInputs:
         self.hmr_factor = hmr_factor
         self.water_model = water_model
         self.wd = os.path.abspath(builder_dir)
+        os.makedirs(self.wd, exist_ok=True)
         self.__self_was_called = False
 
         # Initialize vectors and angles based on the information of the PDB only if a membrane system
