@@ -78,6 +78,8 @@ def abfe_check_results():
         help='Input protein pdb file path',
         type=str)
     args = parser.parse_args()
-
-    print(gather_results.get_all_dgs(root_folder_path=args.root_folder_path))
+    df = gather_results.get_all_dgs(root_folder_path=args.root_folder_path)
+    if df:
+        df = df.sort_values(by = 'MBAR').reset_index()
+        print(df)
 if __name__ == "__main__":...
