@@ -13,7 +13,7 @@ rule fep_ligand_00_min:
     input:
         top=input_path+"/ligand/ligand.top",
         mdp=run_path+"/ligand/fep/simulation/{state}/00_min/00_min.mdp",
-        gro=run_path+"/ligand/equil-mdsim/03_npt/03_npt.gro"
+        gro=run_path+"/ligand/equil-mdsim/prod/prod.gro"
     params:
         run_dir=run_path+"/ligand/fep/simulation/{state}/00_min",
     output:
