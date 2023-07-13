@@ -103,17 +103,17 @@ rule equil_ligand_03_npt:
             **mdrun_extra['ligand']
         )
 
-rule equil_ligand_04_npt:
+rule equil_ligand_prod:
     input:
         top=input_path+"/ligand/ligand.top",
         gro=run_path+"/ligand/equil-mdsim/03_npt/03_npt.gro",
         cpt=run_path+"/ligand/equil-mdsim/03_npt/03_npt.cpt",
-        mdp=run_path+"/ligand/equil-mdsim/04_npt/04_npt.mdp",
+        mdp=run_path+"/ligand/equil-mdsim/prod/prod.mdp",
     params:
-        run_dir=run_path+"/ligand/equil-mdsim/04_npt"
+        run_dir=run_path+"/ligand/equil-mdsim/prod"
     output:
-        gro=run_path+"/ligand/equil-mdsim/04_npt/04_npt.gro",
-        cpt=run_path+"/ligand/equil-mdsim/04_npt/04_npt.cpt",
+        gro=run_path+"/ligand/equil-mdsim/prod/prod.gro",
+        cpt=run_path+"/ligand/equil-mdsim/prod/prod.cpt",
     threads: threads
     retries: retries
     run:
