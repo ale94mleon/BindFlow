@@ -75,11 +75,20 @@ def abfe_check_results():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         dest = 'root_folder_path',
-        help='Input protein pdb file path',
+        help='abfe directory',
+        type=str)
+    parser.add_argument(
+        '-o', '--out_csv',
+        help="The path to output the csv file, by default None",
+        dest='out_csv',
+        nargs=argparse.OPTIONAL,
+        default=None,
         type=str)
     args = parser.parse_args()
     df = gather_results.get_all_dgs(root_folder_path=args.root_folder_path)
     if len(df):
         df = df.sort_values(by = 'MBAR').reset_index()
+        if args.out_csv:
+            df.to_csv(args.out_csv)
         print(df)
 if __name__ == "__main__":...

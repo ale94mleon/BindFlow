@@ -461,7 +461,10 @@ class MakeInputs:
         else:
             return None
         if dict_to_work['conf']:
-            print(f"\t\t- Getting OpenFF parameters for: {dict_to_work['conf']}")
+            if  dict_to_work['top']:
+                print(f"\t\t- Using supplied: {dict_to_work['top']} for {dict_to_work['conf']}")
+            else:
+                print(f"\t\t- Getting OpenFF parameters for: {dict_to_work['conf']}") 
         else:
             return None
         
@@ -528,7 +531,7 @@ class MakeInputs:
         if dict_to_work['conf']:
             dict_to_work['conf'] = os.path.abspath(dict_to_work['conf'])
             name, ext = os.path.splitext(os.path.basename(dict_to_work['conf']))
-            print(f"\t\t-Processing: {dict_to_work['conf']}")
+            print(f"\t\t- Processing: {dict_to_work['conf']}")
         else:
             return None
 
@@ -575,6 +578,7 @@ class MakeInputs:
 
         if self.membrane:
             # BioSimSpace does not know how to deal with Slipids_2020
+            # TODO and readParmEDMolecule fails with amber99sb-start-ildn
             system = readParmEDMolecule(top_file=top_out, gro_file=gro_out)
             if self.hmr_factor:
                 HMassRepartition(system, self.hmr_factor).execute()
@@ -719,4 +723,4 @@ class MakeInputs:
 
 #############################################################################################
 
-if __name__ == "__main__": ...
+if __name__ == "__main__":...
