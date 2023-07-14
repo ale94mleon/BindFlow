@@ -186,7 +186,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         The global configuration. It must contain:
         out_approach_path[PathLike], inputs[dict[dict]],
         ligand_names[list[str]], replicas[float], threads[int],
-        hmr_factor[float], cluster/type[str], cluster/options/calculation[dict]
+        hmr_factor[float, None], cluster/type[str], cluster/options/calculation[dict]
         cluster/options/job[dict]. The last is optional and will override cluster/options/calculation[dict]
         during submit
     submit : bool, optional

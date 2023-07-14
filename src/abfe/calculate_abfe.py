@@ -4,7 +4,7 @@ from typing import List, Union
 from abfe.utils import tools
 from abfe._version import __version__
 import copy
-
+from warnings import warn
 # TODO: Ligand and RuleThemAll is using CPUs  and they are only waiting
 # THink in a way to connect RuleThemAll to Ligand to avoid the use of its CPUs on
 # each Ligand simulation
@@ -107,7 +107,7 @@ def calculate_abfe(
         cofactor: Union[tools.PathLike, dict, None] = None,
         cofactor_on_protein:bool = True, # this is to the correct group on the thermostat
         membrane: Union[tools.PathLike, dict, None] = None,
-        hmr_factor: float = 3.0,
+        hmr_factor: Union[float, None] = 3.0,
         # water_model:str = 'tip3p',
         dt_max:float = 0.004, # The maximum integration time in ps for all the steps in the workflow. This will be overwrite by the definitions in the global_config
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
@@ -130,11 +130,16 @@ def calculate_abfe(
     check_config = tools.config_validator(global_config=_global_config)
     if not check_config[0]:
         raise ValueError(check_config[1])
-    if hmr_factor > 4:
-        raise ValueError(f"{hmr_factor =}. Must be lower or equal than 4 (preferred 3) to avoid instabilities")
-    elif hmr_factor < 2:
+    if hmr_factor:
+        if hmr_factor > 4:
+            warn(f"{hmr_factor =}. It should be lower or equal than 4 (preferred 3) to avoid instabilities")
+        elif hmr_factor < 2:
+            if dt_max > 0.002:
+                warn(f"{hmr_factor =} and {dt_max =}. For hmr_factor < 2; dt_max should be <= 0.002 ps")
+    else:
         if dt_max > 0.002:
-            raise ValueError(f"{hmr_factor =} and {dt_max =}. Is not compatible. for hmr_factor < 2; dt_max must be <= 0.002 ps")
+             warn(f"{hmr_factor =} and {dt_max =}. hmr_factor is not been, therefore dt_max should be <= 0.002 ps")
+
     # IO:
     # Initialize inputs on config
     _global_config["inputs"] = {}

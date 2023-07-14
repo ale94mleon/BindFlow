@@ -363,7 +363,7 @@ class MakeInputs:
             cofactor:dict = None,
             cofactor_on_protein:bool = True,
             water_model:str = 'tip3p',
-            hmr_factor:float = None,
+            hmr_factor:Union[float, None] = None,
             builder_dir:PathLike = 'builder'):
         """This class is used for building the systems for ABFE calculation.
         It will create the necessary topology and configuration files, as well the
