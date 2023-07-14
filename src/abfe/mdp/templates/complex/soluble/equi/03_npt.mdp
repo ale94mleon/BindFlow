@@ -13,8 +13,8 @@ title        = NPT-equil-constrained
 define       = -DPOSRES
 integrator   = sd            ; Langevin integrator
 ld-seed      = -1            ; Langevin seed [-1]
-nsteps       = 250000        ; 4 * 250,000 fs = 1ns
-dt           = 0.004         ; 4 fs
+nsteps       = 333350        ; 3 * 250,000 fs ~ 1 ns
+dt           = 0.003         ; 3 fs
 pbc          = xyz           ; Periodic boundary conditions
 comm-mode    = Linear        ; remove center of mass translation
 nstcomm      = 50            ; frequency for center of mass motion removal
