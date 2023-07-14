@@ -130,8 +130,8 @@ def calculate_abfe(
     check_config = tools.config_validator(global_config=_global_config)
     if not check_config[0]:
         raise ValueError(check_config[1])
-    if hmr_factor > 3:
-        raise ValueError(f"{hmr_factor =}. Must be lower than 3 to avoid instabilities")
+    if hmr_factor > 4:
+        raise ValueError(f"{hmr_factor =}. Must be lower or equal than 4 (preferred 3) to avoid instabilities")
     elif hmr_factor < 2:
         if dt_max > 0.002:
             raise ValueError(f"{hmr_factor =} and {dt_max =}. Is not compatible. for hmr_factor < 2; dt_max must be <= 0.002 ps")
