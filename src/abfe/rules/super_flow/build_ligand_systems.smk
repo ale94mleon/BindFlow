@@ -12,8 +12,10 @@ ligand_names = names = [os.path.splitext(ligand_basename)[0] for ligand_basename
 # Create a dictionary to map name to basename
 ligand_dict = {ligand_name: {'basename': ligand_basename, 'definition': ligand_definition} for ligand_name, ligand_basename, ligand_definition in zip(ligand_names, ligand_basenames, config["inputs"]["ligands"])}
 
+
+hmr_factor = config['hmr_factor']
 if hmr_factor:
-    hmr_factor = float(config['hmr_factor'])
+    hmr_factor = float(hmr_factor)
 else:
     hmr_factor = None
 
