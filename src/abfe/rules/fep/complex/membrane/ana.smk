@@ -9,16 +9,16 @@ threads = config['threads']
 # Ana
 rule fep_ana_get_dg_complex_contributions:
     input:
-        xvg_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw']))),
-        xvg_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul']))),
-        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded']))),
         # Make sure that the simualtion ends properly
-        gro_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['vdw']))),
-        gro_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['coul']))),
-        gro_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.gro", state=range(len(config['lambdas']['complex']['bonded']))),
+        finished_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['vdw']))),
+        finished_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['coul']))),
+        finished_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['bonded']))),
         # To get the simulaiton temperature
         mdp_vdw_0_prod=run_path+"/complex/fep/simulation/vdw.0/prod/prod.mdp",
     params:
+        xvg_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw']))),
+        xvg_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul']))),
+        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded']))),
         ana_loc=run_path+"/complex/fep/ana",
     output:
         complex_json=run_path+"/complex/fep/ana/dg_complex_contributions.json"
@@ -42,8 +42,8 @@ rule fep_ana_get_dg_complex_contributions:
             temperature = temperature,
             convergency_plots_prefix = params.ana_loc + "/complex_",
             # Sort the paths
-            vdw = sorted(input.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            coul = sorted(input.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            bonded = sorted(input.xvg_bonded_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            vdw = sorted(params.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            coul = sorted(params.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            bonded = sorted(params.xvg_bonded_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
         )
 

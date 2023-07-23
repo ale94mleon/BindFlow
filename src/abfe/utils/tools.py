@@ -200,6 +200,36 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
 
     os.chdir(cwd)
 
+def paths_exist(paths:List, raise_error:bool = False, out:Union[str, None] = None) -> None:
+    """Check that the paths exist
+
+    Parameters
+    ----------
+    paths : List
+        A list of paths
+    raise_error : bool, optional
+        If True will raise a RuntimeError when any path doe snot exist, by default False
+    out : Union[str, None], optional
+        In case that all files exist and out is st to some file; the existence of this file could be 
+        used as a check that all paths exist (useful for sanekemake), by default None
+
+    Raises
+    ------
+    RuntimeError
+        In case some path does not exist and rasie_error = True
+    """
+    check = True
+    for path in paths:
+        if not os.path.exists(path):
+            check = False
+            msg = f"Missing path/file: {path}"
+            if raise_error:
+                raise RuntimeError(msg)
+            else:
+                print(msg)
+    if out and check:
+        open(out, "w").close()
+
 def list_if_dir(path = '.'):
     return [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item))]
 

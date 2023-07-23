@@ -8,16 +8,16 @@ threads = config['threads']
 # Ana
 rule fep_ana_get_dg_ligand_contributions:
     input:
-        xvg_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['vdw']))),
-        xvg_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['coul']))),
         # Make sure that the simualtion ends properly
-        gro_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.gro", state=range(len(config['lambdas']['ligand']['vdw']))),
-        gro_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.gro", state=range(len(config['lambdas']['ligand']['coul']))),
+        finished_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['ligand']['vdw']))),
+        finished_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['ligand']['coul']))),
         # To get the simulaiton temperature
         mdp_vdw_0_prod=run_path+"/ligand/fep/simulation/vdw.0/prod/prod.mdp",
         # TODO: This dependency makes wait the ligand simulations. Could be used on the complex/ana???
         boresch_dat = run_path+"/complex/equil-mdsim/boreschcalc/dG_off.dat",
     params:
+        xvg_vdw_loc=expand(run_path+"/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['vdw']))),
+        xvg_coul_loc=expand(run_path+"/ligand/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['coul']))),
         ana_loc=run_path+"/ligand/fep/ana",
     output:
         ligand_json=run_path+"/ligand/fep/ana/dg_ligand_contributions.json"
@@ -42,6 +42,6 @@ rule fep_ana_get_dg_ligand_contributions:
             temperature = temperature,
             convergency_plots_prefix = params.ana_loc + "/ligand_",
             # Sort the paths
-            vdw = sorted(input.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            coul = sorted(input.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            vdw = sorted(params.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            coul = sorted(params.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
         )

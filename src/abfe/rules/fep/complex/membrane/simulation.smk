@@ -1,4 +1,4 @@
-from abfe.utils.tools import gmx_runner
+from abfe.utils import tools
 
 
 # Common to all the sub-workflows ligand/replica
@@ -13,8 +13,8 @@ rule fep_complex_00_min:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
-        mdp=run_path+"/complex/fep/simulation/{state}/00_min/00_min.mdp",
         gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
+        mdp=run_path+"/complex/fep/simulation/{state}/00_min/00_min.mdp", 
     params:
         run_dir=run_path+"/complex/fep/simulation/{state}/00_min/",
     output:
@@ -22,7 +22,7 @@ rule fep_complex_00_min:
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
@@ -38,16 +38,17 @@ rule fep_complex_01_nvt:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
         mdp=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro"
+        gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro",
     params:
+        out_gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        out_cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
         run_dir=run_path+"/complex/fep/simulation/{state}/01_nvt",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt"
+        finished=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
@@ -57,84 +58,98 @@ rule fep_complex_01_nvt:
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
+        # Allow proper GROMACS continuation
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule fep_complex_02_npt:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
+        finished=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
         mdp=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt"
     params:
+        in_gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        in_cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
+        out_gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        out_cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
         run_dir=run_path+"/complex/fep/simulation/{state}/02_npt",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt"
+        finished=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.finished",
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = input.gro,
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = input.cpt,
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
+        # Allow proper GROMACS continuation
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule fep_complex_03_npt_norest:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
+        finished=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.finished",
         mdp=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt"
     params:
+        in_gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        in_cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
+        out_gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        out_cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
         run_dir=run_path+"/complex/fep/simulation/{state}/03_npt_norest",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt"
+        finished=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = input.gro,
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = input.cpt,
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
+        # Allow proper GROMACS continuation
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule fep_complex_prod:
     input:
         top=run_path+"/complex/fep/topology/complex_boresch.top",
         ndx=run_path+"/complex/fep/topology/index.ndx",
-        mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
-        cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt"
+        finished=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
+        mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",  
     params:
+        in_gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        in_cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
+        out_gro=run_path+"/complex/fep/simulation/{state}/prod/prod.gro",
+        out_xvg=run_path+"/complex/fep/simulation/{state}/prod/prod.xvg",
         run_dir=run_path+"/complex/fep/simulation/{state}/prod",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/prod/prod.gro",
-        xvg=run_path+"/complex/fep/simulation/{state}/prod/prod.xvg"
+        finished=run_path+"/complex/fep/simulation/{state}/prod/prod.finished",
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = input.gro,
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = input.cpt,
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
+        # Allow proper GROMACS continuation
+        tools.paths_exist(paths = [params.out_gro, params.out_xvg], raise_error = True, out = output.finished)
