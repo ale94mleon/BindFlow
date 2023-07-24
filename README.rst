@@ -12,7 +12,27 @@ Here a visualization of the triggered process:
 
 |workflow|
 
+TODO
+----
 
+Include user friendly options to use the force fields from openmm it is much much easier. The list of force filed for openmm is much higher and easy to access.
+In th4e data directory of openmm.
+
+.. code-block:: python
+
+  import parmed as chem
+  import parmed.unit as u
+
+  from simtk.openmm import app
+  from simtk import openmm as mm
+
+  pdb = app.PDBFile('/home/ale/GIT/protein-ligand-benchmark/plbenchmark/BindFlowData/mcl1/01_protein/crd/protein.pdb')
+  forcefield = app.ForceField('amber99sbildn.xml', 'tip3p.xml')
+  system = forcefield.createSystem(pdb.topology,)# nonbondedMethod=app.PME, nonbondedCutoff=1*u.nanometer)
+
+  struct = chem.openmm.load_topology(pdb.topology, system, xyz = pdb.positions)
+  for path in ['conf.gro', 'topol.top']:
+      struct.save(path, overwrite = True)
 
 Install
 -------
