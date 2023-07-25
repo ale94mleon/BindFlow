@@ -467,9 +467,12 @@ class MakeInputs:
                 print(f"\t\t- Getting OpenFF parameters for: {dict_to_work['conf']}") 
         else:
             return None
-        
+        # Set flag to False by default
+        provided_top_flag = False
         if dict_to_work['top']:
             top_file = dict_to_work['top']
+            # In case the user provided a top, set the flag to True
+            provided_top_flag = True
             if os.path.splitext(dict_to_work['conf'])[-1] == '.gro':
                 gro_file = dict_to_work['conf']
             else:
@@ -492,9 +495,13 @@ class MakeInputs:
         
         if self.membrane:
             parmed_system = readParmEDMolecule(top_file=top_file, gro_file = gro_file)
+            if provided_top_flag and self.hmr_factor:
+                HMassRepartition(parmed_system, self.hmr_factor).execute()
             return parmed_system
         else:
             bss_system = bss.IO.readMolecules([top_file, gro_file])
+            if provided_top_flag and self.hmr_factor:
+                bss_system.repartitionHydrogenMass(factor=self.hmr_factor, water="no")
             return bss_system
 
     def gmx_process(self, mol_definition:dict, is_membrane:bool = False):
