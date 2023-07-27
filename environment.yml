@@ -7,6 +7,7 @@ dependencies:
   - parmed
   - pdbfixer
   - openmm
+  - openmmforcefields
   - openff-toolkit
   - michellab/label/dev::biosimspace
   - bioconda::snakemake

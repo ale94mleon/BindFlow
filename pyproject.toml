@@ -51,7 +51,7 @@ dependencies = [
     "scipy",
     "pandas",
     "mdanalysis",
-    "TOFF",
+    "TOFF >= 0.1.0",
     "tabulate == 0.8.10",
     "pyyaml",
     "uncertainties",

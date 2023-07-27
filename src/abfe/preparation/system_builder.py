@@ -191,6 +191,7 @@ def parmed_solvate(
             {editconf_cmd}
             gmx solvate -cp system_box_corrected.gro -p non_water_ions_system.top -cs {cs} -o system_solvated.gro
         """)
+        # Include missing water and ions parameters in the topology
         add_water_ions_param('non_water_ions_system.top', 'system.top')
         run(f"""    
             gmx grompp -f ions.mdp -c system_solvated.gro -p system.top -o ions.tpr
@@ -426,17 +427,22 @@ class MakeInputs:
             self.vectors, self.angles  = None, None
 
 
-    def openff_process(self, mol_definition:dict, name:str="MOL", safe_naming_prefix:str = None):
+    def small_mol_process(self, mol_definition:dict, name:str="MOL", safe_naming_prefix:str = None):
         """Get parameters for small molecules: ligands, cofactors, ...
 
         Parameters
         ----------
         mol_definition : dict
             This is a dictionary with:
-                * conf -> The path of the small molecule MOL/SDF file [mandatory]
+                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
+                the molecule will not get its parameters.
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
                 * ff:
-                    * code -> OpenFF code [optional], by default openff_unconstrained-2.0.0.offxml
+                    * type -> openff, gaff or espaloma
+                    * code -> force field code [optional], by default depending on type
+                        * openff -> openff_unconstrained-2.0.0.offxml
+                        * gaff -> gaff-2.11
+                        * espaloma -> espaloma-0.2.2
                     * path -> for now this is not used
         name : str, optional
             Name to give, by default "MOL"
@@ -449,38 +455,50 @@ class MakeInputs:
         object
             The BioSimSpace system
         """
+        force_field_code_default = {
+            'openff': 'openff_unconstrained-2.0.0.offxml',
+            'gaff': 'gaff-2.11',
+            'espaloma': 'espaloma-0.2.2'
+        }
         dict_to_work = {
             'top': None,
             'ff': {
-                'code': 'openff_unconstrained-2.0.0.offxml',
+                'type': 'openff',
+                'code': None,
                 'path': None,
             }
         }
         if mol_definition:
             recursive_update_dict(dict_to_work, mol_definition)
+            dict_to_work['ff']['type'] = str(dict_to_work['ff']['type']).lower()
+            if dict_to_work['ff']['type'] not in force_field_code_default:
+                raise ValueError(f"Molecule {dict_to_work} has non valid type for the force field. Choose from {force_field_code_default.keys()}.")
+            # Plug back the default option in case that the user defined None for the code but type was provided correctly                           
+            if not dict_to_work['ff']['code']:
+                dict_to_work['ff']['code'] = force_field_code_default[dict_to_work['ff']['type']]
         else:
-            return None
+            raise ValueError(f"Molecule {mol_definition} has a wrong definition.")
         if dict_to_work['conf']:
             if  dict_to_work['top']:
                 print(f"\t\t- Using supplied: {dict_to_work['top']} for {dict_to_work['conf']}")
             else:
-                print(f"\t\t- Getting OpenFF parameters for: {dict_to_work['conf']}") 
+                print(f"\t\t- Getting {dict_to_work['ff']['code']} parameters for: {dict_to_work['conf']}") 
         else:
-            return None
+            raise ValueError(f"Molecule {mol_definition} has a wrong configuration")
         # Set flag to False by default
         provided_top_flag = False
         if dict_to_work['top']:
-            top_file = dict_to_work['top']
+            top_file = os.path.abspath(dict_to_work['top'])
             # In case the user provided a top, set the flag to True
             provided_top_flag = True
             if os.path.splitext(dict_to_work['conf'])[-1] == '.gro':
-                gro_file = dict_to_work['conf']
+                gro_file = os.path.abspath(dict_to_work['conf'])
             else:
-                warnings.warn(f"For safety reasons, if top is provided for small molecule; the gro file must be provided. Provided: {dict_to_work['conf']}. This small molecule will be ignored!")
-                return None
+                raise ValueError(f"For safety reasons, if top is provided for small molecule; the gro file must be provided. Provided: {dict_to_work['conf']}.")
         else:
             parameterizer = Parameterize(
                 force_field_code = dict_to_work['ff']['code'],
+                force_field_type = dict_to_work['ff']['type'], 
                 ext_types = ['top', 'gro'],
                 hmr_factor = self.hmr_factor,
                 overwrite = True,
@@ -602,7 +620,7 @@ class MakeInputs:
         
         return system
 
-    def make_system(self, ligand_definition:PathLike):
+    def make_system(self, ligand_definition:dict):
         """Create self.sys_ligand, self.sys_cofactor, self.sys_protein, self.sys_membrane
         and self.md_system (the combination of the available components). In case
         that the class was already called, it will be assumed that self.sys_cofactor, self.sys_protein, self.sys_membrane
@@ -612,14 +630,19 @@ class MakeInputs:
         ----------
         ligand_definition : dict
             This is a dictionary with:
-                * conf -> The path of the small MOL/SDF molecule file [mandatory]
+                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
+                the molecule will not get its parameters.
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
                 * ff:
-                    * code -> OpenFF code [optional]
+                    * type -> openff, gaff or espaloma
+                    * code -> force field code [optional], by default depending on type
+                        * openff -> openff_unconstrained-2.0.0.offxml
+                        * gaff -> gaff-2.11
+                        * espaloma -> espaloma-0.2.2
                     * path -> for now this is not used
         """
         print("\t* Processing system components")
-        self.sys_ligand = self.openff_process(
+        self.sys_ligand = self.small_mol_process(
             mol_definition = ligand_definition,
             name="LIG",
             safe_naming_prefix='x')
@@ -628,10 +651,13 @@ class MakeInputs:
         if self.__self_was_called:
             print(f"\t\t- Reusing components from cache")
         else:
-            self.sys_cofactor = self.openff_process(
-                mol_definition = self.cofactor,
-                name="COF",
-                safe_naming_prefix='z')
+            if self.cofactor:
+                self.sys_cofactor = self.small_mol_process(
+                    mol_definition = self.cofactor,
+                    name="COF",
+                    safe_naming_prefix='z')
+            else:
+                self.sys_cofactor = None
             self.sys_protein = self.gmx_process(mol_definition = self.protein)
             self.sys_membrane = self.gmx_process(mol_definition = self.membrane, is_membrane = True)
         print("\t\t- Merging Components")
@@ -657,10 +683,16 @@ class MakeInputs:
         ----------
         ligand_definition : Union[dict, PathLike]
             In case of dictionary, it should be:
-                * conf -> The path of the small MOL/SDF molecule file [mandatory]
+                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
+                the molecule will not get its parameters.
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
                 * ff:
-                    * code -> OpenFF code [optional], by default openff_unconstrained-2.0.0.offxml
+                    * type -> openff, gaff or espaloma
+                    * code -> force field code [optional], by default depending on type
+                        * openff -> openff_unconstrained-2.0.0.offxml
+                        * gaff -> gaff-2.11
+                        * espaloma -> espaloma-0.2.2
+                    * type -> openff, gaff or espaloma
                     * path -> for now this is not used
             In case of PathLike:
                 * The path of the small MOL/SDF molecule file 
