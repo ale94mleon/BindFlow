@@ -16,7 +16,7 @@ from abfe.orchestration.flow_builder import ligand_flows, approach_flow
 from abfe.free_energy import gather_results
 
 
-def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], default_ff:Union[tools.PathLike, str], optional:bool = False) -> dict:
+def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], default_ff:Union[tools.PathLike, str], default_ff_type:Union[str, None] = None, optional:bool = False) -> dict:
     """This helper function is called inside abfe.calculate_ABFE to check for the inputs: protein, ligands, membrane and cofactor
 
     Parameters
@@ -28,6 +28,12 @@ def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], de
     default_ff : Union[tools.PathLike, str]
         A code of the force field. Internally it will be check if [default_ff].ff exist as a directory. This allow a much bigger flexibility
         on the use of different force fields that do not come with the GROMACS distribution by default
+    default_ff_type : Union[tools.PathLike, str]
+        This is used for the small molecules. It must be openff, gaff or espaloma (case insensitive). If it is provided, default_ff will NOT be used and set to None.
+        During the building of the system, it will be converted internally as:
+            * openff -> openff_unconstrained-2.0.0.offxml
+            * gaff -> gaff-2.11
+            * espaloma -> espaloma-0.2.2
     optional : bool, optional
         if the arguments under analysis is optional or not, by default False
 
@@ -47,12 +53,20 @@ def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], de
     FileNotFoundError
         The configuration file is not found when user_input is suppose to be a path
     """
+    valid_ff_types = ['openff', 'gaff', 'espaloma']
+
+
+    if default_ff_type:
+        default_ff_type = str(default_ff_type).lower()
+        if default_ff_type not in valid_ff_types:
+            raise ValueError(f"{default_ff_type =} is not valid. Choose from {valid_ff_types}")
+
 
     if not user_input:
         if optional:
             return None
         else:
-            raise ValueError(f"{arg_name =} was set with {user_input = } but {optional =}")
+            raise ValueError(f"{arg_name =} was set with {user_input =} but {optional =}")
     else:
         internal_dict = {
             'conf': None,
@@ -62,6 +76,9 @@ def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], de
                 'path': None,
             }
         }
+        if default_ff_type:
+            internal_dict['ff']['type'] = default_ff_type
+            internal_dict['ff']['code'] = None
 
         if isinstance(user_input, dict):
             tools.recursive_update_dict(internal_dict, user_input)
@@ -145,8 +162,8 @@ def calculate_abfe(
     # Initialize inputs on config
     _global_config["inputs"] = {}
     _global_config["inputs"]["protein"] = input_helper(arg_name = 'protein',user_input = protein,default_ff = 'amber99sb-ildn',optional = False)
-    _global_config["inputs"]["ligands"] = [input_helper(arg_name = 'ligand',user_input = ligand, default_ff = 'openff_unconstrained-2.0.0.offxml',optional = False) for ligand in ligands]
-    _global_config["inputs"]["cofactor"] = input_helper(arg_name = 'cofactor',user_input = cofactor, default_ff = 'openff_unconstrained-2.0.0.offxml',optional = True)
+    _global_config["inputs"]["ligands"] = [input_helper(arg_name = 'ligand',user_input = ligand, default_ff = None, default_ff_type='openff', optional = False) for ligand in ligands]
+    _global_config["inputs"]["cofactor"] = input_helper(arg_name = 'cofactor',user_input = cofactor, default_ff = None, default_ff_type='openff', optional = True)
     _global_config["inputs"]["membrane"] = input_helper(arg_name = 'membrane',user_input = membrane, default_ff = 'Slipids_2020',optional = True)
 
     _global_config["cofactor_on_protein"] = cofactor_on_protein
