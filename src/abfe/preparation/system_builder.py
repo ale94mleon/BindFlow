@@ -192,6 +192,9 @@ def parmed_solvate(
             gmx solvate -cp system_box_corrected.gro -p non_water_ions_system.top -cs {cs} -o system_solvated.gro
         """)
         # Include missing water and ions parameters in the topology
+        # TODO Limitation! Only works with tip3p model I have to extend this. The same for the bss_solvate
+        # The other is that the ions are always amber ions and this is not right in the case of charmm force fields.
+        # OpenMM gives a better force field handled consider to switch to OpenMM for topology retrieve.
         add_water_ions_param('non_water_ions_system.top', 'system.top')
         run(f"""    
             gmx grompp -f ions.mdp -c system_solvated.gro -p system.top -o ions.tpr
@@ -442,7 +445,7 @@ class MakeInputs:
                     * code -> force field code [optional], by default depending on type
                         * openff -> openff_unconstrained-2.0.0.offxml
                         * gaff -> gaff-2.11
-                        * espaloma -> espaloma-0.2.2
+                        * espaloma -> espaloma-0.3.1
                     * path -> for now this is not used
         name : str, optional
             Name to give, by default "MOL"
@@ -458,7 +461,7 @@ class MakeInputs:
         force_field_code_default = {
             'openff': 'openff_unconstrained-2.0.0.offxml',
             'gaff': 'gaff-2.11',
-            'espaloma': 'espaloma-0.2.2'
+            'espaloma': 'espaloma-0.3.1'
         }
         dict_to_work = {
             'top': None,
@@ -638,7 +641,7 @@ class MakeInputs:
                     * code -> force field code [optional], by default depending on type
                         * openff -> openff_unconstrained-2.0.0.offxml
                         * gaff -> gaff-2.11
-                        * espaloma -> espaloma-0.2.2
+                        * espaloma -> espaloma-0.3.1
                     * path -> for now this is not used
         """
         print("\t* Processing system components")
@@ -691,7 +694,7 @@ class MakeInputs:
                     * code -> force field code [optional], by default depending on type
                         * openff -> openff_unconstrained-2.0.0.offxml
                         * gaff -> gaff-2.11
-                        * espaloma -> espaloma-0.2.2
+                        * espaloma -> espaloma-0.3.1
                     * type -> openff, gaff or espaloma
                     * path -> for now this is not used
             In case of PathLike:

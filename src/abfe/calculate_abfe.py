@@ -33,7 +33,7 @@ def input_helper(arg_name:str, user_input: Union[tools.PathLike, dict, None], de
         During the building of the system, it will be converted internally as:
             * openff -> openff_unconstrained-2.0.0.offxml
             * gaff -> gaff-2.11
-            * espaloma -> espaloma-0.2.2
+            * espaloma -> espaloma-0.3.1
     optional : bool, optional
         if the arguments under analysis is optional or not, by default False
 
