@@ -1,8 +1,8 @@
 from abfe.preparation import system_builder as sb
+# import itertools as sb # TODO!!!!!!!!!!!!!! for debuging
 import os
 import glob
 import shutil
-from abfe.utils import tools
 
 out_approach_path = config["out_approach_path"]
 
@@ -17,14 +17,6 @@ if hmr_factor:
     hmr_factor = float(hmr_factor)
 else:
     hmr_factor = None
-
-# TODO I do not know if this is necesary
-rule check_input_files:
-    input:
-        expand(out_approach_path+"/{ligand_name}/input/complex/complex.gro", ligand_name = ligand_names),
-        expand(out_approach_path+"/{ligand_name}/input/complex/complex.top", ligand_name = ligand_names),
-        expand(out_approach_path+"/{ligand_name}/input/ligand/ligand.gro", ligand_name = ligand_names),
-        expand(out_approach_path+"/{ligand_name}/input/ligand/ligand.top", ligand_name = ligand_names),
 
 
 rule make_ligand_copies:
@@ -44,11 +36,11 @@ rule build_ligand_system:
         # This is just used to paralelize
         mol_file = lambda wildcards: out_approach_path + "/{ligand_name}/input/mol/" + ligand_dict[wildcards.ligand_name]['basename']
     output:
-        out_approach_path+"/{ligand_name}/input/complex/complex.gro",
-        out_approach_path+"/{ligand_name}/input/complex/complex.top",
-        # optional(out_approach_path+"/{ligand_name}/input/complex/index.ndx"),
-        out_approach_path+"/{ligand_name}/input/ligand/ligand.gro",
-        out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
+        out_approach_path + "/{ligand_name}/input/complex/complex.gro",
+        out_approach_path + "/{ligand_name}/input/complex/complex.top",
+        out_approach_path+"/{ligand_name}/input/complex/index.ndx",
+        out_approach_path + "/{ligand_name}/input/ligand/ligand.gro",
+        out_approach_path + "/{ligand_name}/input/ligand/ligand.top",
     threads: config["threads"]
     run:
         out_ligand_path = os.path.join(out_approach_path, wildcards.ligand_name)

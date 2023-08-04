@@ -21,9 +21,9 @@ rule fep_setup_complex:
         ligand_names = config['ligand_names'],
         replicas = range(1,1 + config['replicas']),
     output:
-        mdp_vdw=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['vdw'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.complex.membrane.fep+"/vdw", ext='mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas'])))),
-        mdp_coul=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.complex.membrane.fep+"/coul", ext='mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas'])))),
-        mdp_bonded=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.complex.membrane.fep+"/bonded", ext='mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas'])))),
+        mdp_vdw=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['vdw'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.complex.membrane.fep+"/vdw", ext='mdp')], allow_missing = True),
+        mdp_coul=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.complex.membrane.fep+"/coul", ext='mdp')], allow_missing = True),
+        mdp_bonded=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.complex.membrane.fep+"/bonded", ext='mdp')], allow_missing = True),
         fep_top=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
         ndx=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
     run:

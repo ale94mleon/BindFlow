@@ -1,11 +1,6 @@
 from abfe.free_energy import analysis
 approach_path = config["out_approach_path"]
 
-#TODO I do not know if it is needed
-rule fep_results_check:
-    input:
-        dG_path= expand(approach_path + "/{ligand_name}/{replica}/dG_results.csv", ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas']))))
-
 rule fep_get_dg_cycle:
     input:
         complex_json=approach_path + "/{ligand_name}/{replica}/complex/fep/ana/dg_complex_contributions.json",

@@ -13,9 +13,8 @@ if config["complex_type"] == 'soluble':
 
 elif config["complex_type"] == 'membrane':
     include: 'ligand/setup.smk'
-    print(777)
     include: 'complex/membrane/setup.smk'
-    print(888)
+
     #RUN: FEP 
     include: 'ligand/simulation.smk'
     include: 'complex/membrane/simulation.smk'
@@ -30,7 +29,5 @@ else:
         shell:
             "echo 'fep simulations, you must give complex_type = soluble or membrane' > {output}"
 
-# Continue with common rules
-print(101010)
 # Final Result:
 include: "calculate_result.smk"

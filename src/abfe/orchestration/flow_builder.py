@@ -5,6 +5,7 @@ import numpy as np
 from abfe.orchestration import generate_scheduler
 import json
 from abfe import rules
+from abfe.utils import tools
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -68,7 +69,11 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> Non
     f"configfile: \'{conf_file_path}\'\n"\
     "approach_path = config['out_approach_path']\n\n"\
     "# Start Flow\n"\
-    f"include: \'{rules.super_flow}\'"
+    f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
+    "# Specify targets and dependencies\n"\
+    "rule RuleThemAll:\n"\
+    "    input:config[\"out_approach_path\"] + \"/abfe_results.csv\""
+            
     with open(out_file_path, 'w') as out:
         out.write(file_str)
 
@@ -158,12 +163,11 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         out_ligand_path = os.path.join(global_config["out_approach_path"],  str(ligand_name))
 
         # Make directories on demand
-        if (not os.path.exists(out_ligand_path)):
-            os.mkdir((out_ligand_path))
-
+        tools.makedirs(out_ligand_path)
         out_ligand_input_path = os.path.join(out_ligand_path, "input")
-        if not os.path.isdir(out_ligand_input_path):
-            os.mkdir(out_ligand_input_path)
+        tools.makedirs(out_ligand_input_path)
+        tools.makedirs(os.path.join(out_ligand_input_path, "complex"))
+        tools.makedirs(os.path.join(out_ligand_input_path, "ligand"))
         
         # Archive original files      
         with tarfile.open(os.path.join(out_ligand_input_path, 'orig_in.tar.gz'), "w:gz") as tar:

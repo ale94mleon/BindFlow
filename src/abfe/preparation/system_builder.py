@@ -3,7 +3,6 @@ import warnings
 import glob
 import os
 import shutil
-import argparse
 import tempfile
 import copy
 from typing import Iterable
@@ -754,6 +753,9 @@ class MakeInputs:
                 cofactor_name = 'COF' if self.cofactor else None,
                 cofactor_on_protein=self.cofactor_on_protein,
             )
+        else:
+            # Create a dummy index.ndx file. It is needed for the Snakemake workflow
+            open(system_dir, "index.ndx", "w").close()
         
         # Construct ABFE system:
         print(f"\t* Final build of ABFE directory on: {self.out_dir}")
