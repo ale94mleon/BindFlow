@@ -178,7 +178,7 @@ class SlurmScheduler(Scheduler):
         only_build : bool, optional
             Only create the file to submit to the cluster but it will not be executed, by default False
         job_prefix : bool, optional
-            It will be added as {job_prefix}RuleThemAll , by default False
+            It will be added as {job_prefix}.RuleThemAll , by default False
         Returns
         -------
         str
@@ -204,9 +204,9 @@ class SlurmScheduler(Scheduler):
         tools.makedirs(cluster_log_path)
         cluster_to_work.update({
             # Clear naming
-            "job-name": f"{job_prefix}RuleThemAll",
-            "output": os.path.join(cluster_log_path, f"{job_prefix}RuleThemAll.out"),
-            "error": os.path.join(cluster_log_path, f"{job_prefix}RuleThemAll.err"),
+            "job-name": f"{job_prefix}.RuleThemAll",
+            "output": os.path.join(cluster_log_path, f"{job_prefix}.RuleThemAll.out"),
+            "error": os.path.join(cluster_log_path, f"{job_prefix}.RuleThemAll.err"),
         })
 
         # Create the sbatch section of the script

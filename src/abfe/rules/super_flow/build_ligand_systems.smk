@@ -8,10 +8,9 @@ out_approach_path = config["out_approach_path"]
 
 ligand_paths = [mol['conf'] for mol in config["inputs"]["ligands"]]
 ligand_basenames = [os.path.basename(path) for path in ligand_paths]
-ligand_names = names = [os.path.splitext(ligand_basename)[0] for ligand_basename in ligand_basenames]
+ligand_names = [os.path.splitext(ligand_basename)[0] for ligand_basename in ligand_basenames]
 # Create a dictionary to map name to basename
 ligand_dict = {ligand_name: {'basename': ligand_basename, 'definition': ligand_definition} for ligand_name, ligand_basename, ligand_definition in zip(ligand_names, ligand_basenames, config["inputs"]["ligands"])}
-
 
 hmr_factor = config['hmr_factor']
 if hmr_factor:
@@ -19,11 +18,21 @@ if hmr_factor:
 else:
     hmr_factor = None
 
+# TODO I do not know if this is necesary
+rule check_input_files:
+    input:
+        expand(out_approach_path+"/{ligand_name}/input/complex/complex.gro", ligand_name = ligand_names),
+        expand(out_approach_path+"/{ligand_name}/input/complex/complex.top", ligand_name = ligand_names),
+        expand(out_approach_path+"/{ligand_name}/input/ligand/ligand.gro", ligand_name = ligand_names),
+        expand(out_approach_path+"/{ligand_name}/input/ligand/ligand.top", ligand_name = ligand_names),
+
+
 rule make_ligand_copies:
     input:
-        ligand_paths=ligand_paths
+        ligand_paths=ligand_paths,
+        out_dirs = expand(out_approach_path+"/{ligand_name}/", ligand_name = ligand_names)
     output:
-        ligand_copies = expand(out_approach_path+"/{ligand_name}/input/mol/{ligand_basename}", zip, ligand_name=ligand_names, ligand_basename = ligand_basenames)
+        ligand_copies = expand(out_approach_path+"/{ligand_name}/input/mol/{ligand_basename}", zip, ligand_name = ligand_names, ligand_basename = ligand_basenames)
     run:
         for ligand_path, ligand_copy in zip(input.ligand_paths, output.ligand_copies):
             # TODO: check if the topology was provided and also copy the file

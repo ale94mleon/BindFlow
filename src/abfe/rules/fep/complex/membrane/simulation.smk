@@ -2,7 +2,7 @@ from abfe.utils import tools
 
 
 # Common to all the sub-workflows ligand/replica
-run_path = config["run_path"]
+approach_path = config["out_approach_path"]
 threads = config['threads']
 retries = config['retries']
 load_dependencies = config['extra_directives']['dependencies']
@@ -11,14 +11,14 @@ mdrun_extra = config['extra_directives']['mdrun']
 
 rule fep_complex_00_min:
     input:
-        top=run_path+"/complex/fep/topology/complex_boresch.top",
-        ndx=run_path+"/complex/fep/topology/index.ndx",
-        gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
-        mdp=run_path+"/complex/fep/simulation/{state}/00_min/00_min.mdp", 
+        top=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        gro=approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
+        mdp=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.mdp", 
     params:
-        run_dir=run_path+"/complex/fep/simulation/{state}/00_min/",
+        run_dir=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/",
     output:
-        gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro",
+        gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.gro",
     threads: threads
     retries: retries
     run:
@@ -35,16 +35,16 @@ rule fep_complex_00_min:
 
 rule fep_complex_01_nvt:
     input:
-        top=run_path+"/complex/fep/topology/complex_boresch.top",
-        ndx=run_path+"/complex/fep/topology/index.ndx",
-        mdp=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.mdp",
-        gro=run_path+"/complex/fep/simulation/{state}/00_min/00_min.gro",
+        top=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        mdp=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.mdp",
+        gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.gro",
     params:
-        out_gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
-        out_cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
-        run_dir=run_path+"/complex/fep/simulation/{state}/01_nvt",
+        out_gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        out_cpt=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
+        run_dir=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt",
     output:
-        finished=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
+        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
     threads: threads
     retries: retries
     run:
@@ -63,18 +63,18 @@ rule fep_complex_01_nvt:
 
 rule fep_complex_02_npt:
     input:
-        top=run_path+"/complex/fep/topology/complex_boresch.top",
-        ndx=run_path+"/complex/fep/topology/index.ndx",
-        finished=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
-        mdp=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.mdp",
+        top=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
+        mdp=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.mdp",
     params:
-        in_gro=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
-        in_cpt=run_path+"/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
-        out_gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
-        out_cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
-        run_dir=run_path+"/complex/fep/simulation/{state}/02_npt",
+        in_gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        in_cpt=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
+        out_gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        out_cpt=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
+        run_dir=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt",
     output:
-        finished=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.finished",
+        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.finished",
     threads: threads
     retries: retries
     run:
@@ -94,18 +94,18 @@ rule fep_complex_02_npt:
 
 rule fep_complex_03_npt_norest:
     input:
-        top=run_path+"/complex/fep/topology/complex_boresch.top",
-        ndx=run_path+"/complex/fep/topology/index.ndx",
-        finished=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.finished",
-        mdp=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.mdp",
+        top=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.finished",
+        mdp=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.mdp",
     params:
-        in_gro=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.gro",
-        in_cpt=run_path+"/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
-        out_gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
-        out_cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
-        run_dir=run_path+"/complex/fep/simulation/{state}/03_npt_norest",
+        in_gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        in_cpt=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
+        out_gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        out_cpt=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
+        run_dir=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest",
     output:
-        finished=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
+        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
     threads: threads
     retries: retries
     run:
@@ -125,18 +125,18 @@ rule fep_complex_03_npt_norest:
 
 rule fep_complex_prod:
     input:
-        top=run_path+"/complex/fep/topology/complex_boresch.top",
-        ndx=run_path+"/complex/fep/topology/index.ndx",
-        finished=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
-        mdp=run_path+"/complex/fep/simulation/{state}/prod/prod.mdp",  
+        top=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
+        mdp=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.mdp",  
     params:
-        in_gro=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
-        in_cpt=run_path+"/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
-        out_gro=run_path+"/complex/fep/simulation/{state}/prod/prod.gro",
-        out_xvg=run_path+"/complex/fep/simulation/{state}/prod/prod.xvg",
-        run_dir=run_path+"/complex/fep/simulation/{state}/prod",
+        in_gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        in_cpt=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
+        out_gro=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.gro",
+        out_xvg=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.xvg",
+        run_dir=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod",
     output:
-        finished=run_path+"/complex/fep/simulation/{state}/prod/prod.finished",
+        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.finished",
     threads: threads
     retries: retries
     run:

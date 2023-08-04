@@ -3,25 +3,24 @@ from abfe.utils import tools
 from abfe.mdp import mdp
 import os
 
-run_path = config["run_path"]
 threads = config['threads']
 
 # Ana
 rule fep_ana_get_dg_complex_contributions:
     input:
         # Make sure that the simualtion ends properly
-        finished_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['vdw']))),
-        finished_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['coul']))),
-        finished_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['bonded']))),
+        finished_vdw_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing = True),
+        finished_coul_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['coul'])), allow_missing = True),
+        finished_bonded_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['bonded'])), allow_missing = True),
         # To get the simulaiton temperature
-        mdp_vdw_0_prod=run_path+"/complex/fep/simulation/vdw.0/prod/prod.mdp",
+        mdp_vdw_0_prod=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.0/prod/prod.mdp",
     params:
-        xvg_vdw_loc=expand(run_path+"/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw']))),
-        xvg_coul_loc=expand(run_path+"/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul']))),
-        xvg_bonded_loc=expand(run_path+"/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded']))),
-        ana_loc=run_path+"/complex/fep/ana",
+        xvg_vdw_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing = True),
+        xvg_coul_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul'])), allow_missing = True),
+        xvg_bonded_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded'])), allow_missing = True),
+        ana_loc=approach_path + "/{ligand_name}/{replica}/complex/fep/ana",
     output:
-        complex_json=run_path+"/complex/fep/ana/dg_complex_contributions.json"
+        complex_json=approach_path + "/{ligand_name}/{replica}/complex/fep/ana/dg_complex_contributions.json"
     threads: threads # TODO: Sometimes the rule hang for a long time
     run:
         # Make directory

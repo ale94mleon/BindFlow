@@ -4,7 +4,7 @@ from abfe.free_energy import gather_results
 rule gather_receptor_results:
     input:
         approach_path=config["out_approach_path"],
-        prior_result_paths=expand(config["out_approach_path"] + "/{ligand_names}/{replica}/dG_results.csv",ligand_names=config['ligand_names'],replica=list(map(str, range(1,1 + config['replicas']))), allow_missing=True)
+        prior_result_paths=expand(config["out_approach_path"] + "/{ligand_names}/{replica}/dG_results.csv",ligand_names=config['ligand_names'],replica=list(map(str, range(1,1 + config['replicas']))))
     output:
         out_dg_file=config["out_approach_path"]+"/abfe_results.csv",
     run:

@@ -2,8 +2,9 @@ import os
 import tarfile
 from typing import List, Union
 import numpy as np
-from abfe.orchestration import generate_snake, generate_scheduler
+from abfe.orchestration import generate_scheduler
 import json
+from abfe import rules
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -53,125 +54,23 @@ def update_nwindows_config(config:dict) -> dict:
 
 
 
-def ligand_flows(global_config:dict):
-    """Prepare all the directories and files
+def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> None:
+    """Used to generate the main Snakefile
 
     Parameters
     ----------
-    global_config : dict
-        This is the global configuration file. It must have:
-        num_max_thread: int, The maximum number of threads to be used on each simulation.
-        mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True} 
-        extra_dependencies: A list of dependencies that must be run before gmx mdrun. Useful to launch modules as spack or conda.
-        out_approach_path: PathLike: The path where the ligands, their replicas and main configuration files will be written.
-        num_jobs: int: Maximum number of jobs to run in parallel (TODO, on the ligands??)
-        inputs: {
-            'ligands': List[dict],
-            'protein': dict,
-            'cofactor': dict,
-            'membrane': dict
-        }
-
-        Usually this dictionary is created by first invoking :meth:`abfe.calculate_abfe.calculate_abfe`
+    out_file_path : str
+        Path to write the Snakefile
+    conf_file_path : str
+        Path of the yml workflow configuration file.
     """
-
-    # Update (or set) nwindows on global_config.
-    global_config = update_nwindows_config(global_config)
-    # With this implementation the user can select the number of windows setting them up on the global configuration.
-    ligand_config = {
-        'run_path': None,
-        'run_num': None,
-        'threads': global_config['threads'],
-        'extra_directives': global_config['extra_directives'],
-        'retries':3,
-        'dt_max': global_config['dt_max'],
-        'lambdas': {
-            'ligand': {
-                'vdw': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['vdw']), 2)),
-                'coul': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['coul']), 2)),
-            },
-            'complex': {
-                'vdw': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['vdw']), 2)),
-                'coul': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['coul']), 2)),
-                'bonded': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['bonded']), 2)),
-            },
-        },
-    }
-
-    # Specify the complex type
-    if global_config["inputs"]["membrane"]:
-        ligand_config["complex_type"] = 'membrane'
-    else:
-        ligand_config["complex_type"] = 'soluble'
-    
-    # Add extra mdp options if provided
-    try:
-        ligand_config['mdp'] = global_config['mdp']
-    except KeyError:
-        pass
-    
-    # Just to save the prefix
-    if global_config["job_prefix"]:
-        ligand_config["job_prefix"] = global_config["job_prefix"]
-
-    for ligand_definition in global_config["inputs"]["ligands"]:
-        input_ligand_path = ligand_definition['conf']
-        ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
-        out_ligand_path = os.path.join(global_config["out_approach_path"],  str(ligand_name))
-
-        # Make directories on demand
-        if (not os.path.exists(out_ligand_path)):
-            os.mkdir((out_ligand_path))
-
-        out_ligand_input_path = os.path.join(out_ligand_path, "input")
-        if (not os.path.isdir(out_ligand_input_path)):
-            os.mkdir(out_ligand_input_path)
-        
-        # Archive original files      
-        with tarfile.open(os.path.join(out_ligand_input_path, 'orig_in.tar.gz'), "w:gz") as tar:
-            tar.add(input_ligand_path, arcname=os.path.basename(input_ligand_path))
-            tar.add(global_config["inputs"]["protein"]["conf"],arcname=os.path.basename(global_config["inputs"]["protein"]["conf"]))
-            if global_config["inputs"]["cofactor"]:
-                tar.add(global_config["inputs"]["cofactor"]["conf"],arcname=os.path.basename(global_config["inputs"]["cofactor"]["conf"]))
-            if global_config["inputs"]["membrane"]:
-                tar.add(global_config["inputs"]["membrane"]["conf"],arcname=os.path.basename(global_config["inputs"]["membrane"]["conf"]))
-        
-        # Update ligand configuration file
-        tmp_ligand_config = ligand_config.copy()
-        tmp_ligand_config['input_data_path'] = out_ligand_input_path
-
-        # Build the replicas
-        for num_replica in range(1, global_config["replicas"] + 1):
-            ligand_rep_name = f"{global_config['job_prefix']}{ligand_name}.rep{num_replica}"
-            out_replica_path = os.path.join(out_ligand_path, str(num_replica))
-
-            if (not os.path.isdir(out_replica_path)):
-                os.mkdir(out_replica_path)
-
-            # set global files:
-            snake_path = os .path.join(out_replica_path, "Snakefile")
-            conf_path = os .path.join(out_replica_path, "snake_conf.json")
-
-            # Update ligand configuration file
-            tmp_ligand_config.update({
-                'run_path':out_replica_path,
-                'run_num': num_replica,
-            })
-            # Write the new ligand configuration
-            with open(conf_path, "w") as out_IO:
-                json.dump(tmp_ligand_config, out_IO, indent=4)
-            
-            # Generate the snakefile inside each replica
-            generate_snake.generate_snake_file(out_file_path=snake_path, conf_file_path=conf_path)
-
-            scheduler = generate_scheduler.create_scheduler(
-                scheduler_type = global_config["cluster"]["type"],
-                cluster_config = global_config["cluster"]["options"]["calculation"],
-                out_dir = out_replica_path,
-                prefix_name = ligand_rep_name,
-                snake_executor_file = 'job.sh')
-            
-            scheduler.build_snakemake(jobs = global_config["jobs_per_ligand_job"])
+    file_str = "# Load Config:\n"\
+    f"configfile: \'{conf_file_path}\'\n"\
+    "approach_path = config['out_approach_path']\n\n"\
+    "# Start Flow\n"\
+    f"include: \'{rules.super_flow}\'"
+    with open(out_file_path, 'w') as out:
+        out.write(file_str)
 
 def approach_flow(global_config:dict, submit:bool = False) -> str:
     """This is the main workflow, it controls the rest of the workflows
@@ -184,9 +83,13 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     ----------
     global_config : dict
         The global configuration. It must contain:
-        out_approach_path[PathLike], inputs[dict[dict]],
+        out_approach_path[PathLike], inputs[dict[dict]], water_model[str], cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
         ligand_names[list[str]], replicas[float], threads[int],
         hmr_factor[float, None], cluster/type[str], cluster/options/calculation[dict]
+        num_max_thread: int, The maximum number of threads to be used on each simulation.
+        mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True} 
+        extra_dependencies: A list of dependencies that must be run before gmx mdrun. Useful to launch modules as spack or conda.
+        num_jobs: int: Maximum number of jobs to run in parallel
         cluster/options/job[dict]. The last is optional and will override cluster/options/calculation[dict]
         during submit
     submit : bool, optional
@@ -202,6 +105,9 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     snake_path = out_path + "/Snakefile"
     approach_conf_path = out_path + "/snake_conf.json"
 
+    # Update (or set) nwindows on global_config.
+    global_config = update_nwindows_config(global_config)
+
     approach_config = {
         "out_approach_path": global_config["out_approach_path"],
         "inputs": global_config["inputs"],
@@ -209,38 +115,95 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],
-        'threads': global_config["threads"],
-        "hmr_factor": global_config["hmr_factor"]
+        "hmr_factor": global_config["hmr_factor"],
+        'threads': global_config['threads'],
+        'extra_directives': global_config['extra_directives'],
+        'retries':3,
+        'dt_max': global_config['dt_max'],
+        # With this implementation the user can select the number of windows setting them up on the global configuration.
+        'lambdas': {
+            'ligand': {
+                'vdw': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['vdw']), 2)),
+                'coul': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['coul']), 2)),
+            },
+            'complex': {
+                'vdw': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['vdw']), 2)),
+                'coul': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['coul']), 2)),
+                'bonded': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['bonded']), 2)),
+            },
+        },
     }
+
+    # Specify the complex type
+    if global_config["inputs"]["membrane"]:
+        approach_config["complex_type"] = 'membrane'
+    else:
+        approach_config["complex_type"] = 'soluble'
+    
+    # Add extra mdp options if provided
+    try:
+        approach_config['mdp'] = global_config['mdp']
+    except KeyError:
+        pass
+
+    # Just to save the prefix
+    if global_config["job_prefix"]:
+        approach_config["job_prefix"] = global_config["job_prefix"]
+
+
+
+    for ligand_definition in global_config["inputs"]["ligands"]:
+        input_ligand_path = ligand_definition['conf']
+        ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
+        out_ligand_path = os.path.join(global_config["out_approach_path"],  str(ligand_name))
+
+        # Make directories on demand
+        if (not os.path.exists(out_ligand_path)):
+            os.mkdir((out_ligand_path))
+
+        out_ligand_input_path = os.path.join(out_ligand_path, "input")
+        if not os.path.isdir(out_ligand_input_path):
+            os.mkdir(out_ligand_input_path)
+        
+        # Archive original files      
+        with tarfile.open(os.path.join(out_ligand_input_path, 'orig_in.tar.gz'), "w:gz") as tar:
+            tar.add(input_ligand_path, arcname=os.path.basename(input_ligand_path))
+            tar.add(global_config["inputs"]["protein"]["conf"],arcname=os.path.basename(global_config["inputs"]["protein"]["conf"]))
+            if global_config["inputs"]["cofactor"]:
+                tar.add(global_config["inputs"]["cofactor"]["conf"],arcname=os.path.basename(global_config["inputs"]["cofactor"]["conf"]))
+            if global_config["inputs"]["membrane"]:
+                tar.add(global_config["inputs"]["membrane"]["conf"],arcname=os.path.basename(global_config["inputs"]["membrane"]["conf"]))
+        
+
+        # Build the replicas
+        for num_replica in range(1, global_config["replicas"] + 1):
+            out_replica_path = os.path.join(out_ligand_path, str(num_replica))
+
+            if not os.path.isdir(out_replica_path):
+                os.mkdir(out_replica_path)
+
     with open(approach_conf_path, "w") as out_IO:
         json.dump(approach_config, out_IO, indent=4)
 
-    generate_snake.generate_approach_snake_file(out_file_path=snake_path,
-                                                conf_file_path=approach_conf_path)
+    generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path)
 
-    # TODO this Ligand si also mostly waiting not performing heavy calculations. Think on a better strategy,
-    # I think that in this case we should use the resources of job, but I have to take a look
-    # The only thing here is that the build_ligand_systems is also run at this stage.
     scheduler = generate_scheduler.create_scheduler(
         scheduler_type = global_config["cluster"]["type"],
         # by default, run with the main cluster options
         # only if global_config["cluster"]["options"]["job"] is defined it will change during submit
         cluster_config = global_config["cluster"]["options"]["calculation"],
         out_dir = out_path,
-        prefix_name = f"{global_config['job_prefix']}Ligand",
+        prefix_name = f"{global_config['job_prefix']}",
         snake_executor_file = 'job.sh')
     
-    scheduler.build_snakemake(jobs = global_config["ligand_jobs"])
+    scheduler.build_snakemake(jobs = global_config["num_jobs"])
 
     # Check for extra definitions
     if 'job' in global_config["cluster"]["options"]:
         job_cluster_config = global_config["cluster"]["options"]["job"]
     else:
         job_cluster_config = None
-    if submit:
-        only_build = False
-    else:
-        only_build = True
+
     # if global_config["cluster"]["options"]["job"] changes during submit the cluster options
-    job_id = scheduler.submit(new_cluster_config = job_cluster_config, only_build = only_build, job_prefix = global_config["job_prefix"])
+    job_id = scheduler.submit(new_cluster_config = job_cluster_config, only_build = not submit, job_prefix = global_config["job_prefix"])
     return job_id

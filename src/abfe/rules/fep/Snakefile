@@ -1,27 +1,28 @@
 #Setup: FEP dir structure and make mdp files from templates
 if config["complex_type"] == 'soluble':
-    include: 'ligand/setup.smk' 
-    include: 'complex/soluble/setup.smk' 
+    include: 'ligand/setup.smk'
+    include: 'complex/soluble/setup.smk'
     
     #RUN: FEP 
-    include: 'ligand/simulation.smk' 
-    include: 'complex/soluble/simulation.smk' 
+    include: 'ligand/simulation.smk'
+    include: 'complex/soluble/simulation.smk'
     
     #ANA: FEP
-    include: 'ligand/ana.smk' 
-    include: 'complex/soluble/ana.smk' 
+    include: 'ligand/ana.smk'
+    include: 'complex/soluble/ana.smk'
 
 elif config["complex_type"] == 'membrane':
-    include: 'ligand/setup.smk' 
-    include: 'complex/membrane/setup.smk' 
-    
+    include: 'ligand/setup.smk'
+    print(777)
+    include: 'complex/membrane/setup.smk'
+    print(888)
     #RUN: FEP 
-    include: 'ligand/simulation.smk' 
-    include: 'complex/membrane/simulation.smk' 
+    include: 'ligand/simulation.smk'
+    include: 'complex/membrane/simulation.smk'
     
     #ANA: FEP
-    include: 'ligand/ana.smk' 
-    include: 'complex/membrane/ana.smk' 
+    include: 'ligand/ana.smk'
+    include: 'complex/membrane/ana.smk'
 else:
     rule fep_not_implemented:
         output:
@@ -30,13 +31,6 @@ else:
             "echo 'fep simulations, you must give complex_type = soluble or membrane' > {output}"
 
 # Continue with common rules
-
+print(101010)
 # Final Result:
 include: "calculate_result.smk"
-
-#Final Check Job
-run_path = config["run_path"]
-
-rule fep_results:
-    input:
-        dG_path=run_path+"/dG_results.csv",
