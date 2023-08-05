@@ -25,7 +25,7 @@ elif config["complex_type"] == 'membrane':
 else:
     rule fep_not_implemented:
         output:
-            run_path+"/fep_not_implemented.txt"
+            "fep_not_implemented.txt"
         shell:
             "echo 'fep simulations, you must give complex_type = soluble or membrane' > {output}"
 

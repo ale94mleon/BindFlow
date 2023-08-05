@@ -151,7 +151,7 @@ rule equil_complex_prod:
         mdp=approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp",
     params:
         in_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.gro",
-        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.cpt"
+        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.cpt",
         out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.gro",
         out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.cpt",
         out_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
