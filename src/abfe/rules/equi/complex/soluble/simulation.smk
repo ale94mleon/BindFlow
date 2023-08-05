@@ -21,7 +21,7 @@ rule equil_complex_00_min:
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = input.gro,
@@ -131,7 +131,7 @@ rule equil_complex_04_npt:
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = params.input['gro'],
@@ -162,7 +162,7 @@ rule equil_complex_prod:
     threads: threads
     retries: retries
     run:
-        gmx_runner(
+        tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
             structure = params.in_gro,
