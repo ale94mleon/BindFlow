@@ -123,7 +123,7 @@ def make_posres_files(input_topology:PathLike, molecules:Iterable[str], out_dir:
                             bonds_flag = True
                             break
                         if atom_flag and not bonds_flag:
-                            if not "[" in top_lines[j] and not top_lines[j].startswith("\n") and not top_lines[j].startswith(";"):
+                            if not "[" in top_lines[j] and not top_lines[j].startswith("\n") and not top_lines[j].startswith(";") and not top_lines[j].startswith("#"):
                                 # Check if heavy atom based on the mass. In case of use of HMR, for that reason 3
                                 if float(top_lines[j].split()[7]) > 3:
                                     posres_str = f"{top_lines[j].split()[0]} 1 {f_xyz[0]} {f_xyz[1]} {f_xyz[2]}\n"

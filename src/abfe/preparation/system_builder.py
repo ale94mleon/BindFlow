@@ -17,11 +17,6 @@ from abfe.utils.tools import run, PathLike, recursive_update_dict
 
 from toff import Parameterize
 
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore",category=DeprecationWarning)
-    import BioSimSpace as bss
-    
-
 from parmed.gromacs import GromacsTopologyFile, GromacsGroFile
 from parmed.structure import Structure
 from parmed.tools.actions import HMassRepartition
@@ -205,60 +200,6 @@ def parmed_solvate(
         shutil.copy(final_top, os.path.join(out_dir, 'solvated.top'))
         shutil.copy(final_gro, os.path.join(out_dir, 'solvated.gro'))
 
-
-
-
-# TODO, check what is the type of the bss_systems to add it as a HintType
-def bss_solvate(bss_system:object, out_dir:PathLike = '.', vectors:Iterable[float] = None, angles:Iterable[float] = None, ion_conc:float = 150E-3):
-    """Solvate and add ions to the system, if vectors and angles are not provided,
-    the system will be solvated as a truncated octahedron with a padding of 15 Angstroms.
-
-    Parameters
-    ----------
-    bss_system : object
-        The BSS system to solvate
-    out_dir : PathLike, optional
-        Where the files will be written: solvated.gro, solvated.top, by default '.'
-    vectors : Iterable[float], optional
-        This is the vectors of the bos in ANGSTROMS. It is important that the provided vector has the correct units, by default None
-    angles : Iterable[float], optional
-        This is the angles between the components of the vector in DEGREES. It is important that the provided vector has the correct units, by default None
-    ion_conc : float, optional
-        Ion concentration used during neutralization of the system, by default 150E-3
-    Raises
-    ------
-    ValueError
-        if vectors does not have three elements
-    ValueError
-        if angles does not have three elements
-    """
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    if isinstance(bss_system, Structure):
-        pass
-    else:
-        if vectors and angles:
-            if len(vectors) != 3:
-                raise ValueError(f"'vectors' must be a iterable of three values: [a,b,c] in Angstrom. Provided: vectors = {vectors}")
-            elif len(angles) != 3:
-                raise ValueError(f"'angles' must be a iterable of three values: [alpha,beta,gamma] in Degree. Provided: angles = {angles}")
-            vectors = [bss.Types.Length(proj, 'angstrom') for proj in vectors]
-            angles = [bss.Types.Angle(angle, 'degree') for angle in angles]
-        else:
-            box_min, box_max = bss_system.getAxisAlignedBoundingBox()
-            box_size = [y - x for x, y in zip(box_min, box_max)]
-            padding = 15 * bss.Units.Length.angstrom
-            box_length = (max(box_size) + 1.5 * padding)
-            vectors, angles = bss.Box.truncatedOctahedron(box_length.value() * bss.Units.Length.angstrom)
-        
-        # It looks like in this case it use the default ions of gmx genions which are Na and Cl
-        solvated = bss.Solvent.tip3p(bss_system, box=vectors, angles=angles, ion_conc=ion_conc, is_neutral=True)
-        
-        cwd = os.getcwd()
-        os.chdir(out_dir)
-        bss.IO.saveMolecules('solvated', solvated, ["GroTop", "Gro87"])
-        os.chdir(cwd)
-
 def make_abfe_dir(out_dir:PathLike, ligand_dir:PathLike, sys_dir:PathLike):
     """A copy and paste function to create the structure of the abfe directory
 
@@ -288,7 +229,6 @@ def make_abfe_dir(out_dir:PathLike, ligand_dir:PathLike, sys_dir:PathLike):
     shutil.copyfile(src=os.path.join(sys_dir, "solvated.gro"), dst=os.path.join(complex_out, "complex.gro"))
     # The last one in be copy, this will be used in the snake rule
     shutil.copyfile(src=os.path.join(sys_dir, "solvated_fix.top"), dst=os.path.join(complex_out, "complex.top"))
-
 
 class CRYST1:
     """
@@ -327,26 +267,6 @@ class CRYST1:
                     break
         if not self.__is_init:
             warnings.warn('from_pdb was not able to initialize {self.__class__.__name__}')
-    
-    def get_bss_vectors(self) -> tuple[bss.Types.Length]:
-        """get BioSimSpace vectors from the CRYST1 information
-
-        Returns
-        -------
-        tuple[bss.Types.Length]
-            BioSimSpace box (a, b, c)
-        """
-        return bss.Types.Length(self.a, 'angstrom'), bss.Types.Length(self.b, 'angstrom'), bss.Types.Length(self.c, 'angstrom')
-
-    def get_bss_angles(self) -> tuple[bss.Types.Angle]:
-        """get BioSimSpace angles from the CRYST1 information
-
-        Returns
-        -------
-        tuple[bss.Types.Angle]
-            BioSimSpace box (alpha, beta, gamma)
-        """
-        return bss.Types.Angle(self.alpha, 'degree'), bss.Types.Angle(self.beta, 'degree'), bss.Types.Angle(self.gamma, 'degree')
 
     def __getitem__(self, key):
         return self.__dict__[key]
@@ -513,16 +433,11 @@ class MakeInputs:
             top_file = os.path.join(self.wd, f"{name}.top")
             gro_file = os.path.join(self.wd, f"{name}.gro")
         
-        if self.membrane:
-            parmed_system = readParmEDMolecule(top_file=top_file, gro_file = gro_file)
-            if provided_top_flag and self.hmr_factor:
-                HMassRepartition(parmed_system, self.hmr_factor).execute()
-            return parmed_system
-        else:
-            bss_system = bss.IO.readMolecules([top_file, gro_file])
-            if provided_top_flag and self.hmr_factor:
-                bss_system.repartitionHydrogenMass(factor=self.hmr_factor, water="no")
-            return bss_system
+        parmed_system = readParmEDMolecule(top_file=top_file, gro_file = gro_file)
+        if provided_top_flag and self.hmr_factor:
+            HMassRepartition(parmed_system, self.hmr_factor).execute()
+        return parmed_system
+
 
     def gmx_process(self, mol_definition:dict, is_membrane:bool = False):
         """Used to process the biomolecules compatibles with amber99sb-ildn (protein, DNA, ..)
@@ -603,22 +518,11 @@ class MakeInputs:
                 run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} -water {self.water_model} -o {gro_out} -p {top_out} -i {posre_out} -ignh")
         os.chdir(cwd)
 
-        if self.membrane:
-            # BioSimSpace does not know how to deal with Slipids_2020
-            # TODO and readParmEDMolecule fails with amber99sb-start-ildn
-            system = readParmEDMolecule(top_file=top_out, gro_file=gro_out)
-            if self.hmr_factor:
-                HMassRepartition(system, self.hmr_factor).execute()
-            system.write(os.path.join(self.wd, f'{name}_final.top'))
-        else:
-            system = bss.IO.readMolecules([gro_out,top_out])
-            if self.hmr_factor:
-                system.repartitionHydrogenMass(factor=self.hmr_factor, water="no")
-            cwd = os.getcwd()
-            os.chdir(self.wd)
-            bss.IO.saveMolecules(f"{name}_final", system, ["GroTop"])
-            system = bss.IO.readMolecules([f"{name}_final.top", f'{name}.gro'])
-            os.chdir(cwd)
+        # TODO and readParmEDMolecule fails with amber99sb-start-ildn
+        system = readParmEDMolecule(top_file=top_out, gro_file=gro_out)
+        if self.hmr_factor:
+            HMassRepartition(system, self.hmr_factor).execute()
+        system.write(os.path.join(self.wd, f'{name}_final.top'))
         
         return system
 
@@ -718,20 +622,16 @@ class MakeInputs:
         ligand_dir = os.path.join(self.wd, 'ligand')
 
         print("\t* Solvating:")
+        print("\t\t- Ligand in: ", ligand_dir)
+        parmed_solvate(self.sys_ligand, bt='octahedron', d = 1.5, out_dir=ligand_dir)
         if self.membrane:
             print("\t\t- Complex in: ", system_dir)
             parmed_solvate(self.md_system, bt='triclinic', box = self.vectors,angles=self.angles, out_dir=system_dir)
-            print("\t\t- Ligand in: ", system_dir)
-            parmed_solvate(self.sys_ligand, bt='octahedron', d = 1.5, out_dir=ligand_dir)
         else:
             print("\t\t- Complex in: ", system_dir)
-            bss_solvate(self.md_system, out_dir=system_dir)
-            print("\t\t- Ligand in: ", system_dir)
-            bss_solvate(self.sys_ligand, out_dir=ligand_dir)
+            parmed_solvate(self.md_system, bt='octahedron', d = 1.5, out_dir=system_dir)
 
         print("\t* Fixing topologies")
-        # TODO, I am here!! in case of membrane system, create index file and specific restraints files
-        
         # Set the propers constraints depending on the system
         if self.membrane:
             # TODO: this is the easiest way to implement the position restraints changing the restraints
@@ -755,7 +655,7 @@ class MakeInputs:
             )
         else:
             # Create a dummy index.ndx file. It is needed for the Snakemake workflow
-            open(system_dir, "index.ndx", "w").close()
+            open(os.path.join(system_dir, "index.ndx"), "w").close()
         
         # Construct ABFE system:
         print(f"\t* Final build of ABFE directory on: {self.out_dir}")
