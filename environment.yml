@@ -13,6 +13,7 @@ dependencies:
   - espaloma >=0.3.1
   - dglteam::dgl <1
   - scipy <1.8
+  # - graphviz
   # - nvidia::cuda-toolkit=11.4.2
   # - pip:
   #   - git+https://github.com/ale94mleon/BindFlow.git

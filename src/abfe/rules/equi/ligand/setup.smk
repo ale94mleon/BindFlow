@@ -8,16 +8,16 @@ approach_path = config["out_approach_path"]
 
 rule equil_setup_ligand:
     input:
-        mdp=expand(TemplatePath.ligand.equi+"/{step}.mdp", step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.equi, ext='mdp')])
+        mdp = expand(TemplatePath.ligand.equi + "/{step}.mdp", step = [os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.equi, ext = 'mdp')])
     params:
-        template_dir=TemplatePath.ligand.equi,
+        template_dir = TemplatePath.ligand.equi,
         # Dynamically access the simulation steps based on the name of the mdp files inside template_dir.
         # Must be defined in this way, outside of the rule is overwrite it.
-        steps = [os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.equi, ext='mdp')],
+        steps = [os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.equi, ext = 'mdp')],
         ligand_names = config['ligand_names'],
         replicas = range(1,1 + config['replicas']),
     output:
-        mdp=expand(approach_path + "/{ligand_name}/{replica}/ligand/equil-mdsim/{step}/{step}.mdp", step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.equi, ext='mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas']))))
+        mdp = expand(approach_path + "/{ligand_name}/{replica}/ligand/equil-mdsim/{step}/{step}.mdp", step = [os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.equi, ext = 'mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas']))))
     run:
         for ligand_name in params.ligand_names:
             for replica in params.replicas:

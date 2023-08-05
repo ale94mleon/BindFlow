@@ -9,8 +9,8 @@ approach_path = config["out_approach_path"]
 
 rule fep_setup_ligand:
     input:
-        mdp_vdw=expand(TemplatePath.ligand.fep+"/vdw/{step}.mdp", step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep+"/vdw", ext='mdp')]),
-        mdp_coul=expand(TemplatePath.ligand.fep+"/coul/{step}.mdp", step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep+"/coul", ext='mdp')])
+        mdp_vdw = expand(TemplatePath.ligand.fep+"/vdw/{step}.mdp", step = [os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep + "/vdw", ext = 'mdp')]),
+        mdp_coul = expand(TemplatePath.ligand.fep+"/coul/{step}.mdp", step = [os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep + "/coul", ext = 'mdp')])
     params:
         template_dir = TemplatePath.ligand.fep,
         vdw_lambdas = config['lambdas']['ligand']['vdw'],
@@ -18,8 +18,8 @@ rule fep_setup_ligand:
         ligand_names = config['ligand_names'],
         replicas = range(1,1 + config['replicas']),
     output:
-        mdp_vdw=expand(approach_path + "/{ligand_name}/{replica}/ligand/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['vdw'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep+"/vdw", ext='mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas'])))),
-        mdp_coul=expand(approach_path + "/{ligand_name}/{replica}/ligand/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['coul'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep+"/coul", ext='mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas']))))
+        mdp_vdw = expand(approach_path + "/{ligand_name}/{replica}/ligand/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['vdw'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep + "/vdw", ext = 'mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas'])))),
+        mdp_coul = expand(approach_path + "/{ligand_name}/{replica}/ligand/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['ligand']['coul'])), step=[os.path.splitext(step)[0] for step in tools.list_if_file(TemplatePath.ligand.fep + "/coul", ext = 'mdp')], ligand_name = config['ligand_names'], replica = list(map(str, range(1,1 + config['replicas']))))
     run:
 
         # In case of user defined MDP keywords, take those from the config

@@ -21,10 +21,10 @@ else:
 
 rule make_ligand_copies:
     input:
-        ligand_paths=ligand_paths,
-        out_dirs = expand(out_approach_path+"/{ligand_name}/", ligand_name = ligand_names)
+        ligand_paths = ligand_paths,
+        out_dirs = expand(out_approach_path + "/{ligand_name}/", ligand_name = ligand_names)
     output:
-        ligand_copies = expand(out_approach_path+"/{ligand_name}/input/mol/{ligand_basename}", zip, ligand_name = ligand_names, ligand_basename = ligand_basenames)
+        ligand_copies = expand(out_approach_path + "/{ligand_name}/input/mol/{ligand_basename}", zip, ligand_name = ligand_names, ligand_basename = ligand_basenames)
     run:
         for ligand_path, ligand_copy in zip(input.ligand_paths, output.ligand_copies):
             # TODO: check if the topology was provided and also copy the file
@@ -38,7 +38,7 @@ rule build_ligand_system:
     output:
         out_approach_path + "/{ligand_name}/input/complex/complex.gro",
         out_approach_path + "/{ligand_name}/input/complex/complex.top",
-        out_approach_path+"/{ligand_name}/input/complex/index.ndx",
+        out_approach_path + "/{ligand_name}/input/complex/index.ndx",
         out_approach_path + "/{ligand_name}/input/ligand/ligand.gro",
         out_approach_path + "/{ligand_name}/input/ligand/ligand.top",
     threads: config["threads"]
