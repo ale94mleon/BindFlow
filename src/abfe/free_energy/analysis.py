@@ -145,8 +145,7 @@ def get_dG_contributions(
     Parameters
     ----------
     boresch_data : PathLike, optional
-        File with the boresch analytical corrections (this should only be used for the ligand 
-        for the ligand), by default None
+        File with the boresch analytical corrections, by default None
     out_csv_path : PathLike, optional
         Path to output the results, by default 'dg_contributions.csv'. It is going to have as columns: [MBAR, TI, boresch]
         and as index: [value, error].
@@ -248,10 +247,17 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
     # Is the energy to release the restraint, so, we have to subtract, because on the cycle we are activating that restraint
     # the equation used in: MDRestraintsGenerator.MDRestraintsGenerator.datatypes.BoreschRestraint._analytical_energy
     # Is the same exposed on: https://chemrxiv.org/engage/chemrxiv/article-details/63cb0e401fb2a897c6dafbd8
-    dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) - ligand_dict["boresch"] + \
+
+    # For compatibility
+    try:
+        boresch_off = complex_dict["boresch"]
+    except KeyError:
+        boresch = ligand_dict["boresch"]
+
+    dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) - boresch_off + \
         get_ufloat(complex_dict["vdw"]["MBAR"]) + get_ufloat(complex_dict["coul"]["MBAR"]) - get_ufloat(complex_dict["bonded"]["MBAR"])
 
-    dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) - ligand_dict["boresch"] + \
+    dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) - boresch_off + \
         get_ufloat(complex_dict["vdw"]["TI"]) + get_ufloat(complex_dict["coul"]["TI"]) - get_ufloat(complex_dict["bonded"]["TI"])
     
     deltaG = {

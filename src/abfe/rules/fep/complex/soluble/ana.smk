@@ -12,6 +12,8 @@ rule fep_ana_get_dg_complex_contributions:
         finished_vdw_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing = True),
         finished_coul_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['coul'])), allow_missing = True),
         finished_bonded_loc=expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['bonded'])), allow_missing = True),
+        # Boresch correction
+        boresch_dat = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/dG_off.dat",
         # To get the simulaiton temperature
         mdp_vdw_0_prod=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.0/prod/prod.mdp",
     params:
@@ -32,7 +34,7 @@ rule fep_ana_get_dg_complex_contributions:
         elif 'ref_t' in mdp_params:
             temperature = float(mdp_params['ref_t'].split()[0])
         analysis.get_dG_contributions(
-            boresch_data = None,
+            boresch_data = input.boresch_dat,
             out_json_path = output.complex_json,
             # Check if it is necessary to remove some initial burning simulation time
             lower = None,
