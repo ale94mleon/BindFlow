@@ -8,7 +8,6 @@ threads = config['threads']
 retries = config['retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
-
 rule equil_complex_00_min:
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",

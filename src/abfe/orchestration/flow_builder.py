@@ -72,7 +72,7 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> Non
     f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
     "# Specify targets and dependencies\n"\
     "rule RuleThemAll:\n"\
-    "    input:config[\"out_approach_path\"] + \"/abfe_results.csv\""
+    "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
             
     with open(out_file_path, 'w') as out:
         out.write(file_str)
