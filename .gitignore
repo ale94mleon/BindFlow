@@ -23,4 +23,6 @@ public
 build
 dist
 
+.DS_Store
+
 ideas
