@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from abfe.home import home
-from abfe.preparation.gmx_topology import fix_topology, add_water_ions_param, index_for_membrane_system
+from abfe.preparation import solvent
 from abfe.utils.tools import run, PathLike, recursive_update_dict
 
 from toff import Parameterize
@@ -221,14 +221,14 @@ def make_abfe_dir(out_dir:PathLike, ligand_dir:PathLike, sys_dir:PathLike):
         shutil.copy(src=itp_ndx_file, dst=ligand_out)
 
     shutil.copyfile(src=os.path.join(ligand_dir, "solvated.gro"), dst=os.path.join(ligand_out, "ligand.gro"))
-    shutil.copyfile(src=os.path.join(ligand_dir, "solvated_fix.top"), dst=os.path.join(ligand_out, "ligand.top"))
+    shutil.copyfile(src=os.path.join(ligand_dir, "solvated.top"), dst=os.path.join(ligand_out, "ligand.top"))
 
     for itp_ndx_file in glob.glob(os.path.join(sys_dir, "*.itp")) + glob.glob(os.path.join(sys_dir, "*.ndx")):
         shutil.copy(src=itp_ndx_file, dst=complex_out)
 
     shutil.copyfile(src=os.path.join(sys_dir, "solvated.gro"), dst=os.path.join(complex_out, "complex.gro"))
     # The last one in be copy, this will be used in the snake rule
-    shutil.copyfile(src=os.path.join(sys_dir, "solvated_fix.top"), dst=os.path.join(complex_out, "complex.top"))
+    shutil.copyfile(src=os.path.join(sys_dir, "solvated.top"), dst=os.path.join(complex_out, "complex.top"))
 
 class CRYST1:
     """
@@ -285,7 +285,7 @@ class MakeInputs:
             membrane:PathLike = None,
             cofactor:dict = None,
             cofactor_on_protein:bool = True,
-            water_model:str = 'tip3p',
+            water_model:str = 'amber/tip3p',
             hmr_factor:Union[float, None] = None,
             builder_dir:PathLike = 'builder'):
         """This class is used for building the systems for ABFE calculation.
@@ -323,7 +323,7 @@ class MakeInputs:
         hmr_factor : float, optional
             The Hydrogen Mass Factor to use, by default None
         water_model : str, optional
-            The water force field to use, by default tip3p
+            The water force field to use, by default amber/tip3p
         builder_dir : PathLike, optional
             Where all the building files. After completion you can safely remove calling the method clean, by default builder
         """
@@ -515,7 +515,7 @@ class MakeInputs:
                 env_prefix = os.environ["CONDA_PREFIX"]
                 fixed_pdb = os.path.join(self.wd,f"{name}_fixed.pdb")
                 run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
-                run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} -water {self.water_model} -o {gro_out} -p {top_out} -i {posre_out} -ignh")
+                run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} -water none -o {gro_out} -p {top_out} -i {posre_out} -ignh")
         os.chdir(cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn
@@ -578,6 +578,12 @@ class MakeInputs:
         except FileNotFoundError:
             pass
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.clean()
+
     def __call__(self, ligand_definition:Union[dict, PathLike], out_dir = 'abfe'):
         """The call implementation. It identify if it is needed to build
         all the components of the systems,
@@ -621,32 +627,30 @@ class MakeInputs:
         system_dir = os.path.join(self.wd, 'system')
         ligand_dir = os.path.join(self.wd, 'ligand')
 
-        print("\t* Solvating:")
-        print("\t\t- Ligand in: ", ligand_dir)
-        parmed_solvate(self.sys_ligand, bt='octahedron', d = 1.5, out_dir=ligand_dir)
-        if self.membrane:
-            print("\t\t- Complex in: ", system_dir)
-            parmed_solvate(self.md_system, bt='triclinic', box = self.vectors,angles=self.angles, out_dir=system_dir)
-        else:
-            print("\t\t- Complex in: ", system_dir)
-            parmed_solvate(self.md_system, bt='octahedron', d = 1.5, out_dir=system_dir)
-
-        print("\t* Fixing topologies")
-        # Set the propers constraints depending on the system
+        print(f"\t* Solvating with {self.water_model}:")
         if self.membrane:
             # TODO: this is the easiest way to implement the position restraints changing the restraints
             # during different steps. However, we are not using different restraints for different molecules
             # what might be needed for some systems. That will take some coding in order to identify the molecules
-            f_xyz = 3*['POSRES_DYNAMIC']
+            f_xyz_complex = 3*['POSRES_DYNAMIC']
         else:
-            f_xyz = 3*[2500]
-        fix_topology(input_topology=os.path.join(system_dir,'solvated.top'), out_dir=system_dir, f_xyz=f_xyz)
-        # For the ligand, I will keep the original f_xyz
-        fix_topology(input_topology=os.path.join(ligand_dir,'solvated.top'), out_dir=ligand_dir, f_xyz=3*[2500])
+            f_xyz_complex = 3*[2500]
+        
+        with solvent.Solvate(self.water_model, builder_dir='.solvating') as SolObj:
+            
+            print("\t\t- Ligand in: ", ligand_dir)
+            SolObj(structure = self.sys_ligand, bt='octahedron', d = 1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
+            
+            print("\t\t- Complex in: ", system_dir)
+            if self.membrane:
+                SolObj(structure = self.md_system, bt='triclinic', box = self.vectors,angles=self.angles, out_dir=system_dir, out_name='solvated', f_xyz=f_xyz_complex)
+            else:
+                SolObj(structure = self.md_system, bt='octahedron', d = 1.5, out_dir=system_dir, out_name='solvated', f_xyz=f_xyz_complex)
+
         
         # Make index file in case of membrane systems
         if self.membrane:
-            index_for_membrane_system(
+            solvent.index_for_membrane_system(
                 configuration_file = os.path.join(system_dir, "solvated.gro"),
                 ndxout = os.path.join(system_dir, "index.ndx"),
                 lignad_name = 'LIG',

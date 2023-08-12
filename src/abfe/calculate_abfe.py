@@ -126,7 +126,7 @@ def calculate_abfe(
         membrane: Union[tools.PathLike, dict, None] = None,
         hmr_factor: Union[float, None] = 3.0, # For provided topologies if hmr_factor is set, it will pass any way. So for topology files with already HMR, this should be None. And all the topologies should be provided
         # protein, cofactors, membrane, ligands with the HMR already done  
-        # water_model:str = 'tip3p',
+        water_model:str = 'amber/tip3p',
         dt_max:float = 0.004, # The maximum integration time in ps for all the steps in the workflow. This will be overwrite by the definitions in the global_config
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
         num_jobs: int = 10000, # Maximum number of jobs to run in parallel
@@ -168,7 +168,7 @@ def calculate_abfe(
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology
-    _global_config["water_model"] = 'tip3p'# water_model
+    _global_config["water_model"] = water_model
     _global_config["dt_max"] = dt_max
     
     out_root_folder_path = os.path.abspath(out_root_folder_path)

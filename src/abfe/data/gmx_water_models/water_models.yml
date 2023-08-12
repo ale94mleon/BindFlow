@@ -1,0 +1,22 @@
+amber:
+  spc: spc216.gro
+  spce: spc216.gro
+  tip3p: spc216.gro
+  tip4p: tip4p.gro
+  tip4pew: tip4p.gro
+  tip5p: tip5p.gro
+charmm:
+  spc: spc216.gro
+  spce: spc216.gro
+  tip3p: spc216.gro
+  tip4p: tip4p.gro
+  tip5p: tip5p.gro
+  tips3p: spc216.gro
+oplsaa:
+  spc: spc216.gro
+  spce: spc216.gro
+  tip3p: spc216.gro
+  tip4p: tip4p.gro
+  tip4pew: tip4p.gro
+  tip5p: tip5p.gro
+  tip5pe: tip5p.gro

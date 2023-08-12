@@ -6,10 +6,10 @@ requires=[
 build-backend = "setuptools.build_meta"
 
 [project.urls]
-"Hompage" = "https://github.com/bigginlab/ABFE_workflow"
-"Discussions" = "https://github.com/bigginlab/ABFE_workflow/discussions"
-"Documentation" = "https://ABFE_workflow.readthedocs.io/en/latest/"
-"Issues" = "https://github.com/bigginlab/ABFE_workflow/issues"
+"Hompage" = "https://github.com/ale94mleon/BindFlow"
+"Discussions" = "https://github.com/ale94mleon/BindFlow/discussions"
+"Documentation" = "https://BindFlow.readthedocs.io/en/latest/"
+"Issues" = "https://github.com/ale94mleon/BindFlow/issues"
 
 [project]
 name = "abfe"
@@ -18,9 +18,9 @@ description = "A snakemake based workflow for ABFE calculations using GMX."
 readme = "README.rst"
 
 authors=[
-    {name="Benjamin Ries", email="benjamin-ries@outlook.com"},
-    {name="Irfan Alibay", email="irfan.alibay@gmail.com"},
     {name="Alejandro Martínez-León", email="ale94mleon@gmail.com"},
+    {name="Benjamin Ries", email="benjamin-ries@outlook.com"},
+    {name="Irfan Alibay", email="irfan.alibay@gmail.com"}, 
 ]
 
 classifiers = [
@@ -83,7 +83,9 @@ where = ["src"]
 abfe = [
     "LICENSE",
     "data/gmx_ff/*.tar.gz",
-    "mdp/templates/**/*.mdp", 
+    "data/water_models/*.tar.gz",
+    "data/water_models/*.yml",
+    "mdp/templates/**/*.mdp",
     "rules/**/*.smk",
     "rules/**/Snakefile"
 ]

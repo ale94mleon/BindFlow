@@ -47,7 +47,7 @@ rule build_ligand_system:
         out_ligand_input_path = os.path.join(out_ligand_path, 'input')
 
         # Initialize the files builder
-        builder = sb.MakeInputs(
+        with sb.MakeInputs(
             protein = config["inputs"]["protein"],
             membrane = config["inputs"]["membrane"],
             cofactor = config["inputs"]["cofactor"],
@@ -55,9 +55,8 @@ rule build_ligand_system:
             water_model = config["water_model"],
             hmr_factor = hmr_factor,
             builder_dir = os.path.join(out_ligand_path, "builder"),
-        )
+        ) as builder:
 
-        # Create topologies and input files
-        # Here We will use the ligand definition
-        builder(ligand_definition = ligand_dict[wildcards.ligand_name]['definition'], out_dir = out_ligand_input_path)
-        builder.clean()
+            # Create topologies and input files
+            # Here We will use the ligand definition
+            builder(ligand_definition = ligand_dict[wildcards.ligand_name]['definition'], out_dir = out_ligand_input_path)
