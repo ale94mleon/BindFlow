@@ -636,7 +636,7 @@ class MakeInputs:
         else:
             f_xyz_complex = 3*[2500]
         
-        with solvent.Solvate(self.water_model, builder_dir='.solvating') as SolObj:
+        with solvent.Solvate(self.water_model, builder_dir=os.path.join(self.wd, '.solvating')) as SolObj:
             
             print("\t\t- Ligand in: ", ligand_dir)
             SolObj(structure = self.sys_ligand, bt='octahedron', d = 1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
