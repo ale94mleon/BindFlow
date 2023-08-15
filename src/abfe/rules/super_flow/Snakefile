@@ -1,18 +1,27 @@
-import abfe
+from abfe.free_energy import gather_results
+from abfe import root_path as abfe_root_path
 
-approach_path = config["out_approach_path"]
 
-#Final Check Job
+
+out_approach_path = config["out_approach_path"]
+
+# Gather Results
+rule gather_receptor_results:
+    input:
+        prior_result_paths = expand(out_approach_path + "/{ligand_names}/{replica}/dG_results.csv",ligand_names = config['ligand_names'],replica = list(map(str, range(1,1 + config['replicas']))))
+    output:
+        out_dg_file=out_approach_path + "/abfe_results.csv",
+    run:
+        gather_results.get_all_dgs(
+            root_folder_path = out_approach_path,
+            out_csv=os.path.join(output.out_dg_file)
+        )
+
+# Do Equilibration
+include: abfe_root_path + '/rules/equi/Snakefile'
+
+# Do FEP
+include: abfe_root_path + '/rules/fep/Snakefile'
 
 # System Generation
 include: 'build_ligand_systems.smk'
-
-# run Simulations:
-include: 'simulations.smk'
-
-# Gather Results
-include: 'post_commands.smk'
-
-rule final_result:
-    input:
-        result=approach_path+"/abfe_results.csv"

@@ -12,7 +12,7 @@ from warnings import warn
 # Maybe at the end of the simulation one command that tar the files
 # Do not export so many frames in the xtc file, their are not needed for the analysis.
 # For sure not during equilibration phase, keep a relative small number of frames
-from abfe.orchestration.flow_builder import ligand_flows, approach_flow
+from abfe.orchestration.flow_builder import approach_flow
 from abfe.free_energy import gather_results
 
 
@@ -126,11 +126,10 @@ def calculate_abfe(
         membrane: Union[tools.PathLike, dict, None] = None,
         hmr_factor: Union[float, None] = 3.0, # For provided topologies if hmr_factor is set, it will pass any way. So for topology files with already HMR, this should be None. And all the topologies should be provided
         # protein, cofactors, membrane, ligands with the HMR already done  
-        # water_model:str = 'tip3p',
+        water_model:str = 'amber/tip3p',
         dt_max:float = 0.004, # The maximum integration time in ps for all the steps in the workflow. This will be overwrite by the definitions in the global_config
         threads: int = 8, # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
-        ligand_jobs: int = None,# By defaults it will take number of ligands * replicas
-        jobs_per_ligand_job: int = 10000, # On each ligand, how many jobs should run in parallel
+        num_jobs: int = 10000, # Maximum number of jobs to run in parallel
         replicas: int = 3,
         submit: bool = False,
         debug:bool = False,
@@ -169,14 +168,14 @@ def calculate_abfe(
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology
-    _global_config["water_model"] = 'tip3p'# water_model
+    _global_config["water_model"] = water_model
     _global_config["dt_max"] = dt_max
     
     out_root_folder_path = os.path.abspath(out_root_folder_path)
     _global_config["out_approach_path"] = out_root_folder_path
 
     if job_prefix:
-        _global_config["job_prefix"] = f"{job_prefix}."
+        _global_config["job_prefix"] = f"{job_prefix}"
     else:
         _global_config["job_prefix"] = ""
     
@@ -191,15 +190,12 @@ def calculate_abfe(
     os.chdir(_global_config["out_approach_path"])
 
     _global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol['conf']))[0] for mol in _global_config["inputs"]["ligands"]]
-    _global_config["ligand_jobs"] = ligand_jobs if (ligand_jobs is not None) else len(_global_config["ligand_names"]) * replicas
-    _global_config["jobs_per_ligand_job"] = jobs_per_ligand_job
+    _global_config["num_jobs"] = num_jobs
     _global_config["replicas"] = replicas
     _global_config["threads"] = threads
 
     print("Prepare")
     print("\tstarting preparing ABFE-ligand file structure")
-
-    ligand_flows(_global_config)
 
     print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
     expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
@@ -209,7 +205,7 @@ def calculate_abfe(
     # Only if there is something missing
     if (len(result_paths) != expected_out_paths):
         print("\tBuild approach struct")
-        job_id = approach_flow(global_config=_global_config, submit=submit,)
+        job_id = approach_flow(global_config=_global_config, submit=submit)
     else:
         job_id = None
     print("Do")

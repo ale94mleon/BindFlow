@@ -145,8 +145,7 @@ def get_dG_contributions(
     Parameters
     ----------
     boresch_data : PathLike, optional
-        File with the boresch analytical corrections (this should only be used for the ligand 
-        for the ligand), by default None
+        File with the boresch analytical corrections, by default None
     out_csv_path : PathLike, optional
         Path to output the results, by default 'dg_contributions.csv'. It is going to have as columns: [MBAR, TI, boresch]
         and as index: [value, error].
@@ -248,10 +247,17 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
     # Is the energy to release the restraint, so, we have to subtract, because on the cycle we are activating that restraint
     # the equation used in: MDRestraintsGenerator.MDRestraintsGenerator.datatypes.BoreschRestraint._analytical_energy
     # Is the same exposed on: https://chemrxiv.org/engage/chemrxiv/article-details/63cb0e401fb2a897c6dafbd8
-    dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) - ligand_dict["boresch"] + \
+
+    # For compatibility
+    try:
+        boresch_off = complex_dict["boresch"]
+    except KeyError:
+        boresch = ligand_dict["boresch"]
+
+    dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) - boresch_off + \
         get_ufloat(complex_dict["vdw"]["MBAR"]) + get_ufloat(complex_dict["coul"]["MBAR"]) - get_ufloat(complex_dict["bonded"]["MBAR"])
 
-    dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) - ligand_dict["boresch"] + \
+    dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) - boresch_off + \
         get_ufloat(complex_dict["vdw"]["TI"]) + get_ufloat(complex_dict["coul"]["TI"]) - get_ufloat(complex_dict["bonded"]["TI"])
     
     deltaG = {
@@ -268,62 +274,3 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
 
 if __name__ == "__main__":
     pass
-    # import glob
-    # from abfe.mdp import mdp
-    
-    # # Parameters complex
-    # run_path = "/scratch/uds_alma015/smaug/data/users/alejandro/simulation/BindFlow_simulations/biotin-streptavidin/abfe-complex-coul-21coul/"
-    # mdp_vdw_0_prod = run_path + "/biotin_a/1/complex/fep/simulation/vdw.0/prod/prod.mdp"
-
-    # xvg_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/vdw.*")]
-    # coul_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/coul.*")]
-    # bonded_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/complex/fep/simulation/bonded.*")]
-
-
-    # boresch_data = None
-    # # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
-    # temperature = float(mdp.MDP().from_file(mdp_vdw_0_prod).parameters['ref-t'].split()[0]) 
-    # get_dG_contributions(
-
-    #     boresch_data = boresch_data,
-    #     out_json_path = 'results/dg_complex_contributions.json',
-    #     # Check if it is necessary to remove some initial burning simulation time
-    #     lower = None,
-    #     upper = None,
-    #     min_samples = 500,
-    #     temperature = temperature,
-    #     convergency_plots_prefix = 'results/complex_',
-    #     vdw = sorted(xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1]), reverse=True),
-    #     coul = sorted(coul_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1]), reverse=True),
-    #     bonded = sorted(bonded_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1]), reverse=True),
-    # )
-
-
-    # # Parameters ligand
-    # mdp_vdw_0_prod = run_path + "/biotin_a/1/ligand/fep/simulation/vdw.0/prod/prod.mdp"
-
-    # xvg_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/ligand/fep/simulation/vdw.*")]
-    # coul_vdw_loc = [os.path.join(path, "prod/prod.xvg") for path in glob.glob(run_path+"/biotin_a/1/ligand/fep/simulation/coul.*")]
-
-    # boresch_data = run_path + "/biotin_a/1/complex/equil-mdsim/boreschcalc/dG_off.dat"
-    # # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
-    # temperature = float(mdp.MDP().from_file(mdp_vdw_0_prod).parameters['ref-t'].split()[0]) 
-    # get_dG_contributions(
-    #     boresch_data = boresch_data,
-    #     out_json_path = 'results/dg_ligand_contributions.json',
-    #     # Check if it is necessary to remove some initial burning simulation time
-    #     lower = None,
-    #     upper = None,
-    #     min_samples = 500,
-    #     temperature = temperature,
-    #     convergency_plots_prefix = 'results/ligand_',
-    #     vdw = sorted(xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-    #     coul = sorted(coul_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-    # )
-
-
-    # get_dg_cycle(
-    #     ligand_contributions='results/dg_ligand_contributions.json',
-    #     complex_contributions='results/dg_complex_contributions.json',
-    #     out_csv='results/dG_results.csv'
-    # )

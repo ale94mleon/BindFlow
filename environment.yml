@@ -1,18 +1,19 @@
-name: abfe
+name: BindFlow
 channels:
   - conda-forge
 dependencies:
-  - python >=3.8, <3.10 # biosimspace use this python definition
+  - python >=3.8, <3.10
   - pip
   - parmed
   - pdbfixer
   - openmm
   - openmmforcefields
   - openff-toolkit
-  - michellab/label/dev::biosimspace
   - bioconda::snakemake
   - espaloma >=0.3.1
-  - dgl::dglteam <1
+    #  - dglteam::dgl <1
+  - scipy <1.8
+  # - graphviz
   # - nvidia::cuda-toolkit=11.4.2
   # - pip:
   #   - git+https://github.com/ale94mleon/BindFlow.git

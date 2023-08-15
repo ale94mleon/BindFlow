@@ -348,14 +348,3 @@ def config_validator(global_config:dict) -> List:
 
 if __name__ == "__main__":
     pass
-    glolba_config = {
-        "cluster": {
-            # "type": "slurm",
-            "options":{
-                "calculation": {
-                    1:1
-                }
-            }
-        }
-    }
-    print(config_validator(global_config=glolba_config))

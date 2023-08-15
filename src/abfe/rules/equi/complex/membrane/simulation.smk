@@ -3,8 +3,7 @@ from abfe.preparation import boresch
 from abfe.mdp import mdp
 
 # Common to all the sub-workflows ligand/replica
-input_path = config['input_data_path']
-run_path = config["run_path"]
+approach_path = config["out_approach_path"]
 threads = config['threads']
 retries = config['retries']
 load_dependencies = config['extra_directives']['dependencies']
@@ -12,14 +11,14 @@ mdrun_extra = config['extra_directives']['mdrun']
 
 rule equil_complex_00_min:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        gro=input_path+"/complex/complex.gro",
-        mdp=run_path+"/complex/equil-mdsim/00_min/00_min.mdp"
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        gro = approach_path + "/{ligand_name}/input/complex/complex.gro",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/00_min/00_min.mdp"
     params:
-        run_dir=run_path+"/complex/equil-mdsim/00_min"
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/00_min"
     output:
-        gro=run_path+"/complex/equil-mdsim/00_min/00_min.gro"
+        gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/00_min/00_min.gro"
     threads: threads
     retries: retries
     run:
@@ -36,18 +35,16 @@ rule equil_complex_00_min:
 
 rule equil_complex_01_nvt:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        gro=run_path+"/complex/equil-mdsim/00_min/00_min.gro",
-        mdp=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.mdp",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/00_min/00_min.gro",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.mdp",
     params:
-        output={
-            'gro':run_path+"/complex/equil-mdsim/01_nvt/01_nvt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/01_nvt/01_nvt.cpt"
-        },
-        run_dir=run_path+"/complex/equil-mdsim/01_nvt",
+        out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.gro",
+        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.cpt",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt",
     output:
-        finished=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.finished",
     threads: threads
     retries: retries
     run:
@@ -62,250 +59,224 @@ rule equil_complex_01_nvt:
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = params.output.values(), raise_error = True, out = output.finished)
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_02_npt:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        finished=run_path+"/complex/equil-mdsim/01_nvt/01_nvt.finished",
-        mdp=run_path+"/complex/equil-mdsim/02_npt/02_npt.mdp",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.finished",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt/02_npt.mdp",
     params:
-        input={
-            'gro':run_path+"/complex/equil-mdsim/01_nvt/01_nvt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/01_nvt/01_nvt.cpt"
-        },
-        output={
-            'gro':run_path+"/complex/equil-mdsim/02_npt/02_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/02_npt/02_npt.cpt"
-        },
-        run_dir=run_path+"/complex/equil-mdsim/02_npt",
+        in_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.gro",
+        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.cpt",
+        out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt/02_npt.gro",
+        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt/02_npt.cpt",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt",
     output:
-        finished=run_path+"/complex/equil-mdsim/02_npt/02_npt.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt/02_npt.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = params.input['gro'],
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = params.input['cpt'],
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = params.output.values(), raise_error = True, out = output.finished)
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_03_npt:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        finished=run_path+"/complex/equil-mdsim/02_npt/02_npt.finished",
-        mdp=run_path+"/complex/equil-mdsim/03_npt/03_npt.mdp",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt/02_npt.finished",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.mdp",
     params:
-        input={
-            'gro':run_path+"/complex/equil-mdsim/02_npt/02_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/02_npt/02_npt.cpt"
-        },
-        output={
-            'gro':run_path+"/complex/equil-mdsim/03_npt/03_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/03_npt/03_npt.cpt"
-        },
-        run_dir=run_path+"/complex/equil-mdsim/03_npt",
+        in_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt/02_npt.gro",
+        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_npt/02_npt.cpt",
+        out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.gro",
+        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.cpt",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt",
     output:
-        finished=run_path+"/complex/equil-mdsim/03_npt/03_npt.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = params.input['gro'],
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = params.input['cpt'],
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = params.output.values(), raise_error = True, out = output.finished)
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_04_npt:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        finished=run_path+"/complex/equil-mdsim/03_npt/03_npt.finished",
-        mdp=run_path+"/complex/equil-mdsim/04_npt/04_npt.mdp",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.finished",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.mdp",
     params:
-        input={
-            'gro':run_path+"/complex/equil-mdsim/03_npt/03_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/03_npt/03_npt.cpt"
-        },
-        output={
-            'gro':run_path+"/complex/equil-mdsim/04_npt/04_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/04_npt/04_npt.cpt"
-        },
-        run_dir=run_path+"/complex/equil-mdsim/04_npt"
+        in_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.gro",
+        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.cpt",
+        out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.gro",
+        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.cpt",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt",
     output:
-        finished=run_path+"/complex/equil-mdsim/04_npt/04_npt.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = params.input['gro'],
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = params.input['cpt'],
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = params.output.values(), raise_error = True, out = output.finished)
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_05_npt:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        finished=run_path+"/complex/equil-mdsim/04_npt/04_npt.finished",
-        mdp=run_path+"/complex/equil-mdsim/05_npt/05_npt.mdp",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.finished",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt/05_npt.mdp",
     params:
-        input={
-            'gro':run_path+"/complex/equil-mdsim/04_npt/04_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/04_npt/04_npt.cpt"
-        },
-        output={
-            'gro':run_path+"/complex/equil-mdsim/05_npt/05_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/05_npt/05_npt.cpt"
-        },
-        run_dir=run_path+"/complex/equil-mdsim/05_npt"
+        in_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.gro",
+        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.cpt",
+        out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt/05_npt.gro",
+        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt/05_npt.cpt",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt",
     output:
-        finished=run_path+"/complex/equil-mdsim/05_npt/05_npt.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt/05_npt.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = params.input['gro'],
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = params.input['cpt'],
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = params.output.values(), raise_error = True, out = output.finished)
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_06_npt:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        finished=run_path+"/complex/equil-mdsim/05_npt/05_npt.finished",
-        mdp=run_path+"/complex/equil-mdsim/06_npt/06_npt.mdp",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt/05_npt.finished",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt/06_npt.mdp",
     params:
-        input={
-            'gro':run_path+"/complex/equil-mdsim/05_npt/05_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/05_npt/05_npt.cpt"
-        },
-        output={
-            'gro':run_path+"/complex/equil-mdsim/06_npt/06_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/06_npt/06_npt.cpt"
-        },
-        run_dir=run_path+"/complex/equil-mdsim/06_npt"
+        in_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt/05_npt.gro",
+        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/05_npt/05_npt.cpt",
+        out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt/06_npt.gro",
+        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt/06_npt.cpt",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt"
     output:
-        finished=run_path+"/complex/equil-mdsim/06_npt/06_npt.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt/06_npt.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = params.input['gro'],
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = params.input['cpt'],
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = params.output.values(), raise_error = True, out = output.finished)
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_prod:
     input:
-        top=input_path+"/complex/complex.top",
-        ndx=input_path+"/complex/index.ndx",
-        finished=run_path+"/complex/equil-mdsim/06_npt/06_npt.finished",
-        mdp=run_path+"/complex/equil-mdsim/prod/prod.mdp",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt/06_npt.finished",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp",
     params:
-        input={
-            'gro':run_path+"/complex/equil-mdsim/06_npt/06_npt.gro",
-            'cpt':run_path+"/complex/equil-mdsim/06_npt/06_npt.cpt"
-        },
-        output={
-            'gro':run_path+"/complex/equil-mdsim/prod/prod.gro",
-            'cpt':run_path+"/complex/equil-mdsim/prod/prod.cpt",
-            'tpr':run_path+"/complex/equil-mdsim/prod/prod.tpr",
-            'xtc':run_path+"/complex/equil-mdsim/prod/prod.xtc",
-        },
-        run_dir=run_path+"/complex/equil-mdsim/prod",
+        in_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt/06_npt.gro",
+        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/06_npt/06_npt.cpt",
+        out_gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.gro",
+        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.cpt",
+        out_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
+        out_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod",
     output:
-        finished=run_path+"/complex/equil-mdsim/prod/prod.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
             mdp = input.mdp,
             topology = input.top,
-            structure = params.input['gro'],
+            structure = params.in_gro,
             index = input.ndx,
-            checkpoint = params.input['cpt'],
+            checkpoint = params.in_cpt,
             nthreads = threads,
             load_dependencies = load_dependencies,
             run_dir = params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = params.output.values(), raise_error = True, out = output.finished)
+        tools.paths_exist(paths = [params.out_gro, params.out_cpt, params.out_tpr, params.out_xtc], raise_error = True, out = output.finished)
 
-rule equil_run_complex_trjconv:
+rule equil_complex_trjconv:
     input:
-        finished=run_path+"/complex/equil-mdsim/prod/prod.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
     params:
-        input={
-            'tpr':run_path+"/complex/equil-mdsim/prod/prod.tpr",
-            'xtc':run_path+"/complex/equil-mdsim/prod/prod.xtc"
-        },
-        run_dir=run_path+"/complex/equil-mdsim/boreschcalc/"
+        in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
+        in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/",
     output:
-        xtc=run_path+"/complex/equil-mdsim/boreschcalc/prod_center.xtc"
+        xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/prod_center.xtc"
     run:
         tools.makedirs(params.run_dir)
-        tools.run(f"echo 'System' | gmx trjconv -s {params.input['tpr']} -f {params.input['xtc']} -o {params.run_dir}/whole.xtc -pbc whole")
-        tools.run(f"echo 'System' | gmx trjconv -s {params.input['tpr']} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump")
-        tools.run(f"echo 'Protein System' | gmx trjconv -s {params.input['tpr']} -f {params.run_dir}/nojump.xtc -o {output.xtc} -pbc mol -center -ur compact")
+        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.in_xtc} -o {params.run_dir}/whole.xtc -pbc whole")
+        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump")
+        tools.run(f"echo 'Protein System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/nojump.xtc -o {output.xtc} -pbc mol -center -ur compact")
         tools.run(f"rm {params.run_dir}/whole.xtc {params.run_dir}/nojump.xtc")
 
-rule equil_run_complex_get_boresch_restraints:
+rule equil_complex_get_boresch_restraints:
     input:
-        finished=run_path+"/complex/equil-mdsim/prod/prod.finished",
-        xtc=run_path+"/complex/equil-mdsim/boreschcalc/prod_center.xtc",
-        mdp=run_path+"/complex/equil-mdsim/prod/prod.mdp",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
+        xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/prod_center.xtc",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp",
     params:
-        tpr=run_path+"/complex/equil-mdsim/prod/prod.tpr",
-        run_dir=run_path+"/complex/equil-mdsim/boreschcalc/",
+        tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/",
     output:
-        gro=run_path+"/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
-        top=run_path+"/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
-        boresch_dG_off=run_path+"/complex/equil-mdsim/boreschcalc/dG_off.dat"
+        gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
+        top = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
+        boresch_dG_off = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/dG_off.dat"
     run:
         mdp_params = mdp.MDP().from_file(input.mdp).parameters
         if 'ref-t' in mdp_params:
