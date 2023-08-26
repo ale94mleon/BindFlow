@@ -21,8 +21,7 @@ else:
 
 rule make_ligand_copies:
     input:
-        ligand_paths = ligand_paths,
-        out_dirs = expand(out_approach_path + "/{ligand_name}/", ligand_name = ligand_names)
+        ligand_paths = ligand_paths
     output:
         ligand_copies = expand(out_approach_path + "/{ligand_name}/input/mol/{ligand_basename}", zip, ligand_name = ligand_names, ligand_basename = ligand_basenames)
     run:

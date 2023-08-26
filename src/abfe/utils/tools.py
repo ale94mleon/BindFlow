@@ -254,10 +254,8 @@ def list_if_file(path:PathLike = '.', ext:str = None) -> List[str]:
     return files
 
 def makedirs(path):
-    if os.path.exists(path):
-        pass
-    else:
-        os.makedirs(path,exist_ok=True)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def recursive_update_dict(original_dict:dict, update_dict:dict) -> None:
     for key, value in update_dict.items():
