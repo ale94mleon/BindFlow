@@ -68,15 +68,15 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
     for xvg in xvgs:
         extracted_dHdls = extract_dHdl(xvg, T = temperature)
         
+        df = slicing(extracted_dHdls, lower = lower, upper = upper)
+
+        
+        # Calculate the time step on the data based on statistical_inefficiency (or autocorrelation)
         # TODO, here I am using force = True because I faced some problems of Duplicate time values found
         # I suppose that this issue came from a possible restarting of GROMACS and
         # the time point is written twice. Consider remove this keyword in future
         # gls4_f4/1/complex/fep
-        df = slicing(extracted_dHdls, lower = lower, upper = upper, force=True)
-
-        
-        # Calculate the time step on the data based on statistical_inefficiency (or autocorrelation)
-        df_ineff = statistical_inefficiency(df, series=df.iloc[:, 0])
+        df_ineff = statistical_inefficiency(df, series=df.iloc[:, 0], drop_duplicates=True)
         if len(df_ineff) != 0:
             ineff_step = math.ceil(len(df) / len(df_ineff))
         else:
