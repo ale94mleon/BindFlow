@@ -32,7 +32,7 @@ rule make_ligand_copies:
 
 rule build_ligand_system:
     input:
-        # This is just used to paralelize
+        # This is just used to parallelize
         mol_file = lambda wildcards: out_approach_path + "/{ligand_name}/input/mol/" + ligand_dict[wildcards.ligand_name]['basename']
     output:
         out_approach_path + "/{ligand_name}/input/complex/complex.gro",
