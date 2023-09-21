@@ -173,7 +173,6 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
     """
     for molecule in molecules:
         atom_flag = False
-        bonds_flag = False
 
         with open(input_topology, "r") as f:
             top_lines = f.readlines()
@@ -183,22 +182,26 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
             posres_file.write("[ position_restraints ]\n")
 
             for i in range(len(top_lines)):
+                
                 if f"{molecule}  " in (top_lines[i]) and " 3\n" in (top_lines[i]):
-                    atom_flag = False
-                    bonds_flag = False
-
-                    for j in range(i + 1, len(top_lines)):
+                    j = i + 1
+                    while j < len(top_lines):
+                        
                         if '[ atoms ]' in top_lines[j]:
+                            j += 1 # skip this line
                             atom_flag = True
-                        if '[ bonds ]' in top_lines[j]:
-                            bonds_flag = True
+                        
+                        if top_lines[j].startswith('['): # A new section was reached
                             break
-                        if atom_flag and not bonds_flag:
-                            if not "[" in top_lines[j] and not top_lines[j].startswith("\n") and not top_lines[j].startswith(";") and not top_lines[j].startswith("#"):
+
+                        if atom_flag:
+                            if not top_lines[j].startswith("\n") and not top_lines[j].startswith(";") and not top_lines[j].startswith("#"):
                                 # Check if heavy atom based on the mass. In case of use of HMR, for that reason 3
                                 if float(top_lines[j].split()[7]) > 3:
                                     posres_str = f"{top_lines[j].split()[0]} 1 {f_xyz[0]} {f_xyz[1]} {f_xyz[2]}\n"
                                     posres_file.write(posres_str)
+                        j += 1
+                    break
     
     # Add posre sections to the topology
     add_posres_section(
@@ -546,7 +549,7 @@ class Solvate:
             nname:str = "CL",
             ion_conc:float = 150E-3,
             rmin:float = 1.0,
-            exclusion_list:list = ["SOL", "NA", "CL", "MG", "ZN"],
+            exclusion_list:list = ["SOL", "NA", "CL",],# "MG", "ZN"],
             out_dir:tools.PathLike = '.',
             out_name:str = 'solvated',
             f_xyz:tuple = (2500, 2500, 2500),
