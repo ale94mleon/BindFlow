@@ -2,6 +2,7 @@
 import subprocess, os
 from typing import List, Union
 import os
+import tempfile
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -254,8 +255,43 @@ def list_if_file(path:PathLike = '.', ext:str = None) -> List[str]:
         files = [file for file in files if os.path.splitext(file)[-1] == f".{ext}"]
     return files
 
-def archive_dir(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
+def find_xtc_files(root_path:PathLike, exclude: List[paths_exist] = None) -> List[PathLike]:
+
+    if not isinstance(exclude, list):
+        raise TypeError(f"exclude must be a list. Provided: {exclude}")
+    
+    xtc_files = []
+
+    def should_exclude(file_path):
+        for excluded in exclude:
+            if str(file_path).startswith(str(excluded)):
+                print(3333, str(file_path), excluded, str(file_path).startswith(str(excluded)))
+                return True
+        return False
+
+    for root, _, files in os.walk(root_path):
+        for file in files:
+            if file.endswith('.xtc'):
+                xtc_file_path = os.path.relpath(os.path.join(root, file), root_path)
+                if should_exclude(xtc_file_path):
+                    print(f"Skipping XTC: {xtc_file_path}")
+                else:
+                    xtc_files.append(xtc_file_path)
+    return xtc_files
+
+def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
     """It compress all the dirs inside root_path that are not specified in exclude.
+    In-house benchmark showed:
+    
+    +-------+-------+-------+
+    |       | Time  | Space |
+    +=======+=======+=======+
+    | bz2   | x s   | x MB  |
+    +-------+-------+-------+
+    | gz    | x s   | x MB  |
+    +-------+-------+-------+
+    | xz    | x s   | x MB  |
+    +-------+-------+-------+
 
     Parameters
     ----------
@@ -279,7 +315,6 @@ def archive_dir(root_path: PathLike, exclude:List[PathLike] = None, name: str = 
     """
     import tarfile, shutil
     # Ensure the provided path exists
-    # root_path = os.path.abspath(root_path)
     if not os.path.exists(root_path):
         raise FileNotFoundError(f"Directory '{root_path}' does not exist.")
 
@@ -288,7 +323,6 @@ def archive_dir(root_path: PathLike, exclude:List[PathLike] = None, name: str = 
         exclude = []
     dirs = [d for d in list_if_dir(root_path) if d not in exclude]
 
-
     if not dirs:
         print("No directories to compress.")
         return
@@ -296,22 +330,38 @@ def archive_dir(root_path: PathLike, exclude:List[PathLike] = None, name: str = 
     # Define the name of the compressed file
     compress_type = compress_type.lower()
     valid_tar_exts = ['tar', 'gz', 'bz2', 'xz']
-    if compress_type in valid_tar_exts:
-        archive_name = f'{name}.tar'
-        if compress_type != 'tar':
-            archive_name += f'.{compress_type}'
-        archive_mode = compress_type
-    else:
-        raise ValueError(f"Unsupported compression type ({compress_type}). Use: {' '.join(valid_tar_exts)}.")
+    if compress_type not in valid_tar_exts:
+         raise ValueError(f"Unsupported compression type ({compress_type}). Use: {' '.join(valid_tar_exts)}.")
 
-    # Create the compressed archive
-    with tarfile.open(archive_name, f'w:{archive_mode}') as archive:
-        for dir_name in dirs:
-            full_dir_path = os.path.join(root_path, dir_name)
-            print(f"Compressing: {full_dir_path}")
-            archive.add(full_dir_path, arcname=dir_name)
+    # Find and create a separate archive for XTC files
+    xtc_files = find_xtc_files(root_path, exclude=exclude)
+    with tarfile.open(f"{name}.tar", f'w:tar') as project_archive:
+        if xtc_files:
+            for xtc_file in xtc_files:
+                xtc_file_path = os.path.join(root_path, xtc_file)
+                print(f"Adding XTC: {xtc_file}")
+                project_archive.add(xtc_file_path, arcname=xtc_file)
 
-    print(f"Successfully compressed {len(dirs)} directories into '{archive_name}'.")
+
+        with tempfile.TemporaryDirectory(prefix='.main_archive', dir='.') as tmpdir:
+
+            # Create the compressed main_archive
+            arcname = 'main_project.tar'
+            if compress_type != 'tar':
+                arcname += f".{compress_type}"
+
+            with tarfile.open(os.path.join(tmpdir, arcname), f'w:{compress_type}') as main_archive:
+                for dir_name in dirs:
+                    full_dir_path = os.path.join(root_path, dir_name)
+                    print(f"Compressing: {full_dir_path}")
+                    for root, _, files in os.walk(full_dir_path):
+                        for file in files:
+                            if not file.endswith('.xtc'):
+                                file_path = os.path.relpath(os.path.join(root, file), root_path)
+                                main_archive.add(os.path.join(root, file), arcname=file_path)
+            
+            print(f"Adding: {arcname}")
+            project_archive.add(os.path.join(tmpdir, arcname), arcname=arcname)
 
     # Optionally remove the source directories
     if remove_dirs:
@@ -320,6 +370,29 @@ def archive_dir(root_path: PathLike, exclude:List[PathLike] = None, name: str = 
             full_dir_path = os.path.join(root_path, dir_name)
             print(f"Removing: {full_dir_path}")
             shutil.rmtree(full_dir_path)
+
+def unarchive(archive_file: PathLike, target_path: PathLike):
+    import tarfile
+    # Ensure the target directory exists
+    target_path = os.path.abspath(target_path)
+    os.makedirs(target_path, exist_ok=True)
+   
+   # Create a temporary directory for extracting the main compressed archive
+    with tempfile.TemporaryDirectory(prefix='.unarchive_main', dir='.') as tmpdir:
+        # Extract the XTC archive first
+        with tarfile.open(archive_file, 'r') as archive:
+            for member in archive.getmembers():
+                print(f"Decompressing: {member.name}")
+                if member.name.startswith('main_project.tar'):
+                    compress_type = member.name.split('.')[-1]
+                    main_archive_path = os.path.join(tmpdir, member.name)
+                    archive.extract(member, tmpdir)
+                    with tarfile.open(main_archive_path, f'r:{compress_type}') as main_archive:
+                        for main_member in main_archive.getmembers():
+                            print(f"Decompressing: {main_member.name}")
+                            main_archive.extract(main_member, target_path)
+                else:
+                    archive.extract(member, target_path)
 
 def makedirs(path):
     if not os.path.exists(path):

@@ -1,6 +1,7 @@
 #python gedoens
 __pycache__
 *.pyc
+jupyter_execute
 
 #snake fun
 .snakemake
