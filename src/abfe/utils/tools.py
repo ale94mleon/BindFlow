@@ -280,7 +280,9 @@ def find_xtc_files(root_path:PathLike, exclude: List[paths_exist] = None) -> Lis
     return xtc_files
 
 def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
-    """It compress all the dirs inside root_path that are not specified in exclude.
+    """It compress all the dirs inside root_path that are not specified in exclude. It will always create
+    a tar file with the XTC files (without compress) and a main_project.tar.{compress_type} wth the rest of the 
+    directory. It will only compress those files included in main_project.tar.{compress_type}.
     In-house benchmark showed:
     
     +-------+-------+-------+
@@ -372,6 +374,15 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
             shutil.rmtree(full_dir_path)
 
 def unarchive(archive_file: PathLike, target_path: PathLike):
+    """It unarchive a project archived by the function :meth:`abfe.utils.tools.archive`
+
+    Parameters
+    ----------
+    archive_file : PathLike
+        Archived project
+    target_path : PathLike
+        Out path to unarchive
+    """
     import tarfile
     # Ensure the target directory exists
     target_path = os.path.abspath(target_path)

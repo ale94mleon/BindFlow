@@ -36,7 +36,7 @@ def abfe_run():
     parser.add_argument('-gc', '--global_config',
                         help="This is the configuration YAML file for your simulation. Here you define the cluster characteristics and other optional parameters of the simulation", required=True, type=str)
     parser.add_argument('-submit',help='Will automatically submit the ABFE calculations', required=False, action='store_true')
-    parser.add_argument('-v', '--version', action='version', version=f"abfe: {__version__}")
+    parser.add_argument('-v', '--version', action='version', version=f"BindFlow: {__version__}")
 
     args = parser.parse_args()
     print(args)
@@ -91,4 +91,68 @@ def abfe_check_results():
         if args.out_csv:
             df.to_csv(args.out_csv)
         print(df)
+
+def abfe_archive():
+    from abfe.utils.tools import archive
+    from abfe._version import __version__
+    parser  =argparse.ArgumentParser()
+    parser.add_argument(
+        dest = 'root_path',
+        help = 'The root path for which all the dirs will be compressed',
+        type = str,)
+    parser.add_argument(
+        '-e', '--exclude',
+        dest = 'exclude',
+        help = 'List of dirs to exclude form compression, by default None',
+        nargs = '+',
+        default = None)
+    parser.add_argument(
+        '-n', '--name',
+        dest = 'name',
+        help = "Output name of the archive file, by default 'archive'",
+        default='archive',
+        type = str,)
+    parser.add_argument(
+        '-ct', '--compress_type',
+        dest = 'compress_type',
+        help = "Type of compression to use, tar, gz, bz2 and xz are possible, by default 'gz'",
+        type = str,
+        default = 'gz')
+    parser.add_argument(
+        '-rd', '--remove_dirs',
+        help ='Remove compressed dirs, by default False',
+        nargs = "?",
+        dest = 'remove_dirs',
+        const = True,
+        default = False,
+        type=bool)
+    parser.add_argument(
+        '-v', '--version',
+        action='version',
+        version=f"BindFlow: {__version__}")
+    args = parser.parse_args()
+    archive(
+        root_path = args.root_path,
+        exclude = args.exclude,
+        name = args.name,
+        compress_type = args.compress_type,
+        remove_dirs = args.remove_dirs)
+def abfe_unarchive():
+    from abfe.utils.tools import unarchive
+    from abfe._version import __version__
+    parser  =argparse.ArgumentParser()
+    parser.add_argument(
+        dest = 'archive_file',
+        help = 'Archived project',
+        type = str,)
+    parser.add_argument(
+        dest = 'target_path',
+        help = 'Out path to unarchive',
+        type = str,)
+    parser.add_argument(
+        '-v', '--version',
+        action='version',
+        version=f"BindFlow: {__version__}")
+    args = parser.parse_args()
+    unarchive(archive_file = args.archive_file, target_path = args.target_path)
 if __name__ == "__main__":...
