@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import subprocess, os
 from typing import List, Union
+import os
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -252,6 +253,73 @@ def list_if_file(path:PathLike = '.', ext:str = None) -> List[str]:
     if ext:
         files = [file for file in files if os.path.splitext(file)[-1] == f".{ext}"]
     return files
+
+def archive_dir(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
+    """It compress all the dirs inside root_path that are not specified in exclude.
+
+    Parameters
+    ----------
+    root_path : PathLike
+        The root path for which all the dirs will be compressed
+    exclude : List[PathLike], optional
+        List of dirs to exclude form compression, by default None
+    name : str, optional
+        Output name of the archive file, by default 'archive'
+    compress_type : str, optional
+        Type of compression to use, tar, gz, bz2 and xz are possible, by default 'gz'
+    remove_dirs : bool, optional
+        Remove compressed dirs, by default False
+
+    Raises
+    ------
+    FileNotFoundError
+        If root_path does not exist
+    ValueError
+        Incorrect compress_type
+    """
+    import tarfile, shutil
+    # Ensure the provided path exists
+    # root_path = os.path.abspath(root_path)
+    if not os.path.exists(root_path):
+        raise FileNotFoundError(f"Directory '{root_path}' does not exist.")
+
+    # Create a list of directories to compress
+    if not exclude:
+        exclude = []
+    dirs = [d for d in list_if_dir(root_path) if d not in exclude]
+
+
+    if not dirs:
+        print("No directories to compress.")
+        return
+
+    # Define the name of the compressed file
+    compress_type = compress_type.lower()
+    valid_tar_exts = ['tar', 'gz', 'bz2', 'xz']
+    if compress_type in valid_tar_exts:
+        archive_name = f'{name}.tar'
+        if compress_type != 'tar':
+            archive_name += f'.{compress_type}'
+        archive_mode = compress_type
+    else:
+        raise ValueError(f"Unsupported compression type ({compress_type}). Use: {' '.join(valid_tar_exts)}.")
+
+    # Create the compressed archive
+    with tarfile.open(archive_name, f'w:{archive_mode}') as archive:
+        for dir_name in dirs:
+            full_dir_path = os.path.join(root_path, dir_name)
+            print(f"Compressing: {full_dir_path}")
+            archive.add(full_dir_path, arcname=dir_name)
+
+    print(f"Successfully compressed {len(dirs)} directories into '{archive_name}'.")
+
+    # Optionally remove the source directories
+    if remove_dirs:
+        print("Cleaning after compression:")
+        for dir_name in dirs:
+            full_dir_path = os.path.join(root_path, dir_name)
+            print(f"Removing: {full_dir_path}")
+            shutil.rmtree(full_dir_path)
 
 def makedirs(path):
     if not os.path.exists(path):
