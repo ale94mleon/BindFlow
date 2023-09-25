@@ -366,6 +366,9 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
             project_archive.add(os.path.join(tmpdir, arcname), arcname=arcname)
 
     # Optionally remove the source directories
+    with open(f"{name}_safe_remove.check", "w") as f:
+        f.write(f'All files were successfully archived!')
+
     if remove_dirs:
         print("Cleaning after compression:")
         for dir_name in dirs:
