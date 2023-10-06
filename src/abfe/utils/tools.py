@@ -281,8 +281,11 @@ def find_xtc_files(root_path:PathLike, exclude: List[paths_exist] = None) -> Lis
 
 def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
     """It compress all the dirs inside root_path that are not specified in exclude. It will always create
-    a tar file with the XTC files (without compress) and a main_project.tar.{compress_type} wth the rest of the 
-    directory. It will only compress those files included in main_project.tar.{compress_type}.
+    a tar file with the XTC files (without compress) and a main_project.tar.{compress_type} with the rest of 
+    directories. It will only compress those files included in main_project.tar.{compress_type}. If the archive worked as expected,
+    a file {name}_safe_remove.check will be written. In-house benchmark showed a compress rate close to for a abfe campaign 1.8 using gz compression 
+    (data taken from MCL1).
+    139 GB to 77 GB
     In-house benchmark showed:
     
     +-------+-------+-------+
