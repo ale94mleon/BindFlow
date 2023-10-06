@@ -121,7 +121,7 @@ def calculate_abfe(
         protein: Union[tools.PathLike, dict], # conf, top, ff
         ligands: Union[tools.PathLike, List[dict]],
         out_root_folder_path: tools.PathLike,
-        cofactor: Union[tools.PathLike, dict, None] = None,
+        cofactor: Union[tools.PathLike, dict, None] = None, # You can also specify the keyword is_water in case that the cofactor is a water system, that will change the settles section to triangular constraints. That is needed for compatibility with GROMACS
         cofactor_on_protein:bool = True, # this is to the correct group on the thermostat
         membrane: Union[tools.PathLike, dict, None] = None,
         hmr_factor: Union[float, None] = 3.0, # For provided topologies if hmr_factor is set, it will pass any way. So for topology files with already HMR, this should be None. And all the topologies should be provided

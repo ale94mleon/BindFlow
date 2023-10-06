@@ -249,43 +249,38 @@ rule equil_complex_prod:
         # Allow proper GROMACS continuation
         tools.paths_exist(paths = [params.out_gro, params.out_cpt, params.out_tpr, params.out_xtc], raise_error = True, out = output.finished)
 
-rule equil_complex_trjconv:
-    input:
-        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
-    params:
-        in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
-        in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/",
-    output:
-        xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/prod_center.xtc"
-    run:
-        tools.makedirs(params.run_dir)
-        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.in_xtc} -o {params.run_dir}/whole.xtc -pbc whole")
-        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump")
-        tools.run(f"echo 'Protein System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/nojump.xtc -o {output.xtc} -pbc mol -center -ur compact")
-        tools.run(f"rm {params.run_dir}/whole.xtc {params.run_dir}/nojump.xtc")
-
 rule equil_complex_get_boresch_restraints:
     input:
         finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
-        xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/prod_center.xtc",
         mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp",
     params:
-        tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
+        in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
+        in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
         run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/",
     output:
         gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
         top = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
         boresch_dG_off = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/dG_off.dat"
     run:
+        # Fix trajectory.
+        tools.makedirs(params.run_dir)
+        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.in_xtc} -o {params.run_dir}/whole.xtc -pbc whole")
+        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump")
+        tools.run(f"echo 'Protein System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/nojump.xtc -o {params.run_dir}/prod_center.xtc -pbc mol -center -ur compact")
+        # Clean
+        tools.run(f"rm {params.run_dir}/whole.xtc {params.run_dir}/nojump.xtc")
+
+        # Getting Borech restraints
         mdp_params = mdp.MDP().from_file(input.mdp).parameters
         if 'ref-t' in mdp_params:
             temperature = float(mdp_params['ref-t'].split()[0])
         elif 'ref_t' in mdp_params:
             temperature = float(mdp_params['ref_t'].split()[0])
         boresch.gen_restraint(
-            topology = params.tpr,
-            trajectory = input.xtc,
+            topology = params.in_tpr,
+            trajectory = f"{params.run_dir}/prod_center.xtc",
             outpath = params.run_dir,
             temperature = temperature
         )
+        # Clean
+        tools.run(f"rm {params.run_dir}/prod_center.xtc")

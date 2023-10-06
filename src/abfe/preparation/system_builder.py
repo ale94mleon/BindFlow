@@ -550,10 +550,19 @@ class MakeInputs:
             SolObj(structure = self.sys_ligand, bt='octahedron', d = 1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
             
             print("\t\t- Complex in: ", system_dir)
+            settles_to_constraints_on = None
+            if self.cofactor:
+                if 'is_water' in self.cofactor:
+                    if self.cofactor['is_water']:
+                        warnings.warn(f'Provided cofactor {self.cofactor} was labeled as water (is_water = True)'\
+                                    'So, its settles section (if any), will be changed to tip3p-like triangular constraints'\
+                                    'Check here for more information: https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9')
+                        settles_to_constraints_on = 'COF'
+
             if self.membrane:
-                SolObj(structure = self.md_system, bt='triclinic', box = self.vectors,angles=self.angles, out_dir=system_dir, out_name='solvated', f_xyz=f_xyz_complex)
+                SolObj(structure = self.md_system, bt = 'triclinic', box = self.vectors, angles = self.angles, out_dir = system_dir, out_name = 'solvated', f_xyz = f_xyz_complex, settles_to_constraints_on = settles_to_constraints_on)
             else:
-                SolObj(structure = self.md_system, bt='octahedron', d = 1.5, out_dir=system_dir, out_name='solvated', f_xyz=f_xyz_complex)
+                SolObj(structure = self.md_system, bt = 'octahedron', d = 1.5, out_dir = system_dir, out_name = 'solvated', f_xyz = f_xyz_complex, settles_to_constraints_on = settles_to_constraints_on)
 
         
         # Make index file in case of membrane systems

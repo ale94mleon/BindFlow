@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import subprocess, os
 from typing import List, Union
+import os
+import tempfile
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -253,11 +255,165 @@ def list_if_file(path:PathLike = '.', ext:str = None) -> List[str]:
         files = [file for file in files if os.path.splitext(file)[-1] == f".{ext}"]
     return files
 
+def find_xtc_files(root_path:PathLike, exclude: List[paths_exist] = None) -> List[PathLike]:
+
+    if not isinstance(exclude, list):
+        raise TypeError(f"exclude must be a list. Provided: {exclude}")
+    
+    xtc_files = []
+
+    def should_exclude(file_path):
+        for excluded in exclude:
+            if str(file_path).startswith(str(excluded)):
+                print(3333, str(file_path), excluded, str(file_path).startswith(str(excluded)))
+                return True
+        return False
+
+    for root, _, files in os.walk(root_path):
+        for file in files:
+            if file.endswith('.xtc'):
+                xtc_file_path = os.path.relpath(os.path.join(root, file), root_path)
+                if should_exclude(xtc_file_path):
+                    print(f"Skipping XTC: {xtc_file_path}")
+                else:
+                    xtc_files.append(xtc_file_path)
+    return xtc_files
+
+def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
+    """It compress all the dirs inside root_path that are not specified in exclude. It will always create
+    a tar file with the XTC files (without compress) and a main_project.tar.{compress_type} with the rest of 
+    directories. It will only compress those files included in main_project.tar.{compress_type}. If the archive worked as expected,
+    a file {name}_safe_remove.check will be written. In-house benchmark showed a compress rate close to for a abfe campaign 1.8 using gz compression 
+    (data taken from MCL1).
+    139 GB to 77 GB
+    In-house benchmark showed:
+    
+    +-------+-------+-------+
+    |       | Time  | Space |
+    +=======+=======+=======+
+    | bz2   | x s   | x MB  |
+    +-------+-------+-------+
+    | gz    | x s   | x MB  |
+    +-------+-------+-------+
+    | xz    | x s   | x MB  |
+    +-------+-------+-------+
+
+    Parameters
+    ----------
+    root_path : PathLike
+        The root path for which all the dirs will be compressed
+    exclude : List[PathLike], optional
+        List of dirs to exclude form compression, by default None
+    name : str, optional
+        Output name of the archive file, by default 'archive'
+    compress_type : str, optional
+        Type of compression to use, tar, gz, bz2 and xz are possible, by default 'gz'
+    remove_dirs : bool, optional
+        Remove compressed dirs, by default False
+
+    Raises
+    ------
+    FileNotFoundError
+        If root_path does not exist
+    ValueError
+        Incorrect compress_type
+    """
+    import tarfile, shutil
+    # Ensure the provided path exists
+    if not os.path.exists(root_path):
+        raise FileNotFoundError(f"Directory '{root_path}' does not exist.")
+
+    # Create a list of directories to compress
+    if not exclude:
+        exclude = []
+    dirs = [d for d in list_if_dir(root_path) if d not in exclude]
+
+    if not dirs:
+        print("No directories to compress.")
+        return
+
+    # Define the name of the compressed file
+    compress_type = compress_type.lower()
+    valid_tar_exts = ['tar', 'gz', 'bz2', 'xz']
+    if compress_type not in valid_tar_exts:
+         raise ValueError(f"Unsupported compression type ({compress_type}). Use: {' '.join(valid_tar_exts)}.")
+
+    # Find and create a separate archive for XTC files
+    xtc_files = find_xtc_files(root_path, exclude=exclude)
+    with tarfile.open(f"{name}.tar", f'w:tar') as project_archive:
+        if xtc_files:
+            for xtc_file in xtc_files:
+                xtc_file_path = os.path.join(root_path, xtc_file)
+                print(f"Adding XTC: {xtc_file}")
+                project_archive.add(xtc_file_path, arcname=xtc_file)
+
+
+        with tempfile.TemporaryDirectory(prefix='.main_archive', dir='.') as tmpdir:
+
+            # Create the compressed main_archive
+            arcname = 'main_project.tar'
+            if compress_type != 'tar':
+                arcname += f".{compress_type}"
+
+            with tarfile.open(os.path.join(tmpdir, arcname), f'w:{compress_type}') as main_archive:
+                for dir_name in dirs:
+                    full_dir_path = os.path.join(root_path, dir_name)
+                    print(f"Compressing: {full_dir_path}")
+                    for root, _, files in os.walk(full_dir_path):
+                        for file in files:
+                            if not file.endswith('.xtc'):
+                                file_path = os.path.relpath(os.path.join(root, file), root_path)
+                                main_archive.add(os.path.join(root, file), arcname=file_path)
+            
+            print(f"Adding: {arcname}")
+            project_archive.add(os.path.join(tmpdir, arcname), arcname=arcname)
+
+    # Optionally remove the source directories
+    with open(f"{name}_safe_remove.check", "w") as f:
+        f.write(f'All files were successfully archived!')
+
+    if remove_dirs:
+        print("Cleaning after compression:")
+        for dir_name in dirs:
+            full_dir_path = os.path.join(root_path, dir_name)
+            print(f"Removing: {full_dir_path}")
+            shutil.rmtree(full_dir_path)
+
+def unarchive(archive_file: PathLike, target_path: PathLike):
+    """It unarchive a project archived by the function :meth:`abfe.utils.tools.archive`
+
+    Parameters
+    ----------
+    archive_file : PathLike
+        Archived project
+    target_path : PathLike
+        Out path to unarchive
+    """
+    import tarfile
+    # Ensure the target directory exists
+    target_path = os.path.abspath(target_path)
+    os.makedirs(target_path, exist_ok=True)
+   
+   # Create a temporary directory for extracting the main compressed archive
+    with tempfile.TemporaryDirectory(prefix='.unarchive_main', dir='.') as tmpdir:
+        # Extract the XTC archive first
+        with tarfile.open(archive_file, 'r') as archive:
+            for member in archive.getmembers():
+                print(f"Decompressing: {member.name}")
+                if member.name.startswith('main_project.tar'):
+                    compress_type = member.name.split('.')[-1]
+                    main_archive_path = os.path.join(tmpdir, member.name)
+                    archive.extract(member, tmpdir)
+                    with tarfile.open(main_archive_path, f'r:{compress_type}') as main_archive:
+                        for main_member in main_archive.getmembers():
+                            print(f"Decompressing: {main_member.name}")
+                            main_archive.extract(main_member, target_path)
+                else:
+                    archive.extract(member, target_path)
+
 def makedirs(path):
-    if os.path.exists(path):
-        pass
-    else:
-        os.makedirs(path,exist_ok=True)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def recursive_update_dict(original_dict:dict, update_dict:dict) -> None:
     for key, value in update_dict.items():

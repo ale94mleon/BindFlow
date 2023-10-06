@@ -1,6 +1,7 @@
 #python gedoens
 __pycache__
 *.pyc
+jupyter_execute
 
 #snake fun
 .snakemake
@@ -12,9 +13,10 @@ data/*
 /examples/2VT4/extra
 /examples/2VT4/abfe
 
-# Dealing with membranes
-/abfe/template/complex_memb_equil_workflow
 public
+
+# Interanl modules
+src/abfe/utils/my_pdb.py
 
 .pytest_cache
 .vscode

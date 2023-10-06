@@ -173,7 +173,6 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
     """
     for molecule in molecules:
         atom_flag = False
-        bonds_flag = False
 
         with open(input_topology, "r") as f:
             top_lines = f.readlines()
@@ -183,22 +182,26 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
             posres_file.write("[ position_restraints ]\n")
 
             for i in range(len(top_lines)):
+                
                 if f"{molecule}  " in (top_lines[i]) and " 3\n" in (top_lines[i]):
-                    atom_flag = False
-                    bonds_flag = False
-
-                    for j in range(i + 1, len(top_lines)):
+                    j = i + 1
+                    while j < len(top_lines):
+                        
                         if '[ atoms ]' in top_lines[j]:
+                            j += 1 # skip this line
                             atom_flag = True
-                        if '[ bonds ]' in top_lines[j]:
-                            bonds_flag = True
+                        
+                        if top_lines[j].startswith('['): # A new section was reached
                             break
-                        if atom_flag and not bonds_flag:
-                            if not "[" in top_lines[j] and not top_lines[j].startswith("\n") and not top_lines[j].startswith(";") and not top_lines[j].startswith("#"):
+
+                        if atom_flag:
+                            if not top_lines[j].startswith("\n") and not top_lines[j].startswith(";") and not top_lines[j].startswith("#"):
                                 # Check if heavy atom based on the mass. In case of use of HMR, for that reason 3
                                 if float(top_lines[j].split()[7]) > 3:
                                     posres_str = f"{top_lines[j].split()[0]} 1 {f_xyz[0]} {f_xyz[1]} {f_xyz[2]}\n"
                                     posres_file.write(posres_str)
+                        j += 1
+                    break
     
     # Add posre sections to the topology
     add_posres_section(
@@ -206,6 +209,61 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
         molecules = molecules,
         out_file = None)
 
+def _tip3p_settles_to_constraints(top:tools.PathLike, molecule:str, out_top:Union[tools.PathLike, None] = None) -> None:
+    """Temporal solution to TODO (put the GitHub Issue).
+    Basicallyt it will change the settles entrance of `molecule`
+    by:
+    ; https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
+    '[ constraints ]'
+    ; ai aj funct length
+    1 2 1 0.09572
+    1 3 1 0.09572
+    2 3 1 0.15139
+
+    Warning
+    -------
+    This is only useful for replacing the settle section of a tip3p-like molecule.
+    This funciton its just a workaroud and will probably bve removed on the future
+
+    Parameters
+    ----------
+    top : tools.PathLike
+        The GMX topology file
+    molecule : str
+        Name of the molecule where to look for the [ settles ] section
+    out_top : Union[tools.PathLike, None], optional
+        Path for a output topology, by default None which means that top will be modify in place.
+    """
+    constraints_section = "; https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9\n"\
+    "[ constraints ]\n"\
+    "; ai aj funct length\n"\
+    "1 2 1 0.09572\n"\
+    "1 3 1 0.09572\n"\
+    "2 3 1 0.15139\n\n"
+    with open(top, 'r') as f:
+        lines = f.readlines()
+    idx_begins, idx_ends = None, None
+    section_found = False
+    i = 0 
+    while not lines[i].startswith('[ molecules ]') and i < len(lines):
+        if molecule in lines[i] and " 3\n" in lines[i]:
+            j = i
+            while not lines[j].startswith('[ moleculetype ]') and j < len(lines):
+                if lines[j].startswith('[ settles ]'):
+                    section_found = True
+                    idx_begins = j
+                    j += 1
+                if section_found and lines[j].startswith(('[', '#')):
+                    idx_ends = j
+                    break
+                j += 1
+            break
+        i += 1
+    if not out_top:
+        out_top = top
+    with open(out_top, 'w') as f:
+        f.write("".join(lines[:idx_begins]) + constraints_section + "".join(lines[idx_ends:]))
+ 
 
 class Solvate:
     def __init__(self, water_model_code:str, builder_dir: tools.PathLike = '.solvate') -> None:
@@ -491,10 +549,11 @@ class Solvate:
             nname:str = "CL",
             ion_conc:float = 150E-3,
             rmin:float = 1.0,
-            exclusion_list:list = ["SOL", "NA", "CL", "MG", "ZN"],
+            exclusion_list:list = ["SOL", "NA", "CL",],# "MG", "ZN"],
             out_dir:tools.PathLike = '.',
             out_name:str = 'solvated',
-            f_xyz:tuple = (2500, 2500, 2500)
+            f_xyz:tuple = (2500, 2500, 2500),
+            settles_to_constraints_on:Union[tools.PathLike, str] = None,
             ) -> None:
         
         # Clean any possible generated files during previous calls
@@ -537,6 +596,10 @@ class Solvate:
             out_dir=out_dir,
             f_xyz = f_xyz
         )
+        # Fix conversion for constraints to settles on water-like molecules
+        if settles_to_constraints_on:
+            _tip3p_settles_to_constraints(top = init_top, molecule = settles_to_constraints_on, out_top = None)
+
         shutil.copy(init_top, os.path.join(out_dir, f'{out_name}.top'))
         shutil.copy(init_gro, os.path.join(out_dir, f'{out_name}.gro'))
 

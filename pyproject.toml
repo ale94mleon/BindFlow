@@ -94,3 +94,5 @@ abfe = [
 abfe-run = "abfe.cli:abfe_run"
 abfe-dag = "abfe.cli:abfe_dag"
 abfe-check_results = "abfe.cli:abfe_check_results"
+abfe-archive = 'abfe.cli:abfe_archive'
+abfe-unarchive = 'abfe.cli:abfe_unarchive'

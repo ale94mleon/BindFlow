@@ -69,9 +69,8 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
         extracted_dHdls = extract_dHdl(xvg, T = temperature)
         
         df = slicing(extracted_dHdls, lower = lower, upper = upper)
-        
-        # Calculate the time step on the data based on statistical_inefficiency (or autocorrelation)
         df_ineff = statistical_inefficiency(df, series=df.iloc[:, 0])
+
         if len(df_ineff) != 0:
             ineff_step = math.ceil(len(df) / len(df_ineff))
         else:
