@@ -181,7 +181,7 @@ rule equil_complex_get_boresch_restraints:
     params:
         in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
         in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/",
+        run_dir = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc",
     output:
         gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
         top = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
@@ -189,9 +189,9 @@ rule equil_complex_get_boresch_restraints:
     run:
         # Fix trajectory.
         tools.makedirs(params.run_dir)
-        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.in_xtc} -o {params.run_dir}/whole.xtc -pbc whole")
-        tools.run(f"echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump")
-        tools.run(f"echo 'Protein System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/nojump.xtc -o {params.run_dir}/prod_center.xtc -pbc mol -center -ur compact")
+        tools.run(f"export GMX_MAXBACKUP=-1; echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.in_xtc} -o {params.run_dir}/whole.xtc -pbc whole")
+        tools.run(f"export GMX_MAXBACKUP=-1; echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump")
+        tools.run(f"export GMX_MAXBACKUP=-1; echo 'Protein System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/nojump.xtc -o {params.run_dir}/prod_center.xtc -pbc mol -center -ur compact")
         # Clean
         tools.run(f"rm {params.run_dir}/whole.xtc {params.run_dir}/nojump.xtc")
 
