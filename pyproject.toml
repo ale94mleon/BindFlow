@@ -19,8 +19,6 @@ readme = "README.rst"
 
 authors=[
     {name="Alejandro Martínez-León", email="ale94mleon@gmail.com"},
-    {name="Benjamin Ries", email="benjamin-ries@outlook.com"},
-    {name="Irfan Alibay", email="irfan.alibay@gmail.com"}, 
 ]
 
 classifiers = [
@@ -43,8 +41,8 @@ keywords = [
 
 requires-python = ">= 3.8 , < 3.10"
 dependencies = [
-    "alchemlyb == 2.0.0",
-    "pymbar == 4.0.1",
+    "alchemlyb == 2.0.0", # TODO update to new
+    "pymbar == 4.0.1", #TODO  update to new
     "MDRestraintsGenerator",
     "matplotlib",
     "numpy",
@@ -52,10 +50,13 @@ dependencies = [
     "pandas",
     "mdanalysis",
     "TOFF >= 0.1.0",
-    "tabulate == 0.8.10",
+    "tabulate == 0.8.10", # TODO update to new
     "pyyaml",
     "uncertainties",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest"]
 
 [tool.versioningit]
 default-version = "1+unknown"
@@ -85,6 +86,8 @@ abfe = [
     "data/gmx_ff/*.tar.gz",
     "data/water_models/*.tar.gz",
     "data/water_models/*.yml",
+    "data/ci_systems/**/*.yml",
+    "data/ci_systems/**/*.tar.gz",
     "mdp/templates/**/*.mdp",
     "rules/**/*.smk",
     "rules/**/Snakefile"

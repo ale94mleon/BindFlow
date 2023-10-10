@@ -1,0 +1,92 @@
+cluster:
+  type: FrontEnd
+  options:
+    calculation: None   
+extra_directives: # Optional
+  dependencies:
+    # - 'source /data/shared/spack-0.19.1/shared.bash'
+    # - 'module load gromacs/2022.4'
+    - 'export GMX_MAXBACKUP=-1'
+  mdrun:
+    all:
+      cpi: False
+      stepout: 5000
+      v: True
+nwindows: # optional
+  ligand:
+      vdw: 6
+      coul: 6
+  complex:
+      vdw: 6
+      coul: 6
+      bonded: 6
+mdp: # optional
+  ligand:
+    equi:
+      01_nvt:
+        nsteps: 25
+      02_nvt:
+        nsteps: 25
+      03_npt:
+        nsteps: 25
+      prod:
+        nsteps: 250
+    fep:
+      vdw:
+        01_nvt:
+          nsteps: 25
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
+      coul:
+        01_nvt:
+          nsteps: 25
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
+  complex:
+    equi:
+      01_nvt:
+          nsteps: 25
+      02_nvt:
+          nsteps: 25
+      03_npt:
+        nsteps: 25
+      04_npt:
+        nsteps: 25
+      prod:
+        nsteps: 250
+    fep:
+      vdw:
+        01_nvt:
+          nsteps: 25
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
+      coul:
+        01_nvt:
+          nsteps: 25
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
+      bonded:
+        01_nvt:
+          nsteps: 25
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
