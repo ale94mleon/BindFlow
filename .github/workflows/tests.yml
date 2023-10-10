@@ -6,18 +6,8 @@ name: tests
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - src/abfe/**
-      - .github/workflows/tests.yml
-      - tests/**
-      - pyproject.toml
   pull_request:
     branches: [ "main" ]
-    paths:
-      - src/abfe/**
-      - .github/workflows/tests.yml
-      - tests/**
-      - pyproject.toml
 
 jobs:
   build_ubuntu:
@@ -25,35 +15,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        python-version: [3.8, 3.9]
+        os: [ubuntu-latest, macOS-latest] #windows-latest (vina is not available for windows in conda-forge),m think about use bioconda autodock-vina
+        python-version: [3.9, '3.10'] # 3.8, 
+        exclude:
+          - os: macOS-latest
+            python-version: '3.10'
     steps:
     - uses: actions/checkout@v3
     - name: Setup conda
-      uses: s-weigand/setup-conda@v1
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        update-conda: true
         python-version: ${{ matrix.python-version }}
-        conda-channels: anaconda, conda-forge
-    - name: Install dependencies from conda
-      run: |
-        conda install -y -c conda-forge parmed pdbfixer openmm openff-toolkit openmmforcefields openff-toolkit bioconda::snakemake "espaloma>=0.3.1" "scipy<1.8"
-    - name: Install pip dependencies and abfe on test mode
+        mamba-version: "*"
+        channels: conda-forge,defaults,bioconda
+        channel-priority: true
+        activate-environment: anaconda-client-env
+        environment-file: environment.yml
+    - name: Install pip dependencies and toff on test mode
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8
-        pip install -e .[dev]
-        # pip install dgl<1 -f https://data.dgl.ai/wheels/repo.html
+        pip install -e .[test]
         python -m pip install pytest-cov
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 src/abfe --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 src/toff --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 src/abfe --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 src/toff --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
         echo after "Lint with flake8" My python version is actually: $(python --version).
     - name: Test with pytest
       run: |
-        pytest --cov src/abfe
+        pytest --cov toff
     - name: Upload coverage reports to Codecov with GitHub Action
       uses: codecov/codecov-action@v3
