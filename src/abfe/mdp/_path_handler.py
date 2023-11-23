@@ -1,4 +1,5 @@
 import os
+
 from abfe.utils import tools
 
 root_path = os.path.abspath(os.path.dirname(__file__))
@@ -10,7 +11,7 @@ __PathDir__ = {
             'fep':  os.path.join(root_path, 'templates', 'complex', 'membrane', 'fep'),
         },
         'soluble': {
-            'equi': os.path.join(root_path, 'templates','complex', 'soluble', 'equi'),
+            'equi': os.path.join(root_path, 'templates', 'complex', 'soluble', 'equi'),
             'fep':  os.path.join(root_path, 'templates', 'complex', 'soluble', 'fep'),
         },
     },

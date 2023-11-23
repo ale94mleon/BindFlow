@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 import os
+import shutil
 import tarfile
-from typing import Any, Union, Iterable
+import tempfile
+from typing import Iterable, Union
+
+import parmed
 import yaml
+
 from abfe.home import home
 from abfe.utils import tools
-import shutil
-import parmed
-import tempfile
 
-def readParmEDMolecule(top_file:tools.PathLike, gro_file:tools.PathLike) -> parmed.Structure:
+
+def readParmEDMolecule(top_file: tools.PathLike, gro_file: tools.PathLike) -> parmed.Structure:
     """Read a gro and top GROMACS file and return
     a topology Structure
 
@@ -34,9 +37,10 @@ def readParmEDMolecule(top_file:tools.PathLike, gro_file:tools.PathLike) -> parm
     gmx_top.box = gmx_gro.box
     return gmx_top
 
-def get_atom_types(top:tools.PathLike) -> dict:
+
+def get_atom_types(top: tools.PathLike) -> dict:
     """
-    Return the atomtypes section as a dict with key atom type and values the 
+    Return the atomtypes section as a dict with key atom type and values the
     corresponded line. Include statements are not
     take it into account.
     """
@@ -44,7 +48,7 @@ def get_atom_types(top:tools.PathLike) -> dict:
 
     with open(top, 'r') as f:
         lines = f.readlines()
-    
+
     section_found = False
     for line in lines:
         if line.startswith('[ atomtypes ]'):
@@ -62,7 +66,8 @@ def get_atom_types(top:tools.PathLike) -> dict:
                 atom_types[atom_type] = line
     return atom_types
 
-def get_molecule_names(input_topology:tools.PathLike, section:str = 'molecules') -> list:
+
+def get_molecule_names(input_topology: tools.PathLike, section: str = 'molecules') -> list:
     """It gets the molecule names specified inside input_topology
 
     Parameters
@@ -93,13 +98,15 @@ def get_molecule_names(input_topology:tools.PathLike, section:str = 'molecules')
                     if len(split_line) == 2:
                         molecules.append(split_line[0])
                 i += 1
-                if i >= len(lines): break
+                if i >= len(lines):
+                    break
         i += 1
 
     return molecules
 
-def add_posres_section(input_topology:tools.PathLike, molecules:Iterable[str], out_file:tools.PathLike = None):
-    """This will add to the original topology file the corresponded POSRES section to the 
+
+def add_posres_section(input_topology: tools.PathLike, molecules: Iterable[str], out_file: tools.PathLike = None):
+    """This will add to the original topology file the corresponded POSRES section to the
     provided molecules:
     Examples of added lines:
 
@@ -148,14 +155,15 @@ def add_posres_section(input_topology:tools.PathLike, molecules:Iterable[str], o
                         out_lines.append("#endif\n\n")
                     look_out_flag = False
         out_lines.append(line)
-    
+
     if not out_file:
         out_file = input_topology
-    
+
     with open(out_file, "w") as w:
         w.write("".join(out_lines))
 
-def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:tools.PathLike, f_xyz:tuple = (2500, 2500, 2500)):
+
+def make_posres(input_topology: tools.PathLike, molecules: Iterable[str], out_dir: tools.PathLike, f_xyz: tuple = (2500, 2500, 2500)):
     """Make a position restraint file out of input_topology for all the molecules specified
     on molecules. Taking only the heavy atoms into account
 
@@ -168,7 +176,7 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
     out_dir : PathLike
         The path where the posres files will be written
     f_xyz : tuple
-        The x, y, z components of the restraint force to be used. It could 
+        The x, y, z components of the restraint force to be used. It could
         be a float number of a string to be then defined on the mdp file, by default (2500, 2500, 2500)
     """
     for molecule in molecules:
@@ -178,20 +186,20 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
             top_lines = f.readlines()
 
         posres_filename = f"posres_{molecule}.itp"
-        with open(os.path.join(out_dir,posres_filename), "w") as posres_file:
+        with open(os.path.join(out_dir, posres_filename), "w") as posres_file:
             posres_file.write("[ position_restraints ]\n")
 
             for i in range(len(top_lines)):
-                
+
                 if f"{molecule}  " in (top_lines[i]) and " 3\n" in (top_lines[i]):
                     j = i + 1
                     while j < len(top_lines):
-                        
+
                         if '[ atoms ]' in top_lines[j]:
-                            j += 1 # skip this line
+                            j += 1  # skip this line
                             atom_flag = True
-                        
-                        if top_lines[j].startswith('['): # A new section was reached
+
+                        if top_lines[j].startswith('['):  # A new section was reached
                             break
 
                         if atom_flag:
@@ -202,14 +210,12 @@ def make_posres(input_topology:tools.PathLike, molecules:Iterable[str], out_dir:
                                     posres_file.write(posres_str)
                         j += 1
                     break
-    
-    # Add posre sections to the topology
-    add_posres_section(
-        input_topology = input_topology,
-        molecules = molecules,
-        out_file = None)
 
-def _tip3p_settles_to_constraints(top:tools.PathLike, molecule:str, out_top:Union[tools.PathLike, None] = None) -> None:
+    # Add posre sections to the topology
+    add_posres_section(input_topology=input_topology, molecules=molecules, out_file=None)
+
+
+def _tip3p_settles_to_constraints(top: tools.PathLike, molecule: str, out_top: Union[tools.PathLike, None] = None) -> None:
     """Temporal solution to TODO (put the GitHub Issue).
     Basicallyt it will change the settles entrance of `molecule`
     by:
@@ -235,16 +241,16 @@ def _tip3p_settles_to_constraints(top:tools.PathLike, molecule:str, out_top:Unio
         Path for a output topology, by default None which means that top will be modify in place.
     """
     constraints_section = "; https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9\n"\
-    "[ constraints ]\n"\
-    "; ai aj funct length\n"\
-    "1 2 1 0.09572\n"\
-    "1 3 1 0.09572\n"\
-    "2 3 1 0.15139\n\n"
+        "[ constraints ]\n"\
+        "; ai aj funct length\n"\
+        "1 2 1 0.09572\n"\
+        "1 3 1 0.09572\n"\
+        "2 3 1 0.15139\n\n"
     with open(top, 'r') as f:
         lines = f.readlines()
     idx_begins, idx_ends = None, None
     section_found = False
-    i = 0 
+    i = 0
     while not lines[i].startswith('[ molecules ]') and i < len(lines):
         if molecule in lines[i] and " 3\n" in lines[i]:
             j = i
@@ -263,15 +269,15 @@ def _tip3p_settles_to_constraints(top:tools.PathLike, molecule:str, out_top:Unio
         out_top = top
     with open(out_top, 'w') as f:
         f.write("".join(lines[:idx_begins]) + constraints_section + "".join(lines[idx_ends:]))
- 
+
 
 class Solvate:
-    def __init__(self, water_model_code:str, builder_dir: tools.PathLike = '.solvate') -> None:
+    def __init__(self, water_model_code: str, builder_dir: tools.PathLike = '.solvate') -> None:
         """Class to solvate GMX systems.
         Force fields were extracted from `GMX topologies <https://gitlab.com/gromacs/gromacs/-/tree/main/share/top?ref_type=heads>`__.
-        
+
         Remember to cite properly the main references if you use any of the water models in your work.
-        
+
         Available water models:
             * amber:
                 * amber/spc
@@ -295,7 +301,7 @@ class Solvate:
                 * oplsaa/tip4pew
                 * oplsaa/tip5p
                 * oplsaa/tip5pe
-        
+
         Parameters
         ----------
         water_model_code : str
@@ -320,16 +326,17 @@ class Solvate:
         # This will be cleaned out and created every time the class is called (at the beginning)
         # to avoid mismatch.ch between files generated on different calls
         self.solvated_dir = os.path.join(self.builder_dir, 'solvated_sys')
-        
+
         with open(os.path.join(home(dataDir='gmx_water_models'), 'water_models.yml'), 'r') as f:
             self.water_models_data = yaml.safe_load(f)
 
         # Check validity of input code
-        force_field_family, water_model = water_model_code.split('/') 
+        force_field_family, water_model = water_model_code.split('/')
         if force_field_family not in self.water_models_data:
             raise ValueError(f"Invalid force field family: {force_field_family}. Choose from {self.water_models_data.keys()}")
         elif water_model not in self.water_models_data[force_field_family]:
-            raise ValueError(f"Invalid water model ({water_model}) for {force_field_family}. Choose from {self.water_models_data[force_field_family].keys()}")
+            raise ValueError(f"Invalid water model ({water_model}) for {force_field_family}."
+                             f"Choose from {self.water_models_data[force_field_family].keys()}")
 
         self.force_field_family = force_field_family
         self.water_model = water_model
@@ -356,21 +363,21 @@ class Solvate:
         # Extract water and ions topologies
         fname_wm = os.path.join(home(dataDir='gmx_water_models'), f'{self.force_field_family}.tar.gz')
         with tarfile.open(fname_wm, "r:gz") as tf:
-            tf.extract(member = f"{self.force_field_family}/{self.water_model}.itp", path=out_dir)
-            tf.extract(member = f"{self.force_field_family}/ions.itp", path=out_dir)
-            tf.extract(member = f"{self.force_field_family}/ffnonbonded.itp", path=out_dir)
-        
+            tf.extract(member=f"{self.force_field_family}/{self.water_model}.itp", path=out_dir)
+            tf.extract(member=f"{self.force_field_family}/ions.itp", path=out_dir)
+            tf.extract(member=f"{self.force_field_family}/ffnonbonded.itp", path=out_dir)
+
         # Extract water configuration
         fname_wc = os.path.join(home(dataDir='gmx_water_models'), 'configurations.tar.gz')
         with tarfile.open(fname_wc, "r:gz") as tf:
-            tf.extract(member = f"configurations/{self.water_models_data[self.force_field_family][self.water_model]}", path=out_dir)
+            tf.extract(member=f"configurations/{self.water_models_data[self.force_field_family][self.water_model]}", path=out_dir)
         water_itp = os.path.abspath(os.path.join(out_dir, f"{self.force_field_family}", f"{self.water_model}.itp"))
         ions_itp = os.path.abspath(os.path.join(out_dir, f"{self.force_field_family}", "ions.itp"))
         ffnonbonded_itp = os.path.abspath(os.path.join(out_dir, f"{self.force_field_family}", "ffnonbonded.itp"))
         water_gro = os.path.abspath(os.path.join(out_dir, "configurations", self.water_models_data[self.force_field_family][self.water_model]))
         return water_itp, ions_itp, ffnonbonded_itp, water_gro
 
-    def _include_all_atom_types(self, top:tools.PathLike) -> None :
+    def _include_all_atom_types(self, top: tools.PathLike) -> None:
         """Add all the atom types of the corresponded force field family
         They will be added to the first [ atomtypes ] section on the file
         top.
@@ -393,13 +400,13 @@ class Solvate:
                 if line.startswith('['):
                     idx_ends = i
                     break
-        if idx_begins != None and idx_ends != None:
+        if idx_begins is not None and idx_ends is not None:
             atom_types = get_atom_types(top)
             atom_types.update(get_atom_types(self.ffnonbonded_itp))
             with open(top, 'w') as f:
                 f.write("".join(lines[:idx_begins] + list(atom_types.values()) + lines[idx_ends:]))
 
-    def _include_water_ions_params(self, top:tools.PathLike) -> None:
+    def _include_water_ions_params(self, top: tools.PathLike) -> None:
         """It add include statements to the corresponded water and ion itp files
 
         Parameters
@@ -421,17 +428,17 @@ class Solvate:
 
     def _add_water_and_ions(
             self,
-            gro:tools.PathLike,
-            top:tools.PathLike,
-            bt:str = "triclinic",
-            box:list[float] = None,
-            angles:list[float] = None,
-            d:float = None,
-            c:bool = False,
-            pname:str = "NA",
-            nname:str = "CL",
-            ion_conc:float = 150E-3,
-            rmin:float = 1.0) -> None:
+            gro: tools.PathLike,
+            top: tools.PathLike,
+            bt: str = "triclinic",
+            box: list[float] = None,
+            angles: list[float] = None,
+            d: float = None,
+            c: bool = False,
+            pname: str = "NA",
+            nname: str = "CL",
+            ion_conc: float = 150E-3,
+            rmin: float = 1.0) -> None:
         """Make box, solvate and add ions to the system
 
         Parameters
@@ -443,9 +450,10 @@ class Solvate:
         bt : str, optional
             Box type for -box and -d: triclinic, cubic, dodecahedron, octahedron, by default triclinic
         box : str, optional
-            Box vector lengths (a,b,c) in nm (remember that PDB are in Angstroms), by default None. Which means that gmx editconf will use (0 0 0)  
+            Box vector lengths (a,b,c) in nm (remember that PDB are in Angstroms), by default None. Which means that gmx editconf will use (0 0 0)
         angles : Iterable[float], optional
-            This is the angles between the components of the vector in DEGREES. It is important that the provided vector has the correct units, by default None.
+            This is the angles between the components of the vector in DEGREES.
+            It is important that the provided vector has the correct units, by default None.
             For membrane systems (90,90,60) is advisable.
         d : float, optional
             Distance between the solute and the box, by default None. Which means that gmx editconf will use 0
@@ -468,23 +476,26 @@ class Solvate:
         os.chdir(self.solvated_dir)
 
         editconf_cmd = f"gmx editconf -f {gro} -o {gro} -bt {bt}"
-        if box: editconf_cmd += f" -box {' '.join([str(i) for i in box])}"
-        if angles: editconf_cmd += f" -angles {' '.join([str(i) for i in angles])}"
-        if d: editconf_cmd += f" -d {d}"
-        if c: editconf_cmd += " -c"
-        
+        if box:
+            editconf_cmd += f" -box {' '.join([str(i) for i in box])}"
+        if angles:
+            editconf_cmd += f" -angles {' '.join([str(i) for i in angles])}"
+        if d:
+            editconf_cmd += f" -d {d}"
+        if c:
+            editconf_cmd += " -c"
+
         # First write an mdp file.
         with open("ions.mdp", "w") as file:
-            file.write("; Neighbor searching\n"\
-            "cutoff-scheme           = Verlet\n"\
-            "rlist                   = 1.1\n"\
-            "pbc                     = xyz\n"\
-            "verlet-buffer-tolerance = -1\n"\
-            "\n; Electrostatics\n"\
-            "coulombtype             = cut-off\n"\
-            "\n; VdW\n"\
-            "rvdw                    = 1.0\n")
-        
+            file.write("; Neighbor searching\n"
+                       "cutoff-scheme           = Verlet\n"
+                       "rlist                   = 1.1\n"
+                       "pbc                     = xyz\n"
+                       "verlet-buffer-tolerance = -1\n"
+                       "\n; Electrostatics\n"
+                       "coulombtype             = cut-off\n"
+                       "\n; VdW\n"
+                       "rvdw                    = 1.0\n")
 
         # It is failing becasue There is not define the atom type for the water molecules
 
@@ -493,20 +504,20 @@ class Solvate:
             {editconf_cmd}
             gmx solvate -cp {gro} -p {top} -cs {self.water_gro} -o {gro}
         """)
- 
+
         tools.run(f"""
             export GMX_MAXBACKUP=-1
             gmx grompp -f ions.mdp -c {gro} -p {top} -o ions.tpr
             echo "SOL" | gmx genion -s ions.tpr -p {top} -o {gro} -neutral -pname {pname} -nname {nname} -rmin {rmin} -conc {ion_conc}
         """)
-        
+
         # Just to clean the topology. In this way only the used atom types are written.
         # And the include statements are removed
         # It builds a monolithic topology
-        struc = readParmEDMolecule(top_file = top, gro_file = gro)
+        struc = readParmEDMolecule(top_file=top, gro_file=gro)
         struc.save(top, overwrite=True)
         struc.save(gro, overwrite=True)
-        
+
         # Change back to cwd
         os.chdir(cwd)
 
@@ -533,29 +544,28 @@ class Solvate:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exception_type, exception_value, exception_traceback):
         self.clean()
-    
+
     def __call__(
             self,
-            structure:parmed.Structure,
-            bt:str = "triclinic",
-            box:list[float] = None,
-            angles:list[float] = None,
-            d:float = None,
-            c:bool = False,
-            pname:str = "NA",
-            nname:str = "CL",
-            ion_conc:float = 150E-3,
-            rmin:float = 1.0,
-            exclusion_list:list = ["SOL", "NA", "CL",],# "MG", "ZN"],
-            out_dir:tools.PathLike = '.',
-            out_name:str = 'solvated',
-            f_xyz:tuple = (2500, 2500, 2500),
-            settles_to_constraints_on:Union[tools.PathLike, str] = None,
-            ) -> None:
-        
+            structure: parmed.Structure,
+            bt: str = "triclinic",
+            box: list[float] = None,
+            angles: list[float] = None,
+            d: float = None,
+            c: bool = False,
+            pname: str = "NA",
+            nname: str = "CL",
+            ion_conc: float = 150E-3,
+            rmin: float = 1.0,
+            exclusion_list: list = ["SOL", "NA", "CL",],  # "MG", "ZN"],
+            out_dir: tools.PathLike = '.',
+            out_name: str = 'solvated',
+            f_xyz: tuple = (2500, 2500, 2500),
+            settles_to_constraints_on: Union[tools.PathLike, str] = None) -> None:
+
         # Clean any possible generated files during previous calls
         self.clean(self.solvated_dir)
         tools.makedirs(self.solvated_dir)
@@ -564,10 +574,10 @@ class Solvate:
         # Set out files
         init_top = os.path.join(self.solvated_dir, 'init.top')
         init_gro = os.path.join(self.solvated_dir, 'init.gro')
-        
+
         # Write the top and gro file of the structure
-        structure.save(init_top, overwrite = True)
-        structure.save(init_gro, overwrite = True)
+        structure.save(init_top, overwrite=True)
+        structure.save(init_gro, overwrite=True)
 
         # Add ion and water section to the topology
         self._include_water_ions_params(init_top)
@@ -575,40 +585,40 @@ class Solvate:
         self._include_all_atom_types(init_top)
         # Solvate add ions and clean the topology
         self._add_water_and_ions(
-            gro = init_gro,
-            top = init_top,
-            bt = bt,
-            box = box,
-            angles = angles,
-            d = d,
-            c = c,
-            pname = pname,
-            nname = nname,
-            ion_conc = ion_conc,
-            rmin = rmin
-        )
+            gro=init_gro,
+            top=init_top,
+            bt=bt,
+            box=box,
+            angles=angles,
+            d=d,
+            c=c,
+            pname=pname,
+            nname=nname,
+            ion_conc=ion_conc,
+            rmin=rmin)
         # Add position restraint section to topology
         molecules = list(set(get_molecule_names(init_top)) - set(exclusion_list))
         # Here I have to move the files to the final directory with its specified names
         make_posres(
-            input_topology = init_top,
-            molecules = molecules,
+            input_topology=init_top,
+            molecules=molecules,
             out_dir=out_dir,
-            f_xyz = f_xyz
+            f_xyz=f_xyz
         )
         # Fix conversion for constraints to settles on water-like molecules
         if settles_to_constraints_on:
-            _tip3p_settles_to_constraints(top = init_top, molecule = settles_to_constraints_on, out_top = None)
+            _tip3p_settles_to_constraints(top=init_top, molecule=settles_to_constraints_on, out_top=None)
 
         shutil.copy(init_top, os.path.join(out_dir, f'{out_name}.top'))
         shutil.copy(init_gro, os.path.join(out_dir, f'{out_name}.gro'))
 
+
 def index_for_membrane_system(
-        configuration_file:tools.PathLike,
-        ndxout:tools.PathLike = "index.ndx",
-        lignad_name:str = 'LIG',
-        cofactor_name:str = None,
-        cofactor_on_protein:bool = True):
+        configuration_file: tools.PathLike,
+        ndxout: tools.PathLike = "index.ndx",
+        lignad_name: str = 'LIG',
+        cofactor_name: str = None,
+        cofactor_on_protein: bool = True):
     """Make the index file for membrane systems with SOLU, MEMB and SOLV. It uses gmx make_ndx and select internally.
     One examples selection that can be created with ligand_name = LIG; cofactor_name = COF and cofactor_on_protein = True is:
         #. "SOLU" group Protein or resname LIG or resname COF;
@@ -635,13 +645,13 @@ def index_for_membrane_system(
     # Nice use of gmx select, see the use of the parenthesis
     sele_MEMB = f"\"MEMB\" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname {lignad_name})"
     sele_SOLU = f"\"SOLU\" group Protein or resname {lignad_name}"
-    sele_SOLV = f"\"SOLV\" group Water_and_ions"
+    sele_SOLV = "\"SOLV\" group Water_and_ions"
     if cofactor_name:
         sele_MEMB += f" and ! (resname {cofactor_name})"
         if cofactor_on_protein:
             sele_SOLU += f" or resname {cofactor_name}"
         else:
-            sele_SOLV += f" or resname {cofactor_name}"          
+            sele_SOLV += f" or resname {cofactor_name}"
 
     sele_SOLU += ";\n"
     sele_MEMB += ";\n"
@@ -655,10 +665,10 @@ def index_for_membrane_system(
                 gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
                 """)
 
-    #deleting the line _f0_t0.000 in the file
+    # deleting the line _f0_t0.000 in the file
     with open(ndxout, "r") as index:
         data = index.read()
-        data = data.replace("_f0_t0.000","")
+        data = data.replace("_f0_t0.000", "")
     with open(ndxout, "w") as index:
         index.write(data)
 
@@ -667,7 +677,6 @@ def index_for_membrane_system(
 
 
 if __name__ == '__main__':
-
     struc = readParmEDMolecule('testing/new.top', 'testing/new.gro')
     with Solvate('amber/tip3p', builder_dir='jaja') as SolObj:
         SolObj(struc, out_dir='solvated', out_name='complex')

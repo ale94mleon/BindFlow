@@ -4,12 +4,15 @@
 
 def test_abfe():
     from abfe.home import home
-    import tempfile, os, tarfile, glob, yaml
+    import tempfile
+    import os
+    import tarfile
+    import glob
+    import yaml
     from pathlib import Path
     # import pytest
     from multiprocessing import cpu_count
     from abfe import calculate_abfe
-
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
@@ -21,20 +24,19 @@ def test_abfe():
 
         tmp_path = Path(tmp) / "WP6_G1"
 
-
         ligand_files = glob.glob(str(tmp_path / "guest/*sdf"))[:1]
 
         ligands = []
         for ligand_file in ligand_files:
             ligands.append({
                 'conf': ligand_file,
-                'ff':{
+                'ff': {
                     'type': 'espaloma',
                     'code': 'espaloma-0.3.1'
                 }
             })
 
-        protein={
+        protein = {
             'conf': str(tmp_path / 'host/WP6.gro'),
             'top': str(tmp_path / 'host/WP6.top'),
             'ff': {
@@ -44,7 +46,10 @@ def test_abfe():
 
         with open(home_path / "config.yml", "r") as c:
             global_config = yaml.safe_load(c)
-
+            # TODO
+            # This is needed for MacOS when GROMACS is build wth -DGMX_GPU=OpenCL
+            # This is not needed in the cluster becasue CUDA is different.
+            global_config['extra_directives']['mdrun']['all']['ntmpi'] = 1
 
         # This are for the boresch restraint
         os.environ['abfe_debug_host_name'] = 'WP6'
@@ -56,19 +61,20 @@ def test_abfe():
             protein=protein,
             ligands=ligands,
             out_root_folder_path=str(tmp_path / "abfe-frontend"),
-            cofactor= None,
+            cofactor=None,
             cofactor_on_protein=True,
-            membrane = None,
-            water_model = 'amber/tip3p',
-            hmr_factor = 3,
-            dt_max= 0.004,
-            threads = threads,
-            num_jobs = num_jobs,
-            replicas = 1,
-            submit= True,
+            membrane=None,
+            water_model='amber/tip3p',
+            hmr_factor=3,
+            dt_max=0.004,
+            threads=threads,
+            num_jobs=num_jobs,
+            replicas=1,
+            submit=True,
             debug=True,
             job_prefix='host_guest.test',
-            global_config = global_config)
+            global_config=global_config)
+
 
 if __name__ == '__main__':
     test_abfe()

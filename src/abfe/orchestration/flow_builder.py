@@ -1,21 +1,25 @@
+import json
 import os
 import tarfile
-from typing import List, Union
+from typing import Union
+
 import numpy as np
-from abfe.orchestration import generate_scheduler
-import json
+
 from abfe import rules
+from abfe.orchestration import generate_scheduler
 from abfe.utils import tools
 
 PathLike = Union[os.PathLike, str, bytes]
 
-def update_nwindows_config(config:dict) -> dict:
+
+def update_nwindows_config(config: dict) -> dict:
     """A simple function to update the config file for the entrance nwindows
 
     Parameters
     ----------
     config : dict
-        The configuration file with or without the nwindows keyword. In case it is present, must be in the shape of:
+        The configuration file with or without the nwindows keyword.
+        In case it is present, must be in the shape of:
         'nwindows':{
             'ligand':{
                 'vdw': <int>[11],
@@ -25,7 +29,7 @@ def update_nwindows_config(config:dict) -> dict:
                 'vdw': <int>[21],
                 'coul': <int>[11],
                 'bonded': <int>[11]
-                }, 
+                },
             }
 
     Returns
@@ -38,10 +42,10 @@ def update_nwindows_config(config:dict) -> dict:
             'vdw': 11,
             'coul': 11,
         },
-        'complex':{
+        'complex': {
             'vdw': 21,
             'coul': 11,
-            'bonded':11,
+            'bonded': 11,
         },
     }
     if 'nwindows' in config:
@@ -49,10 +53,9 @@ def update_nwindows_config(config:dict) -> dict:
         for key in ['ligand', 'complex']:
             if key in nwindows:
                 nwindows_default[key].update(nwindows[key])
-    
+
     config['nwindows'] = nwindows_default
     return config
-
 
 
 def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> None:
@@ -66,18 +69,19 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> Non
         Path of the yml workflow configuration file.
     """
     file_str = "# Load Config:\n"\
-    f"configfile: \'{conf_file_path}\'\n"\
-    "approach_path = config['out_approach_path']\n\n"\
-    "# Start Flow\n"\
-    f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
-    "# Specify targets and dependencies\n"\
-    "rule RuleThemAll:\n"\
-    "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
-            
+        f"configfile: \'{conf_file_path}\'\n"\
+        "approach_path = config['out_approach_path']\n\n"\
+        "# Start Flow\n"\
+        f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
+        "# Specify targets and dependencies\n"\
+        "rule RuleThemAll:\n"\
+        "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
+
     with open(out_file_path, 'w') as out:
         out.write(file_str)
 
-def approach_flow(global_config:dict, submit:bool = False) -> str:
+
+def approach_flow(global_config: dict, submit: bool = False) -> str:
     """This is the main workflow, it controls the rest of the workflows
     that make the actual calculations. It will only hang and wait till the rest
     subprocess finish. In case that cluster/options/job is defined in global_config,
@@ -92,7 +96,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         ligand_names[list[str]], replicas[float], threads[int],
         hmr_factor[float, None], cluster/type[str], cluster/options/calculation[dict]
         num_max_thread: int, The maximum number of threads to be used on each simulation.
-        mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True} 
+        mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True}
         extra_dependencies: A list of dependencies that must be run before gmx mdrun. Useful to launch modules as spack or conda.
         num_jobs: int: Maximum number of jobs to run in parallel
         cluster/options/job[dict]. The last is optional and will override cluster/options/calculation[dict]
@@ -123,7 +127,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         "hmr_factor": global_config["hmr_factor"],
         'threads': global_config['threads'],
         'extra_directives': global_config['extra_directives'],
-        'retries':3,
+        'retries': 3,
         'dt_max': global_config['dt_max'],
         # With this implementation the user can select the number of windows setting them up on the global configuration.
         'lambdas': {
@@ -144,7 +148,7 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         approach_config["complex_type"] = 'membrane'
     else:
         approach_config["complex_type"] = 'soluble'
-    
+
     # Add extra mdp options if provided
     try:
         approach_config['mdp'] = global_config['mdp']
@@ -154,8 +158,6 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     # Just to save the prefix
     if global_config["job_prefix"]:
         approach_config["job_prefix"] = global_config["job_prefix"]
-
-
 
     for ligand_definition in global_config["inputs"]["ligands"]:
         input_ligand_path = ligand_definition['conf']
@@ -168,16 +170,15 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         tools.makedirs(out_ligand_input_path)
         tools.makedirs(os.path.join(out_ligand_input_path, "complex"))
         tools.makedirs(os.path.join(out_ligand_input_path, "ligand"))
-        
-        # Archive original files      
+
+        # Archive original files
         with tarfile.open(os.path.join(out_ligand_input_path, 'orig_in.tar.gz'), "w:gz") as tar:
             tar.add(input_ligand_path, arcname=os.path.basename(input_ligand_path))
-            tar.add(global_config["inputs"]["protein"]["conf"],arcname=os.path.basename(global_config["inputs"]["protein"]["conf"]))
+            tar.add(global_config["inputs"]["protein"]["conf"], arcname=os.path.basename(global_config["inputs"]["protein"]["conf"]))
             if global_config["inputs"]["cofactor"]:
-                tar.add(global_config["inputs"]["cofactor"]["conf"],arcname=os.path.basename(global_config["inputs"]["cofactor"]["conf"]))
+                tar.add(global_config["inputs"]["cofactor"]["conf"], arcname=os.path.basename(global_config["inputs"]["cofactor"]["conf"]))
             if global_config["inputs"]["membrane"]:
-                tar.add(global_config["inputs"]["membrane"]["conf"],arcname=os.path.basename(global_config["inputs"]["membrane"]["conf"]))
-        
+                tar.add(global_config["inputs"]["membrane"]["conf"], arcname=os.path.basename(global_config["inputs"]["membrane"]["conf"]))
 
         # Build the replicas
         for num_replica in range(1, global_config["replicas"] + 1):
@@ -192,15 +193,15 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
     generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path)
 
     scheduler = generate_scheduler.create_scheduler(
-        scheduler_type = global_config["cluster"]["type"],
+        scheduler_type=global_config["cluster"]["type"],
         # by default, run with the main cluster options
         # only if global_config["cluster"]["options"]["job"] is defined it will change during submit
-        cluster_config = global_config["cluster"]["options"]["calculation"],
-        out_dir = out_path,
-        prefix_name = f"{global_config['job_prefix']}",
-        snake_executor_file = 'job.sh')
-    
-    scheduler.build_snakemake(jobs = global_config["num_jobs"])
+        cluster_config=global_config["cluster"]["options"]["calculation"],
+        out_dir=out_path,
+        prefix_name=f"{global_config['job_prefix']}",
+        snake_executor_file='job.sh')
+
+    scheduler.build_snakemake(jobs=global_config["num_jobs"])
 
     # Check for extra definitions
     if 'job' in global_config["cluster"]["options"]:
@@ -209,5 +210,5 @@ def approach_flow(global_config:dict, submit:bool = False) -> str:
         job_cluster_config = None
 
     # if global_config["cluster"]["options"]["job"] changes during submit the cluster options
-    job_id = scheduler.submit(new_cluster_config = job_cluster_config, only_build = not submit, job_prefix = global_config["job_prefix"])
+    job_id = scheduler.submit(new_cluster_config=job_cluster_config, only_build=not submit, job_prefix=global_config["job_prefix"])
     return job_id

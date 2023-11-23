@@ -48,6 +48,7 @@ def home(dataDir=None, libDir=False):
     else:
         return homeDir
 
+
 if __name__ == "__main__":
     import doctest
 

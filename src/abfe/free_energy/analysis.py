@@ -1,23 +1,27 @@
 """
 calculate dF for ligand system
 """
+import json
 import math
 import os
 import warnings
-import json
+
 import numpy as np
 import pandas as pd
-from uncertainties import ufloat
 from alchemlyb import concat
-from alchemlyb.estimators import TI, MBAR
+from alchemlyb.estimators import MBAR, TI
 from alchemlyb.parsing.gmx import extract_dHdl, extract_u_nk
-from alchemlyb.preprocessing import statistical_inefficiency, slicing
-from alchemlyb.visualisation import plot_convergence
-from alchemlyb.convergence import forward_backward_convergence
+# from alchemlyb.visualisation import plot_convergence
+# from alchemlyb.convergence import forward_backward_convergence
 from alchemlyb.postprocessors import units
+from alchemlyb.preprocessing import slicing, statistical_inefficiency
+from uncertainties import ufloat
+
 from abfe.utils.tools import PathLike
 
-def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples: int = 500, temperature: float = 298.15, convergency_plots_prefix:str = None):
+
+def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples: int = 500, temperature: float = 298.15,):
+    # convergency_plots_prefix: str = None):
     """
     Function to get MBAR and TI estimates using alchemlyb from an input set of
     xvgs
@@ -28,7 +32,7 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
         list of filenames for input xvg files. This list must be sorted based on the lambda values.
         For example. If we have coul and vdw and three lambda points; the list must be:
         either: [coul1, coul2, coul3, vdw1, vdw2, vdw3] or [vdw1, vdw2, vdw3, coul1, coul2, coul3]
-        TODO: We can sort the input files too. I am also not sure that that is needed. Maybe alchemlyb 
+        TODO: We can sort the input files too. I am also not sure that that is needed. Maybe alchemlyb
         does the sort internally.
     overlap_path : str
         path to write overlap matrix (if None, no matrix will be written)
@@ -44,7 +48,8 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
     temperature : float
         simulation temperature [298.15]
     convergency_plots_prefix : str
-        If gives, it will plot the convergency to {convergency_plots_prefix}convergence_TI.pdf and {convergency_plots_prefix}convergence_MBAR.pdf, by default None
+        If gives, it will plot the convergency to {convergency_plots_prefix}convergence_TI.pdf and
+        {convergency_plots_prefix}convergence_MBAR.pdf, by default None
 
     Returns
     -------
@@ -66,26 +71,24 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
     # Check how many independent samples do we have in our data.
     sub_steps = []
     for xvg in xvgs:
-        extracted_dHdls = extract_dHdl(xvg, T = temperature)
-        
-        df = slicing(extracted_dHdls, lower = lower, upper = upper)
+        extracted_dHdls = extract_dHdl(xvg, T=temperature)
+
+        df = slicing(extracted_dHdls, lower=lower, upper=upper)
         df_ineff = statistical_inefficiency(df, series=df.iloc[:, 0])
 
         if len(df_ineff) != 0:
             ineff_step = math.ceil(len(df) / len(df_ineff))
         else:
             ineff_step = 1
-            wmsg = "statistical_inefficiency does not give data. This usually means that the sampling is too poor.\n"\
-                          f"{xvg = }"
+            wmsg = f"statistical_inefficiency does not give data. This usually means that the sampling is too poor.\n {xvg = }"
             warnings.warn(wmsg)
 
-        
         # Check the lag of the step to fulfill the minimum number of samples
         step_cutoff = int(len(df) / min_samples)
         if step_cutoff == 0:
             step_cutoff = 1
-            wmsg = f"The number of raw data point ({len(df)}) is less than {min_samples =}. This usually means that the sampling is too poor\n"\
-                          f"{xvg = }"
+            wmsg = f"The number of raw data point ({len(df)}) is less than {min_samples =}. "\
+                f"This usually means that the sampling is too poor\n {xvg = }"
             warnings.warn(wmsg)
 
         # Select the proper step lag
@@ -113,7 +116,7 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
         'TI': {
             'value': units.to_kcalmol(ti.delta_f_).iloc[0, -1],
             'error': units.to_kcalmol(ti.d_delta_f_).iloc[0, -1]
-        }       
+        }
     }
     # # Evaluate convergency
     # # TODO: On MBAR I am getting LLVM ERROR: pthread_create failed: Resource temporarily unavailable Aborted
@@ -128,15 +131,16 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples:
     #         print(f"Not possible to evaluate convergency on: {xvgs}\n. Exception {e} was got it")
     return deltaG
 
+
 # Used on complex(ligand)_fep_ana.smk
 def get_dG_contributions(
-        boresch_data:PathLike = None,
-        out_json_path:PathLike = 'dg_contributions.json',
+        boresch_data: PathLike = None,
+        out_json_path: PathLike = 'dg_contributions.json',
         lower: int = None,
         upper: int = None,
         min_samples: int = 500,
         temperature: float = 298.15,
-        convergency_plots_prefix:str = None,
+        convergency_plots_prefix: str = None,
         **kwargs):
     """It calculate and gather the vdw, coul and bonded (in case of a complex) dG' contributions.
     It also adds the analytical correction due to the ligand restraints.
@@ -157,7 +161,8 @@ def get_dG_contributions(
     temperature : float, optional
         Temperature of the simulation, by default 298.15
     convergency_plots_prefix : str
-        If gives, it will plot the convergency to {convergency_plots_prefix}{<kwargs_name>}_convergence_TI.pdf and {convergency_plots_prefix}{<kwargs_name>}_convergence_MBAR.pdf, by default None
+        If gives, it will plot the convergency to {convergency_plots_prefix}{<kwargs_name>}_convergence_TI.pdf
+        and {convergency_plots_prefix}{<kwargs_name>}_convergence_MBAR.pdf, by default None
     **kwargs : optional
         Only vdw = <List[PathLike]>, coul = <List[PathLike]> and bonded = <List[PathLike]> are valid extra keywords.
         Those are the path to the xvg files of the corresponded lambda type.
@@ -172,7 +177,7 @@ def get_dG_contributions(
         If some xvg files are not found.
     """
     # Check validity of keywords:
-    valid_kwargs = ['vdw', 'coul','bonded']
+    valid_kwargs = ['vdw', 'coul', 'bonded']
     for key in kwargs:
         if key not in valid_kwargs:
             raise ValueError(f"The provided extra keyword '{key}' is not valid. Choose from: {valid_kwargs}")
@@ -189,8 +194,9 @@ def get_dG_contributions(
         if convergency_plots_prefix:
             convergency_plots_prefix_to_use = f"{convergency_plots_prefix}{lambda_type}_"
         print(f'Analyzing {lambda_type =}')
-        dG = run_alchemlyb(xvgs = kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples, temperature=temperature, convergency_plots_prefix=convergency_plots_prefix_to_use)
-        
+        dG = run_alchemlyb(xvgs=kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples,
+                           temperature=temperature, convergency_plots_prefix=convergency_plots_prefix_to_use)
+
         ddG_estimator = abs(dG['MBAR']['value'] - dG['TI']['value'])
         if ddG_estimator > 0.5:
             wmsg = (f'|dG_MBAR - dG_TI| = {ddG_estimator} > 0.5 kcal/mol for {lambda_type}')
@@ -206,7 +212,7 @@ def get_dG_contributions(
         json.dump(system_results, out, indent=4)
 
 
-def get_ufloat(value_error:dict) -> ufloat:
+def get_ufloat(value_error: dict) -> ufloat:
     """Simple function to get the ufloat class
     form a dict with keywords value and error
 
@@ -222,8 +228,10 @@ def get_ufloat(value_error:dict) -> ufloat:
     """
     return ufloat(value_error['value'], value_error['error'])
 
+
 # TODO, check what is going on here calculate_ABFE_ligand_dG
-def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json', complex_contributions:PathLike = 'dg_complex_contributions.json', out_csv:PathLike = 'dG_results.csv'):
+def get_dg_cycle(ligand_contributions: PathLike = 'dg_ligand_contributions.json',
+                 complex_contributions: PathLike = 'dg_complex_contributions.json', out_csv: PathLike = 'dG_results.csv'):
 
     # Create new dict containing the results and calculate complete process:
     with open(ligand_contributions, 'r') as lc:
@@ -231,7 +239,7 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
     with open(complex_contributions, 'r') as cc:
         complex_dict = json.load(cc)
 
-    # TODO: I made a small test with reverse True or False in the during sort of xvgs and I am always getting the same value, 
+    # TODO: I made a small test with reverse True or False in the during sort of xvgs and I am always getting the same value,
     # So that means that the order should not be a problem, the lambda values are guessing from the xvg file itself
     # The cycle is based on 10.1038/s42004-022-00721-4
     # And all the mdp are build in such a way that the last state is at lambda 1 and the first one at 0
@@ -242,7 +250,8 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
     # And becasue what we are getting is [lambda = 1] - [lambda = 0] we must use the opposite sign
     # Also for this on the could and vdw bonded-lambda is set to [1]*number of states
     # TODO: maybe is a good idea to add it with the opposite sign on the previous steps anyways
-    # ligand_dict["boresch"] https://github.com/IAlibay/MDRestraintsGenerator/blob/fa97e5f7032e40327d9d9520091ea5c194aebb86/MDRestraintsGenerator/datatypes.py#L993
+    # ligand_dict["boresch"]
+    # https://github.com/IAlibay/MDRestraintsGenerator/blob/fa97e5f7032e40327d9d9520091ea5c194aebb86/MDRestraintsGenerator/datatypes.py#L993
     # Is the energy to release the restraint, so, we have to subtract, because on the cycle we are activating that restraint
     # the equation used in: MDRestraintsGenerator.MDRestraintsGenerator.datatypes.BoreschRestraint._analytical_energy
     # Is the same exposed on: https://chemrxiv.org/engage/chemrxiv/article-details/63cb0e401fb2a897c6dafbd8
@@ -251,14 +260,14 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
     try:
         boresch_off = complex_dict["boresch"]
     except KeyError:
-        boresch = ligand_dict["boresch"]
+        boresch_off = ligand_dict["boresch"]
 
     dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) - boresch_off + \
         get_ufloat(complex_dict["vdw"]["MBAR"]) + get_ufloat(complex_dict["coul"]["MBAR"]) - get_ufloat(complex_dict["bonded"]["MBAR"])
 
     dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) - boresch_off + \
         get_ufloat(complex_dict["vdw"]["TI"]) + get_ufloat(complex_dict["coul"]["TI"]) - get_ufloat(complex_dict["bonded"]["TI"])
-    
+
     deltaG = {
         'MBAR': {
             'value': dG_MBAR.nominal_value,
@@ -267,9 +276,10 @@ def get_dg_cycle(ligand_contributions:PathLike = 'dg_ligand_contributions.json',
         'TI': {
             'value': dG_TI.nominal_value,
             'std_dev': dG_TI.std_dev
-        }       
+        }
     }
     pd.DataFrame(deltaG).to_csv(out_csv)
+
 
 if __name__ == "__main__":
     pass

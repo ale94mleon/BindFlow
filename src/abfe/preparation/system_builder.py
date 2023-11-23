@@ -1,31 +1,31 @@
 #!/usr/bin/env python
-import warnings
+import copy
 import glob
+import logging
 import os
 import shutil
-import tempfile
-import copy
-from typing import Iterable
-from typing import Union
 import tarfile
-import logging
-logger = logging.getLogger(__name__)
+import warnings
+from typing import Union
+
+from parmed.gromacs import GromacsGroFile, GromacsTopologyFile
+from parmed.structure import Structure
+from parmed.tools.actions import HMassRepartition
+from toff import Parameterize
 
 from abfe.home import home
 from abfe.preparation import solvent
-from abfe.utils.tools import run, PathLike, recursive_update_dict
+from abfe.utils.tools import PathLike, recursive_update_dict, run
 
-from toff import Parameterize
-
-from parmed.gromacs import GromacsTopologyFile, GromacsGroFile
-from parmed.structure import Structure
-from parmed.tools.actions import HMassRepartition
 # from pdbfixer import PDBFixer
 # from openmm.app import PDBFile
 
 # TODO remove the BioSimSpace dependency and just use ParmED
 
-def readParmEDMolecule(top_file:PathLike, gro_file:PathLike) -> Structure:
+logger = logging.getLogger(__name__)
+
+
+def readParmEDMolecule(top_file: PathLike, gro_file: PathLike) -> Structure:
     """Read a gro and top GROMACS file and return
     a topology Structure
 
@@ -51,7 +51,7 @@ def readParmEDMolecule(top_file:PathLike, gro_file:PathLike) -> Structure:
     return gmx_top
 
 
-def get_gmx_ff(ff_code:str, out_dir:PathLike = '.') -> PathLike:
+def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:
     """Get GROMACS Force Field
 
 
@@ -79,7 +79,7 @@ def get_gmx_ff(ff_code:str, out_dir:PathLike = '.') -> PathLike:
 
 
 def system_combiner(**md_elements):
-    """This function simply sum up all the elements provided 
+    """This function simply sum up all the elements provided
     as keyword arguments.
 
     Returns
@@ -108,7 +108,8 @@ def system_combiner(**md_elements):
     print(f"\t* The system was constructed as fallow: {' + '.join([key for key in md_elements if md_elements[key]])}")
     return md_system
 
-def make_abfe_dir(out_dir:PathLike, ligand_dir:PathLike, sys_dir:PathLike):
+
+def make_abfe_dir(out_dir: PathLike, ligand_dir: PathLike, sys_dir: PathLike):
     """A copy and paste function to create the structure of the abfe directory
 
     Parameters
@@ -122,8 +123,10 @@ def make_abfe_dir(out_dir:PathLike, ligand_dir:PathLike, sys_dir:PathLike):
     """
     complex_out = os.path.join(out_dir, "complex")
     ligand_out = os.path.join(out_dir, "ligand")
-    if (not os.path.exists(complex_out)): os.makedirs(complex_out)
-    if (not os.path.exists(ligand_out)): os.makedirs(ligand_out)
+    if (not os.path.exists(complex_out)):
+        os.makedirs(complex_out)
+    if (not os.path.exists(ligand_out)):
+        os.makedirs(ligand_out)
 
     for itp_ndx_file in glob.glob(os.path.join(ligand_dir, "*.itp")) + glob.glob(os.path.join(ligand_dir, "*.ndx")):
         shutil.copy(src=itp_ndx_file, dst=ligand_out)
@@ -138,28 +141,29 @@ def make_abfe_dir(out_dir:PathLike, ligand_dir:PathLike, sys_dir:PathLike):
     # The last one in be copy, this will be used in the snake rule
     shutil.copyfile(src=os.path.join(sys_dir, "solvated.top"), dst=os.path.join(complex_out, "complex.top"))
 
+
 class CRYST1:
     """
     https://www.wwpdb.org/documentation/file-format-content/format33/sect8.html#CRYST1
     """
-    def __init__(self, line = None):
+    def __init__(self, line=None):
         if line:
-            self.a = float(line[6:15])			    #Real(9.3)     a              a (Angstroms).
-            self.b = float(line[15:24])			    #Real(9.3)     b              b (Angstroms).
-            self.c = float(line[24:33])			    #Real(9.3)     c              c (Angstroms).
-            self.alpha = float(line[33:40])			#Real(7.2)     alpha          alpha (degrees).
-            self.beta = float(line[40:47])			#Real(7.2)     beta           beta (degrees).
-            self.gamma = float(line[47:54])			#Real(7.2)     gamma          gamma (degrees).
-            self.sGroup = line[55:66]			    #LString       sGroup         Space  group.
+            self.a = float(line[6:15])			    # Real(9.3)     a              a (Angstroms).
+            self.b = float(line[15:24])			    # Real(9.3)     b              b (Angstroms).
+            self.c = float(line[24:33])			    # Real(9.3)     c              c (Angstroms).
+            self.alpha = float(line[33:40])			# Real(7.2)     alpha          alpha (degrees).
+            self.beta = float(line[40:47])			# Real(7.2)     beta           beta (degrees).
+            self.gamma = float(line[47:54])			# Real(7.2)     gamma          gamma (degrees).
+            self.sGroup = line[55:66]			    # LString       sGroup         Space  group.
             try:
-                self.z = int(line[66:70])			    #Integer       z              Z value.
+                self.z = int(line[66:70])			# Integer       z              Z value.
             except:
                 self.z = ""
             self.__is_init = True
         else:
             self.__is_init = False
-    
-    def from_pdb(self, file:PathLike):
+
+    def from_pdb(self, file: PathLike):
         """Initialize the class from a pdb file
 
         Parameters
@@ -178,24 +182,20 @@ class CRYST1:
 
     def __getitem__(self, key):
         return self.__dict__[key]
-    
+
     def string(self):
-        string_repr = "CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f%-12s%4s\n"%\
-            (self.a,self.b,self.c,self.alpha,self.beta,self.gamma,self.sGroup,self.z)
+        string_repr = "CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f%-12s%4s\n" %\
+            (self.a, self.b, self.c, self.alpha, self.beta, self.gamma, self.sGroup, self.z)
         return string_repr
-    
+
     def __repr__(self):
         return self.string()
 
+
 class MakeInputs:
-    def __init__(self,
-            protein:PathLike = None,
-            membrane:PathLike = None,
-            cofactor:dict = None,
-            cofactor_on_protein:bool = True,
-            water_model:str = 'amber/tip3p',
-            hmr_factor:Union[float, None] = None,
-            builder_dir:PathLike = 'builder'):
+    def __init__(self, protein: PathLike = None, membrane: PathLike = None, cofactor: dict = None,
+                 cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
+                 hmr_factor: Union[float, None] = None, builder_dir: PathLike = 'builder'):
         """This class is used for building the systems for ABFE calculation.
         It will create the necessary topology and configuration files, as well the
         correct directory trees.
@@ -205,14 +205,17 @@ class MakeInputs:
         protein : PathLike, optional
             This is a dictionary with the following information for the protein:
                 * conf -> The path of the protein PDB/GRO file [mandatory]
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
+                * top -> GROMACS topology [optional]. Must be a single file topology with all the
+                force field information and without the position restraint included, by default None
                 * ff:
                     * code -> GMX force field code [optional], by default amber99sb-ildn
                     * path -> Path for the custom force field.
         membrane : PathLike, optional
             This is a dictionary with the following information for the membrane:
-                * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a correct definition of the CRYST1 that information will be used for the solvation step
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
+                * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
+                correct definition of the CRYST1 that information will be used for the solvation step
+                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
+                information and without the position restraint included, by default None
                 * ff:
                     * code -> GMX force field code [optional], by default Slipids_2020
                     * path -> Path for the custom force field.
@@ -220,7 +223,8 @@ class MakeInputs:
         cofactor : dict, optional
             This is a dictionary with the following information for the cofactor:
                 * conf -> The path of the small molecule file [mandatory]
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
+                * top -> GROMACS topology [optional]. Must be a single file topology with all the
+                force field information and without the position restraint included, by default None
                 * ff:
                     * code -> OpenFF code [optional], by default openff_unconstrained-2.0.0.offxml
                     * path -> for now this is not used
@@ -249,24 +253,26 @@ class MakeInputs:
         if self.membrane:
             cryst_info = CRYST1()
             cryst_info.from_pdb(self.membrane['conf'])
-            self.vectors = (cryst_info.a/10, cryst_info.b/10, cryst_info.c/10) # Must convert form Angstrom to nm
+            self.vectors = (cryst_info.a/10, cryst_info.b/10, cryst_info.c/10)  # Must convert form Angstrom to nm
             self.angles = (cryst_info.alpha, cryst_info.beta, cryst_info.gamma)
-            
-            logger.info(f"This is a membrane system. Crystal information was taken from {self.membrane} and it will be used for solvating the system as a GROMACS triclinic box: \n\t\t{cryst_info}")
+
+            logger.info(f"This is a membrane system. Crystal information was taken from {self.membrane} and it will"
+                        f"be used for solvating the system as a GROMACS triclinic box: \n\t\t{cryst_info}")
         else:
-            self.vectors, self.angles  = None, None
+            self.vectors, self.angles = None, None
 
-
-    def small_mol_process(self, mol_definition:dict, name:str="MOL", safe_naming_prefix:str = None):
+    def small_mol_process(self, mol_definition: dict, name: str = "MOL", safe_naming_prefix: str = None):
         """Get parameters for small molecules: ligands, cofactors, ...
 
         Parameters
         ----------
         mol_definition : dict
             This is a dictionary with:
-                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
+                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided,
+                this must be a .gro, a ValueError will be raised if it is not the case
                 the molecule will not get its parameters.
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
+                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
+                information and without the position restraint included, by default None
                 * ff:
                     * type -> openff, gaff or espaloma
                     * code -> force field code [optional], by default depending on type
@@ -279,7 +285,7 @@ class MakeInputs:
         safe_naming_prefix : str, optional
             This is used to be sure that there will not happen any naming conflict in hte topologies, by default None
         name and safe_naming_prefix will only be used if top is not provided in mol_definition.
-        
+
         Returns
         -------
         object
@@ -303,16 +309,16 @@ class MakeInputs:
             dict_to_work['ff']['type'] = str(dict_to_work['ff']['type']).lower()
             if dict_to_work['ff']['type'] not in force_field_code_default:
                 raise ValueError(f"Molecule {dict_to_work} has non valid type for the force field. Choose from {force_field_code_default.keys()}.")
-            # Plug back the default option in case that the user defined None for the code but type was provided correctly                           
+            # Plug back the default option in case that the user defined None for the code but type was provided correctly
             if not dict_to_work['ff']['code']:
                 dict_to_work['ff']['code'] = force_field_code_default[dict_to_work['ff']['type']]
         else:
             raise ValueError(f"Molecule {mol_definition} has a wrong definition.")
         if dict_to_work['conf']:
-            if  dict_to_work['top']:
+            if dict_to_work['top']:
                 print(f"\t\t- Using supplied: {dict_to_work['top']} for {dict_to_work['conf']}")
             else:
-                print(f"\t\t- Getting {dict_to_work['ff']['code']} parameters for: {dict_to_work['conf']}") 
+                print(f"\t\t- Getting {dict_to_work['ff']['code']} parameters for: {dict_to_work['conf']}")
         else:
             raise ValueError(f"Molecule {mol_definition} has a wrong configuration")
         # Set flag to False by default
@@ -324,30 +330,30 @@ class MakeInputs:
             if os.path.splitext(dict_to_work['conf'])[-1] == '.gro':
                 gro_file = os.path.abspath(dict_to_work['conf'])
             else:
-                raise ValueError(f"For safety reasons, if top is provided for small molecule; the gro file must be provided. Provided: {dict_to_work['conf']}.")
+                raise ValueError("For safety reasons, if top is provided for small molecule; "
+                                 f"the gro file must be provided. Provided: {dict_to_work['conf']}.")
         else:
             parameterizer = Parameterize(
-                force_field_code = dict_to_work['ff']['code'],
-                force_field_type = dict_to_work['ff']['type'], 
-                ext_types = ['top', 'gro'],
-                hmr_factor = self.hmr_factor,
-                overwrite = True,
-                safe_naming_prefix = safe_naming_prefix,
-                out_dir = self.wd,
+                force_field_code=dict_to_work['ff']['code'],
+                force_field_type=dict_to_work['ff']['type'],
+                ext_types=['top', 'gro'],
+                hmr_factor=self.hmr_factor,
+                overwrite=True,
+                safe_naming_prefix=safe_naming_prefix,
+                out_dir=self.wd,
             )
             # Actually you can pass to parameterize Chem.rdchem.Mol, *.inchi, *.smi, *.mol, *.mol2, *.sdf
-            parameterizer(input_mol = dict_to_work['conf'],mol_resi_name = name)
+            parameterizer(input_mol=dict_to_work['conf'], mol_resi_name=name)
 
             top_file = os.path.join(self.wd, f"{name}.top")
             gro_file = os.path.join(self.wd, f"{name}.gro")
-        
-        parmed_system = readParmEDMolecule(top_file=top_file, gro_file = gro_file)
+
+        parmed_system = readParmEDMolecule(top_file=top_file, gro_file=gro_file)
         if provided_top_flag and self.hmr_factor:
             HMassRepartition(parmed_system, self.hmr_factor).execute()
         return parmed_system
 
-
-    def gmx_process(self, mol_definition:dict, is_membrane:bool = False):
+    def gmx_process(self, mol_definition: dict, is_membrane: bool = False):
         """Used to process the biomolecules compatibles with amber99sb-ildn (protein, DNA, ..)
         and membrane compatibles with Slipids_2020
 
@@ -355,8 +361,9 @@ class MakeInputs:
         ----------
         mol_definition : dict
             This is a dictionary with the following information for the protein/membrane:
-                * conf -> The path of the protein/membrane file [mandatory]. For the membrane must be a PDB  
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
+                * conf -> The path of the protein/membrane file [mandatory]. For the membrane must be a PDB
+                * top -> GROMACS topology [optional]. Must be a single file topology with
+                all the force field information and without the position restraint included, by default None
                 * ff:
                     * code -> GMX force field code [optional], by default amber99sb-ildn
                     * path -> Path for the custom force field.
@@ -387,12 +394,11 @@ class MakeInputs:
 
         # Convert to absolute paths
         if dict_to_work['top']:
-            dict_to_work['top']  = os.path.abspath(dict_to_work['top'])
+            dict_to_work['top'] = os.path.abspath(dict_to_work['top'])
 
         if dict_to_work['ff']['path']:
             dict_to_work['ff']['path'] = os.path.abspath(dict_to_work['ff']['path'])
             shutil.copytree(dict_to_work['ff']['path'], os.path.join(self.wd, os.path.basename(dict_to_work['ff']['path'])), dirs_exist_ok=True)
-
 
         gro_out = os.path.join(self.wd, f'{name}.gro')
         top_out = os.path.join(self.wd, f'{name}.top')
@@ -404,9 +410,10 @@ class MakeInputs:
             if dict_to_work['ff']['code'] == 'Slipids_2020':
                 if not dict_to_work['ff']['path']:
                     get_gmx_ff('Slipids_2020', out_dir=self.wd)
-        
+
         # TODO Something strange is going on with the posre files. Those are not been used, however, the include statement should be in the topology
-        # and becasue I call fix_topology on __call__ the include section of the position restraint should be duplicated but it is not the case, not sure why
+        # and becasue I call fix_topology on __call__ the include section of the position
+        # restraint should be duplicated but it is not the case, not sure why
         os.chdir(self.wd)
         if dict_to_work['top']:
             shutil.copy(dict_to_work['top'], top_out)
@@ -421,9 +428,10 @@ class MakeInputs:
                 run(f"gmx pdb2gmx -f {dict_to_work['conf']} -ff {dict_to_work['ff']['code']} -water none -o {gro_out} -p {top_out} -i {posre_out}")
             else:
                 env_prefix = os.environ["CONDA_PREFIX"]
-                fixed_pdb = os.path.join(self.wd,f"{name}_fixed.pdb")
+                fixed_pdb = os.path.join(self.wd, f"{name}_fixed.pdb")
                 run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
-                run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} -water none -o {gro_out} -p {top_out} -i {posre_out} -ignh")
+                run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} "
+                    f"-water none -o {gro_out} -p {top_out} -i {posre_out} -ignh")
         os.chdir(cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn
@@ -431,10 +439,10 @@ class MakeInputs:
         if self.hmr_factor:
             HMassRepartition(system, self.hmr_factor).execute()
         system.write(os.path.join(self.wd, f'{name}_final.top'))
-        
+
         return system
 
-    def make_system(self, ligand_definition:dict):
+    def make_system(self, ligand_definition: dict):
         """Create self.sys_ligand, self.sys_cofactor, self.sys_protein, self.sys_membrane
         and self.md_system (the combination of the available components). In case
         that the class was already called, it will be assumed that self.sys_cofactor, self.sys_protein, self.sys_membrane
@@ -444,9 +452,11 @@ class MakeInputs:
         ----------
         ligand_definition : dict
             This is a dictionary with:
-                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
+                * conf -> The path of the small molecule MOL/SDF file [mandatory].
+                In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
                 the molecule will not get its parameters.
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
+                * top -> GROMACS topology [optional]. Must be a single file topology with all the force
+                field information and without the position restraint included, by default None
                 * ff:
                     * type -> openff, gaff or espaloma
                     * code -> force field code [optional], by default depending on type
@@ -457,23 +467,23 @@ class MakeInputs:
         """
         print("\t* Processing system components")
         self.sys_ligand = self.small_mol_process(
-            mol_definition = ligand_definition,
+            mol_definition=ligand_definition,
             name="LIG",
             safe_naming_prefix='x')
-        
+
         # Only if the class has not yet called the full build will be carry out.
         if self.__self_was_called:
-            print(f"\t\t- Reusing components from cache")
+            print("\t\t- Reusing components from cache")
         else:
             if self.cofactor:
                 self.sys_cofactor = self.small_mol_process(
-                    mol_definition = self.cofactor,
+                    mol_definition=self.cofactor,
                     name="COF",
                     safe_naming_prefix='z')
             else:
                 self.sys_cofactor = None
-            self.sys_protein = self.gmx_process(mol_definition = self.protein)
-            self.sys_membrane = self.gmx_process(mol_definition = self.membrane, is_membrane = True)
+            self.sys_protein = self.gmx_process(mol_definition=self.protein)
+            self.sys_membrane = self.gmx_process(mol_definition=self.membrane, is_membrane=True)
         print("\t\t- Merging Components")
         # Cofactor at the end in case is a water molecule, not complains from GROMACS after solvation
         self.md_system = system_combiner(protein=self.sys_protein, membrane=self.sys_membrane, ligand=self.sys_ligand, cofactor=self.sys_cofactor)
@@ -488,11 +498,11 @@ class MakeInputs:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exception_type, exception_value, exception_traceback):
         self.clean()
 
-    def __call__(self, ligand_definition:Union[dict, PathLike], out_dir = 'abfe'):
+    def __call__(self, ligand_definition: Union[dict, PathLike], out_dir: str = 'abfe'):
         """The call implementation. It identify if it is needed to build
         all the components of the systems,
         In case that the class was already called, it will assume that all the components of the system,
@@ -503,9 +513,11 @@ class MakeInputs:
         ----------
         ligand_definition : Union[dict, PathLike]
             In case of dictionary, it should be:
-                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
+                * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided,
+                this must be a .gro, a ValueError will be raised if it is not the case
                 the molecule will not get its parameters.
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field information and without the position restraint included, by default None
+                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
+                information and without the position restraint included, by default None
                 * ff:
                     * type -> openff, gaff or espaloma
                     * code -> force field code [optional], by default depending on type
@@ -515,7 +527,7 @@ class MakeInputs:
                     * type -> openff, gaff or espaloma
                     * path -> for now this is not used
             In case of PathLike:
-                * The path of the small MOL/SDF molecule file 
+                * The path of the small MOL/SDF molecule file
         out_dir : str, optional
             Where you would like to export the generated files, by default 'abfe'
         """
@@ -529,7 +541,7 @@ class MakeInputs:
         self.out_dir = out_dir
         if not os.path.exists(self.out_dir):
             os.makedirs(self.out_dir)
-        
+
         # Construct MD system:
         self.make_system(ligand_definition)
         system_dir = os.path.join(self.wd, 'system')
@@ -543,41 +555,43 @@ class MakeInputs:
             f_xyz_complex = 3*['POSRES_DYNAMIC']
         else:
             f_xyz_complex = 3*[2500]
-        
+
         with solvent.Solvate(self.water_model, builder_dir=os.path.join(self.wd, '.solvating')) as SolObj:
-            
+
             print("\t\t- Ligand in: ", ligand_dir)
-            SolObj(structure = self.sys_ligand, bt='octahedron', d = 1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
-            
+            SolObj(structure=self.sys_ligand, bt='octahedron', d=1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
+
             print("\t\t- Complex in: ", system_dir)
             settles_to_constraints_on = None
             if self.cofactor:
                 if 'is_water' in self.cofactor:
                     if self.cofactor['is_water']:
-                        warnings.warn(f'Provided cofactor {self.cofactor} was labeled as water (is_water = True)'\
-                                    'So, its settles section (if any), will be changed to tip3p-like triangular constraints'\
-                                    'Check here for more information: https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9')
+                        warnings.warn(f'Provided cofactor {self.cofactor} was labeled as water (is_water = True). '
+                                      'So, its settles section (if any), will be changed to tip3p-like triangular constraints. '
+                                      'Check here for more information: '
+                                      'https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9')
                         settles_to_constraints_on = 'COF'
 
             if self.membrane:
-                SolObj(structure = self.md_system, bt = 'triclinic', box = self.vectors, angles = self.angles, out_dir = system_dir, out_name = 'solvated', f_xyz = f_xyz_complex, settles_to_constraints_on = settles_to_constraints_on)
+                SolObj(structure=self.md_system, bt='triclinic', box=self.vectors, angles=self.angles,
+                       out_dir=system_dir, out_name='solvated', f_xyz=f_xyz_complex, settles_to_constraints_on=settles_to_constraints_on)
             else:
-                SolObj(structure = self.md_system, bt = 'octahedron', d = 1.5, out_dir = system_dir, out_name = 'solvated', f_xyz = f_xyz_complex, settles_to_constraints_on = settles_to_constraints_on)
+                SolObj(structure=self.md_system, bt='octahedron', d=1.5, out_dir=system_dir, out_name='solvated',
+                       f_xyz=f_xyz_complex, settles_to_constraints_on=settles_to_constraints_on)
 
-        
         # Make index file in case of membrane systems
         if self.membrane:
             solvent.index_for_membrane_system(
-                configuration_file = os.path.join(system_dir, "solvated.gro"),
-                ndxout = os.path.join(system_dir, "index.ndx"),
-                lignad_name = 'LIG',
-                cofactor_name = 'COF' if self.cofactor else None,
+                configuration_file=os.path.join(system_dir, "solvated.gro"),
+                ndxout=os.path.join(system_dir, "index.ndx"),
+                lignad_name='LIG',
+                cofactor_name='COF' if self.cofactor else None,
                 cofactor_on_protein=self.cofactor_on_protein,
             )
         else:
             # Create a dummy index.ndx file. It is needed for the Snakemake workflow
             open(os.path.join(system_dir, "index.ndx"), "w").close()
-        
+
         # Construct ABFE system:
         print(f"\t* Final build of ABFE directory on: {self.out_dir}")
         make_abfe_dir(out_dir=self.out_dir, ligand_dir=ligand_dir, sys_dir=system_dir)
@@ -588,4 +602,6 @@ class MakeInputs:
 
 #############################################################################################
 
-if __name__ == "__main__":...
+
+if __name__ == "__main__":
+    pass

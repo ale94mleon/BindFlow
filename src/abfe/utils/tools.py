@@ -72,17 +72,20 @@ def gmx_command(load_dependencies:List[str] = None, interactive:bool = False, st
         In case, and interactive section is desired, by default False
     stdout_file : bool
         IF provided, it will append to the command ` >& {stdout_file}`, by default None
-    
+
+
     A typical function will be:
-    
+
     Example
     -------
     .. ipython:: python
 
+        from abfe.utils import tools
+        @tools.gmx_command()
         def mdrun(
                 **kwargs
                 ):...
-    
+
     The important parts are:
 
     #. The name of the function must be the name of the gmx command, for example mdrun, grompp, etc.
@@ -286,6 +289,11 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
     a file {name}_safe_remove.check will be written. In-house benchmark showed a compress rate close to for a abfe campaign 1.8 using gz compression 
     (data taken from MCL1).
     139 GB to 77 GB
+
+    .. warning::
+        It may be that the function fail because the directory is too large, in this case you must split the directory,
+        this was the case for the p38 campaign (https://github.com/openforcefield/protein-ligand-benchmark) with 3 replicas
+
     In-house benchmark showed:
     
     +-------+-------+-------+

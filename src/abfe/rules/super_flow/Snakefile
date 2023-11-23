@@ -13,7 +13,7 @@ rule gather_receptor_results:
         out_dg_file=out_approach_path + "/abfe_results.csv",
     run:
         gather_results.get_all_dgs(
-            root_folder_path = out_approach_path,
+            root_folder_path=out_approach_path,
             out_csv=os.path.join(output.out_dg_file)
         )
 
