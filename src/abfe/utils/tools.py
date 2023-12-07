@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import subprocess, os
-from typing import List, Union
 import os
+import subprocess
 import tempfile
+from typing import List, Union
 
 PathLike = Union[os.PathLike, str, bytes]
+
 
 class DotDict:
     """A simple implementation of dot-access dict"""
@@ -17,11 +18,12 @@ class DotDict:
 
     def __repr__(self) -> str:
         return str(self.__dict__)
-    
+
     def to_dict(self):
         return self.__dict__
 
-def run(command:str, shell:bool = True, executable:str = '/bin/bash', interactive:bool = False) -> subprocess.CompletedProcess:
+
+def run(command: str, shell: bool = True, executable: str = '/bin/bash', interactive: bool = False) -> subprocess.CompletedProcess:
     """A simple wrapper around subprocess.Popen/subprocess.run
 
     Parameters
@@ -51,16 +53,17 @@ def run(command:str, shell:bool = True, executable:str = '/bin/bash', interactiv
         if returncode != 0:
             raise RuntimeError(f'Command {command} returned non-zero exit status {returncode}')
     else:
-        process = subprocess.run(command, shell = shell, executable = executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text = True)
+        process = subprocess.run(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         returncode = process.returncode
-    
+
         if returncode != 0:
             print(f'Command {command} returned non-zero exit status {returncode}')
             raise RuntimeError(process.stderr)
 
     return process
 
-def gmx_command(load_dependencies:List[str] = None, interactive:bool = False, stdout_file:PathLike = None):
+
+def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, stdout_file: PathLike = None):
     """Lazy wrapper of gmx commands
 
     Parameters
@@ -92,9 +95,9 @@ def gmx_command(load_dependencies:List[str] = None, interactive:bool = False, st
     #. You must return the local variables of the function
     #. The names of the keywords are exactly the same name as got it by the respective function.
     #. For flags, a boolean will be provided as value, for example v = True, if you want to be verbose.
-    """   
-    def decorator(gmx_function:object):
-        def wrapper(**kwargs):  
+    """
+    def decorator(gmx_function: object):
+        def wrapper(**kwargs):
             if load_dependencies:
                 cmd = " && ".join(load_dependencies)
                 cmd += " && "
@@ -119,7 +122,9 @@ def gmx_command(load_dependencies:List[str] = None, interactive:bool = False, st
         return wrapper
     return decorator
 
-def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:PathLike = None, index:PathLike = None, nthreads:int = 12, load_dependencies:List[str] = None, run_dir:PathLike = '.', **mdrun_extra):
+
+def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoint: PathLike = None, index: PathLike = None,
+               nthreads: int = 12, load_dependencies: List[str] = None, run_dir: PathLike = '.', **mdrun_extra):
     """This function create the tpr file based on the input provided
     And run the simulation.
     Note: During the tpr creation maxwarn = 2 (TODO: remove it in the future)
@@ -131,11 +136,12 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
 
     mdrun will update the command based on mdrun_extra. You can also suppress the use of nt and/or deffnm passing them as
     False and construct your own mdrun command:
-    e.g. gmx_runner(mdp='emin.mdp', topology='ligand.top',structure='ligand.gro', deffnm = False, cpi = True, s = 'emin.tpr', o = 'emin2', c = 'emin3')
+    e.g. gmx_runner(mdp='emin.mdp', topology='ligand.top',structure='ligand.gro',
+            deffnm = False, cpi = True, s = 'emin.tpr', o = 'emin2', c = 'emin3')
 
     The last will give:
     gmx mdrun -nt 12 -cpi -s emin.tpr -o emi666 -c emi55
-    
+
     Parameters
     ----------
     mdp : str
@@ -162,8 +168,9 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
     makedirs(run_dir)
 
     name = os.path.splitext(os.path.basename(mdp))[0]
-    
-    # Because of how snakemake handles environmental variables that are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
+
+    # Because of how snakemake handles environmental variables that
+    # are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
     # We have to hard code the unset of some of them
     # TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
     hard_code_dependencies = [
@@ -176,14 +183,14 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
     ]
 
     @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies)
-    def grompp(**kwargs):...
-    
+    def grompp(**kwargs): ...
+
     @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies, stdout_file=f"{name}.lis")
-    def mdrun(**kwargs):...
-    
+    def mdrun(**kwargs): ...
+
     cwd = os.getcwd()
     os.chdir(run_dir)
-    
+
     grompp_extra = {}
     if checkpoint:
         grompp_extra['t'] = checkpoint
@@ -191,8 +198,8 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
         grompp_extra['n'] = index
 
     # TODO, I do not like to use the maxwarn keyword hardcoded.
-    grompp(f = f"{mdp}", c = structure, r = structure, p = topology, o = f"{name}.tpr", maxwarn = 2, **grompp_extra)
-    
+    grompp(f=f"{mdp}", c=structure, r=structure, p=topology, o=f"{name}.tpr", maxwarn=2, **grompp_extra)
+
     mdrun_kwargs = {
         # TODO DEBUG
         # "ntomp": nthreads,
@@ -205,7 +212,8 @@ def gmx_runner(mdp:PathLike, topology:PathLike, structure:PathLike, checkpoint:P
 
     os.chdir(cwd)
 
-def paths_exist(paths:List, raise_error:bool = False, out:Union[str, None] = None) -> None:
+
+def paths_exist(paths: List, raise_error: bool = False, out: Union[str, None] = None) -> None:
     """Check that the paths exist
 
     Parameters
@@ -215,7 +223,7 @@ def paths_exist(paths:List, raise_error:bool = False, out:Union[str, None] = Non
     raise_error : bool, optional
         If True will raise a RuntimeError when any path doe snot exist, by default False
     out : Union[str, None], optional
-        In case that all files exist and out is st to some file; the existence of this file could be 
+        In case that all files exist and out is st to some file; the existence of this file could be
         used as a check that all paths exist (useful for sanekemake), by default None
 
     Raises
@@ -235,10 +243,12 @@ def paths_exist(paths:List, raise_error:bool = False, out:Union[str, None] = Non
     if out and check:
         open(out, "w").close()
 
-def list_if_dir(path = '.'):
+
+def list_if_dir(path: PathLike = '.'):
     return [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item))]
 
-def list_if_file(path:PathLike = '.', ext:str = None) -> List[str]:
+
+def list_if_file(path: PathLike = '.', ext: str = None) -> List[str]:
     """Dir all the files in path
 
     Parameters
@@ -258,11 +268,12 @@ def list_if_file(path:PathLike = '.', ext:str = None) -> List[str]:
         files = [file for file in files if os.path.splitext(file)[-1] == f".{ext}"]
     return files
 
-def find_xtc_files(root_path:PathLike, exclude: List[paths_exist] = None) -> List[PathLike]:
+
+def find_xtc_files(root_path: PathLike, exclude: List[paths_exist] = None) -> List[PathLike]:
 
     if not isinstance(exclude, list):
         raise TypeError(f"exclude must be a list. Provided: {exclude}")
-    
+
     xtc_files = []
 
     def should_exclude(file_path):
@@ -282,11 +293,13 @@ def find_xtc_files(root_path:PathLike, exclude: List[paths_exist] = None) -> Lis
                     xtc_files.append(xtc_file_path)
     return xtc_files
 
-def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
+
+def archive(root_path: PathLike, exclude: List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
     """It compress all the dirs inside root_path that are not specified in exclude. It will always create
-    a tar file with the XTC files (without compress) and a main_project.tar.{compress_type} with the rest of 
+    a tar file with the XTC files (without compress) and a main_project.tar.{compress_type} with the rest of
     directories. It will only compress those files included in main_project.tar.{compress_type}. If the archive worked as expected,
-    a file {name}_safe_remove.check will be written. In-house benchmark showed a compress rate close to for a abfe campaign 1.8 using gz compression 
+    a file {name}_safe_remove.check will be written. In-house benchmark showed a compress
+    rate close to for a abfe campaign 1.8 using gz compression
     (data taken from MCL1).
     139 GB to 77 GB
 
@@ -295,7 +308,7 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
         this was the case for the p38 campaign (https://github.com/openforcefield/protein-ligand-benchmark) with 3 replicas
 
     In-house benchmark showed:
-    
+
     +-------+-------+-------+
     |       | Time  | Space |
     +=======+=======+=======+
@@ -326,7 +339,9 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
     ValueError
         Incorrect compress_type
     """
-    import tarfile, shutil
+    import shutil
+    import tarfile
+
     # Ensure the provided path exists
     if not os.path.exists(root_path):
         raise FileNotFoundError(f"Directory '{root_path}' does not exist.")
@@ -344,17 +359,16 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
     compress_type = compress_type.lower()
     valid_tar_exts = ['tar', 'gz', 'bz2', 'xz']
     if compress_type not in valid_tar_exts:
-         raise ValueError(f"Unsupported compression type ({compress_type}). Use: {' '.join(valid_tar_exts)}.")
+        raise ValueError(f"Unsupported compression type ({compress_type}). Use: {' '.join(valid_tar_exts)}.")
 
     # Find and create a separate archive for XTC files
     xtc_files = find_xtc_files(root_path, exclude=exclude)
-    with tarfile.open(f"{name}.tar", f'w:tar') as project_archive:
+    with tarfile.open(f"{name}.tar", 'w:tar') as project_archive:
         if xtc_files:
             for xtc_file in xtc_files:
                 xtc_file_path = os.path.join(root_path, xtc_file)
                 print(f"Adding XTC: {xtc_file}")
                 project_archive.add(xtc_file_path, arcname=xtc_file)
-
 
         with tempfile.TemporaryDirectory(prefix='.main_archive', dir='.') as tmpdir:
 
@@ -372,13 +386,13 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
                             if not file.endswith('.xtc'):
                                 file_path = os.path.relpath(os.path.join(root, file), root_path)
                                 main_archive.add(os.path.join(root, file), arcname=file_path)
-            
+
             print(f"Adding: {arcname}")
             project_archive.add(os.path.join(tmpdir, arcname), arcname=arcname)
 
     # Optionally remove the source directories
     with open(f"{name}_safe_remove.check", "w") as f:
-        f.write(f'All files were successfully archived!')
+        f.write('All files were successfully archived!')
 
     if remove_dirs:
         print("Cleaning after compression:")
@@ -386,6 +400,7 @@ def archive(root_path: PathLike, exclude:List[PathLike] = None, name: str = 'arc
             full_dir_path = os.path.join(root_path, dir_name)
             print(f"Removing: {full_dir_path}")
             shutil.rmtree(full_dir_path)
+
 
 def unarchive(archive_file: PathLike, target_path: PathLike):
     """It unarchive a project archived by the function :meth:`abfe.utils.tools.archive`
@@ -398,11 +413,12 @@ def unarchive(archive_file: PathLike, target_path: PathLike):
         Out path to unarchive
     """
     import tarfile
+
     # Ensure the target directory exists
     target_path = os.path.abspath(target_path)
     os.makedirs(target_path, exist_ok=True)
-   
-   # Create a temporary directory for extracting the main compressed archive
+
+    # Create a temporary directory for extracting the main compressed archive
     with tempfile.TemporaryDirectory(prefix='.unarchive_main', dir='.') as tmpdir:
         # Extract the XTC archive first
         with tarfile.open(archive_file, 'r') as archive:
@@ -419,18 +435,21 @@ def unarchive(archive_file: PathLike, target_path: PathLike):
                 else:
                     archive.extract(member, target_path)
 
+
 def makedirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def recursive_update_dict(original_dict:dict, update_dict:dict) -> None:
+
+def recursive_update_dict(original_dict: dict, update_dict: dict) -> None:
     for key, value in update_dict.items():
         if isinstance(value, dict) and key in original_dict and isinstance(original_dict[key], dict):
             recursive_update_dict(original_dict[key], value)
         else:
             original_dict[key] = value
 
-def config_validator(global_config:dict) -> List:
+
+def config_validator(global_config: dict) -> List:
     """It checks for the validity of the global config.
     This dictionary is usually passed to :meth:`abfe.calculate_abfe.calculate_abfe`
 
@@ -459,17 +478,16 @@ def config_validator(global_config:dict) -> List:
     if 'calculation' not in global_config['cluster']['options']:
         return False, "cluster/options configuration is valid, but no cluster/options/calculation provided"
 
-
     # Setting up default extra mdrun and job dependencies in case it was not provided
     if "extra_directives" in global_config:
-        if not "dependencies" in global_config["extra_directives"]:
+        if "dependencies" not in global_config["extra_directives"]:
             global_config["extra_directives"]["dependencies"] = []
-        if not "mdrun" in global_config["extra_directives"]:
+        if "mdrun" not in global_config["extra_directives"]:
             global_config["extra_directives"]["mdrun"] = {
                 'ligand': {},
                 'complex': {},
                 'all': {}
-            }  
+            }
     else:
         global_config["extra_directives"] = {
             "dependencies": [],
@@ -484,13 +502,13 @@ def config_validator(global_config:dict) -> List:
     for key in valid_mdrun:
         if key not in global_config["extra_directives"]["mdrun"]:
             global_config["extra_directives"]["mdrun"][key] = {}
-    
+
     # Check that mdrun is valid
     valid_mdrun = ["ligand", "complex", "all"]
-    for key in  global_config["extra_directives"]["mdrun"]:
+    for key in global_config["extra_directives"]["mdrun"]:
         if key not in valid_mdrun:
             return False, f"extra_directives/mdrun/{key} is not valid, you must select one of valid mdrun options {valid_mdrun}"
-        
+
         # Here we use as base keywords the one defined in all
         # And then, for ligand and complex, update those based on th user input
         # In other words, ligand and complex will use the all definition updated by their own keywords.
@@ -500,14 +518,13 @@ def config_validator(global_config:dict) -> List:
             global_config["extra_directives"]["mdrun"][key] = key_all
 
         # Always allow continuation in case the user did not defined
-        if "cpi" not in  global_config["extra_directives"]["mdrun"][key]:
+        if "cpi" not in global_config["extra_directives"]["mdrun"][key]:
             global_config["extra_directives"]["mdrun"]['cpi'] = True
-    
+
     # After the update keywords, keep all is not needed any more
     del global_config["extra_directives"]["mdrun"]['all']
 
     return True, "Cluster configuration is valid"
-
 
 
 if __name__ == "__main__":
