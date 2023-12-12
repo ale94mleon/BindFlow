@@ -25,14 +25,14 @@ rule fep_ana_get_dg_ligand_contributions:
     threads: threads # TODO: Sometimes the rule hang for a long time
     run:
         # Make directory
-        tools.makedirs(params.ana_loc)        
+        tools.makedirs(params.ana_loc)
         # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
         mdp_params = mdp.MDP().from_file(input.mdp_vdw_0_prod).parameters
-        if 'ref-t' in mdp_params:   
+        if 'ref-t' in mdp_params:
             temperature = float(mdp_params['ref-t'].split()[0])
         elif 'ref_t' in mdp_params:
             temperature = float(mdp_params['ref_t'].split()[0])
-        
+
         analysis.get_dG_contributions(
             boresch_data = None,
             out_json_path = output.ligand_json,
@@ -41,7 +41,8 @@ rule fep_ana_get_dg_ligand_contributions:
             upper = None,
             min_samples = 500,
             temperature = temperature,
-            convergency_plots_prefix = params.ana_loc + "/ligand_",
+            # convergency_plots_prefix = params.ana_loc + "/ligand_",
+            convergency_plots_prefix = None,
             # Sort the paths
             vdw = sorted(params.xvg_vdw_loc, key = lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
             coul = sorted(params.xvg_coul_loc, key = lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),

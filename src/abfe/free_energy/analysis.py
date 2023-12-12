@@ -20,8 +20,8 @@ from uncertainties import ufloat
 from abfe.utils.tools import PathLike
 
 
-def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None, min_samples: int = 500, temperature: float = 298.15,):
-    # convergency_plots_prefix: str = None):
+def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None,
+                  min_samples: int = 500, temperature: float = 298.15, convergency_plots_prefix: str = None):
     """
     Function to get MBAR and TI estimates using alchemlyb from an input set of
     xvgs
