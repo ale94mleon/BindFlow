@@ -193,6 +193,8 @@ def get_dG_contributions(
                 raise FileNotFoundError(f"Provided xvg file: {xvg_file} for lambda_type = {lambda_type} ")
         if convergency_plots_prefix:
             convergency_plots_prefix_to_use = f"{convergency_plots_prefix}{lambda_type}_"
+        else:
+            convergency_plots_prefix_to_use = None
         print(f'Analyzing {lambda_type =}')
         dG = run_alchemlyb(xvgs=kwargs[lambda_type], lower=lower, upper=upper, min_samples=min_samples,
                            temperature=temperature, convergency_plots_prefix=convergency_plots_prefix_to_use)
