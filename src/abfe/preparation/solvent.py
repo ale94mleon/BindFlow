@@ -341,6 +341,7 @@ class Solvate:
         self.force_field_family = force_field_family
         self.water_model = water_model
         self.water_itp, self.ions_itp, self.ffnonbonded_itp, self.water_gro = self._get_gmx_water_model(self.water_model_dir)
+        self.cwd = os.getcwd()
 
     def _get_gmx_water_model(self, out_dir: tools.PathLike) -> tuple[tools.PathLike]:
         """
@@ -472,7 +473,6 @@ class Solvate:
         """
         # We can change directory because all the path used are already converted to absolute paths
 
-        cwd = os.getcwd()
         os.chdir(self.solvated_dir)
 
         editconf_cmd = f"gmx editconf -f {gro} -o {gro} -bt {bt}"
@@ -519,7 +519,7 @@ class Solvate:
         struc.save(gro, overwrite=True)
 
         # Change back to cwd
-        os.chdir(cwd)
+        os.chdir(self.cwd)
 
     def clean(self, directory: Union[None, tools.PathLike] = None) -> None:
         """Used to delete self.builder_dir or directory if provided
@@ -533,6 +533,8 @@ class Solvate:
         directory : Union[None, tools.PathLike], optional
             Directory to delete, by default None
         """
+        os.chdir(self.cwd)
+
         if directory:
             dir2delete = directory
         else:

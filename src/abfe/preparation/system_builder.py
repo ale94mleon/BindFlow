@@ -260,6 +260,8 @@ class MakeInputs:
                         f"be used for solvating the system as a GROMACS triclinic box: \n\t\t{cryst_info}")
         else:
             self.vectors, self.angles = None, None
+ 
+        self.cwd = os.getcwd()
 
     def small_mol_process(self, mol_definition: dict, name: str = "MOL", safe_naming_prefix: str = None):
         """Get parameters for small molecules: ligands, cofactors, ...
@@ -404,8 +406,6 @@ class MakeInputs:
         top_out = os.path.join(self.wd, f'{name}.top')
         posre_out = os.path.join(self.wd, f'{name}_posre.itp')
 
-        cwd = os.getcwd()
-
         if is_membrane:
             if dict_to_work['ff']['code'] == 'Slipids_2020':
                 if not dict_to_work['ff']['path']:
@@ -432,7 +432,7 @@ class MakeInputs:
                 run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
                 run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} "
                     f"-water none -o {gro_out} -p {top_out} -i {posre_out} -ignh")
-        os.chdir(cwd)
+        os.chdir(self.cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn
         system = readParmEDMolecule(top_file=top_out, gro_file=gro_out)
@@ -491,6 +491,8 @@ class MakeInputs:
     def clean(self):
         """Small cleaner, the intermediate steps saved on builder_dir will be deleted
         """
+        os.chdir(self.cwd)
+
         try:
             shutil.rmtree(self.wd)
         except FileNotFoundError:
