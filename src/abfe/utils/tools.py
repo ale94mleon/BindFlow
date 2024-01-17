@@ -136,8 +136,7 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
 
     mdrun will update the command based on mdrun_extra. You can also suppress the use of nt and/or deffnm passing them as
     False and construct your own mdrun command:
-    e.g. gmx_runner(mdp='emin.mdp', topology='ligand.top',structure='ligand.gro',
-            deffnm = False, cpi = True, s = 'emin.tpr', o = 'emin2', c = 'emin3')
+    e.g. gmx_runner(mdp='emin.mdp', topology='ligand.top',structure='ligand.gro', deffnm = False, cpi = True, s = 'emin.tpr', o = 'emin2', c = 'emin3')
 
     The last will give:
     gmx mdrun -nt 12 -cpi -s emin.tpr -o emi666 -c emi55

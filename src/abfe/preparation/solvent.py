@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import os
 import shutil
 import tarfile
@@ -10,6 +11,8 @@ import yaml
 
 from abfe.home import home
 from abfe.utils import tools
+
+logger = logging.getLogger(__name__)
 
 
 def readParmEDMolecule(top_file: tools.PathLike, gro_file: tools.PathLike) -> parmed.Structure:
@@ -655,10 +658,15 @@ def index_for_membrane_system(
         else:
             sele_SOLV += f" or resname {cofactor_name}"
 
+    logger.info("Groups in the index.ndx file:")
+    logger.info(f"\t{sele_SOLU}")
+    logger.info(f"\t{sele_MEMB}")
+    logger.info(f"\t{sele_SOLV}")
+
     sele_SOLU += ";\n"
     sele_MEMB += ";\n"
     sele_SOLV += ";\n"
-    print(sele_SOLU + sele_MEMB + sele_SOLV)
+
     with open(tmpopt.name, "w") as opt:
         opt.write(sele_SOLU + sele_MEMB + sele_SOLV)
     tools.run(f"""

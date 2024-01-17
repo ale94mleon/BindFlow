@@ -18,10 +18,7 @@ from abfe.preparation import solvent
 from abfe.utils.tools import PathLike, recursive_update_dict, run
 
 # from pdbfixer import PDBFixer
-# from openmm.app import PDBFile
-
-# TODO remove the BioSimSpace dependency and just use ParmED
-
+# from
 logger = logging.getLogger(__name__)
 
 
@@ -105,7 +102,7 @@ def system_combiner(**md_elements):
                     md_system = copy.copy(md_elements[element])
     else:
         raise RuntimeError(f"\t* system_combiner failed with the inputs: {md_elements}")
-    print(f"\t* The system was constructed as fallow: {' + '.join([key for key in md_elements if md_elements[key]])}")
+    logger.info(f" The system was constructed as follows: {' + '.join([key for key in md_elements if md_elements[key]])}")
     return md_system
 
 
@@ -143,10 +140,16 @@ def make_abfe_dir(out_dir: PathLike, ligand_dir: PathLike, sys_dir: PathLike):
 
 
 class CRYST1:
+    """https://www.wwpdb.org/documentation/file-format-content/format33/sect8.html#CRYST1
     """
-    https://www.wwpdb.org/documentation/file-format-content/format33/sect8.html#CRYST1
-    """
-    def __init__(self, line=None):
+    def __init__(self, line: str = None):
+        """The constructor
+
+        Parameters
+        ----------
+        line : str, optional
+            a line to process, by default None
+        """
         if line:
             self.a = float(line[6:15])			    # Real(9.3)     a              a (Angstroms).
             self.b = float(line[15:24])			    # Real(9.3)     b              b (Angstroms).
@@ -193,41 +196,81 @@ class CRYST1:
 
 
 class MakeInputs:
-    def __init__(self, protein: PathLike = None, membrane: PathLike = None, cofactor: dict = None,
+    """This class is used for building the systems for ABFE calculation.
+    It will create the necessary topology and configuration files, as well the
+    correct directory trees.
+    """
+    def __init__(self, protein: dict = None, membrane: dict = None, cofactor: dict = None,
                  cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
-                 hmr_factor: Union[float, None] = None, builder_dir: PathLike = 'builder'):
-        """This class is used for building the systems for ABFE calculation.
-        It will create the necessary topology and configuration files, as well the
-        correct directory trees.
+                 custom_ff_path: Union[None, PathLike] = None, hmr_factor: Union[float, None] = None,
+                 builder_dir: PathLike = 'builder'):
+        """Constructor
 
         Parameters
         ----------
         protein : PathLike, optional
             This is a dictionary with the following information for the protein:
+
                 * conf -> The path of the protein PDB/GRO file [mandatory]
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the
-                force field information and without the position restraint included, by default None
-                * ff:
+
+                * top -> GROMACS topology [optional], by default None.
+                Should be a single file topology with all the force field
+                information and without the position restraint included. However, in case,
+                you need to use an include statement such as:
+
+                    include "./charmm36-jul2022.ff/forcefield.itp"
+
+                You must change the statement to:
+
+                    include "charmm36-jul2022.ff/forcefield.itp"
+
+                And copy the charmm36-jul2022.ff to custom_ff_path and set this parameter accordingly. If not
+                you may get some errors about files not founded. The force field directory
+                must end with the suffix ".ff".
+
+                * ff
                     * code -> GMX force field code [optional], by default amber99sb-ildn
-                    * path -> Path for the custom force field.
+                    You can use your custom force field, but custom_ff_path must be provided
+
         membrane : PathLike, optional
             This is a dictionary with the following information for the membrane:
+
                 * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
-                correct definition of the CRYST1 that information will be used for the solvation step
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
-                information and without the position restraint included, by default None
-                * ff:
+                correct definition of the CRYST1. This information will be used for the solvation step
+
+                * top -> GROMACS topology [optional], by default None.
+                Should be a single file topology with all the force field
+                information and without the position restraint included. However, in case,
+                you need to use an include statement such as:
+
+                    include "./amber-lipids14.ff/forcefield.itp"
+
+                You must change the statement to:
+
+                    include "/amber-lipids14.ff/forcefield.itp"
+
+                And copy theamber-lipids14.ff to custom_ff_path and set this parameter accordingly. If not
+                You may get some errors about files not founded. The force field directory
+                must end with the suffix ".ff".
+
+                * ff
+
                     * code -> GMX force field code [optional], by default Slipids_2020
-                    * path -> Path for the custom force field.
-                    Path of the membrane PDB file.
+                    You can use yoru custom force field, but custom_ff_path must be provided
+
         cofactor : dict, optional
+
             This is a dictionary with the following information for the cofactor:
+
                 * conf -> The path of the small molecule file [mandatory]
+
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the
                 force field information and without the position restraint included, by default None
-                * ff:
+
+                * ff
+
                     * code -> OpenFF code [optional], by default openff_unconstrained-2.0.0.offxml
-                    * path -> for now this is not used
+
         cofactor_on_protein : bool
             It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
             If True, the cofactor will be part of the protein and the ligand
@@ -236,6 +279,11 @@ class MakeInputs:
             The Hydrogen Mass Factor to use, by default None
         water_model : str, optional
             The water force field to use, by default amber/tip3p
+        custom_ff_path Union[None, PathLike], optional
+            All the custom force field must be in this directory. The class will set:
+
+                os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
+
         builder_dir : PathLike, optional
             Where all the building files. After completion you can safely remove calling the method clean, by default builder
         """
@@ -249,6 +297,13 @@ class MakeInputs:
         os.makedirs(self.wd, exist_ok=True)
         self.__self_was_called = False
 
+        # Setting environmental variable for user custom force field:
+        if custom_ff_path:
+            self.custom_ff_path = os.path.abspath(custom_ff_path)
+            os.environ["GMXLIB"] = self.custom_ff_path
+        else:
+            self.custom_ff_path = None
+
         # Initialize vectors and angles based on the information of the PDB only if a membrane system
         if self.membrane:
             cryst_info = CRYST1()
@@ -256,11 +311,11 @@ class MakeInputs:
             self.vectors = (cryst_info.a/10, cryst_info.b/10, cryst_info.c/10)  # Must convert form Angstrom to nm
             self.angles = (cryst_info.alpha, cryst_info.beta, cryst_info.gamma)
 
-            logger.info(f"This is a membrane system. Crystal information was taken from {self.membrane} and it will"
-                        f"be used for solvating the system as a GROMACS triclinic box: \n\t\t{cryst_info}")
+            logger.info(f"This is a membrane system. Crystal information was taken from the configuration of: "
+                        f"{self.membrane} and it will be used for solvating the system as a GROMACS triclinic box: \n\t{cryst_info}")
         else:
             self.vectors, self.angles = None, None
- 
+
         self.cwd = os.getcwd()
 
     def small_mol_process(self, mol_definition: dict, name: str = "MOL", safe_naming_prefix: str = None):
@@ -273,15 +328,23 @@ class MakeInputs:
                 * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided,
                 this must be a .gro, a ValueError will be raised if it is not the case
                 the molecule will not get its parameters.
+
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
                 information and without the position restraint included, by default None
+
                 * ff:
+
                     * type -> openff, gaff or espaloma
+
                     * code -> force field code [optional], by default depending on type
+
                         * openff -> openff_unconstrained-2.0.0.offxml
+
                         * gaff -> gaff-2.11
+
                         * espaloma -> espaloma-0.3.1
-                    * path -> for now this is not used
+
+
         name : str, optional
             Name to give, by default "MOL"
         safe_naming_prefix : str, optional
@@ -303,7 +366,6 @@ class MakeInputs:
             'ff': {
                 'type': 'openff',
                 'code': None,
-                'path': None,
             }
         }
         if mol_definition:
@@ -318,9 +380,9 @@ class MakeInputs:
             raise ValueError(f"Molecule {mol_definition} has a wrong definition.")
         if dict_to_work['conf']:
             if dict_to_work['top']:
-                print(f"\t\t- Using supplied: {dict_to_work['top']} for {dict_to_work['conf']}")
+                logger.info(f"Using supplied: {dict_to_work['top']} for {dict_to_work['conf']}")
             else:
-                print(f"\t\t- Getting {dict_to_work['ff']['code']} parameters for: {dict_to_work['conf']}")
+                logger.info(f"Getting {dict_to_work['ff']['code']} (type = {dict_to_work['ff']['type']}) parameters for: {dict_to_work['conf']}")
         else:
             raise ValueError(f"Molecule {mol_definition} has a wrong configuration")
         # Set flag to False by default
@@ -356,31 +418,26 @@ class MakeInputs:
         return parmed_system
 
     def gmx_process(self, mol_definition: dict, is_membrane: bool = False):
-        """Used to process the biomolecules compatibles with amber99sb-ildn (protein, DNA, ..)
-        and membrane compatibles with Slipids_2020
-
+        """Used to process the biomolecules compatibles.
+        By default it will use amber99sb-ildn (protein, DNA, ..) Slipids_2020 (membrane).
+        However, these setups are overwrite by the definitions on mol_definition 
         Parameters
         ----------
         mol_definition : dict
-            This is a dictionary with the following information for the protein/membrane:
-                * conf -> The path of the protein/membrane file [mandatory]. For the membrane must be a PDB
-                * top -> GROMACS topology [optional]. Must be a single file topology with
-                all the force field information and without the position restraint included, by default None
-                * ff:
-                    * code -> GMX force field code [optional], by default amber99sb-ildn
-                    * path -> Path for the custom force field.
+            This dictionary is wither self.protein or self.membrane, its definition is accessible at the 
+            constructor-method's documentation.
         is_membrane : bool, optional
-            If True, Slipids_2020 will be used instead of amber99sb-ildn, by default False
+            If True, Slipids_2020 will be set as internal default instead of amber99sb-ildn, by default False
         Returns
         -------
         object
-            The BioSimSpace system
+            A par
         """
+        # Setting default parameters
         dict_to_work = {
             'top': None,
             'ff': {
                 'code': 'Slipids_2020' if is_membrane else 'amber99sb-ildn',
-                'path': None,
             }
         }
         if mol_definition:
@@ -390,17 +447,15 @@ class MakeInputs:
         if dict_to_work['conf']:
             dict_to_work['conf'] = os.path.abspath(dict_to_work['conf'])
             name, ext = os.path.splitext(os.path.basename(dict_to_work['conf']))
-            print(f"\t\t- Processing: {dict_to_work['conf']}")
+            if dict_to_work['top']:
+                # Convert to absolute paths
+                dict_to_work['top'] = os.path.abspath(dict_to_work['top'])
+                logger.info(f"Using supplied: {dict_to_work['top']} for {dict_to_work['conf']}")
+            else:
+                logger.info(f"Getting {dict_to_work['ff']['code']} parameters for: {dict_to_work['conf']}")
+
         else:
             return None
-
-        # Convert to absolute paths
-        if dict_to_work['top']:
-            dict_to_work['top'] = os.path.abspath(dict_to_work['top'])
-
-        if dict_to_work['ff']['path']:
-            dict_to_work['ff']['path'] = os.path.abspath(dict_to_work['ff']['path'])
-            shutil.copytree(dict_to_work['ff']['path'], os.path.join(self.wd, os.path.basename(dict_to_work['ff']['path'])), dirs_exist_ok=True)
 
         gro_out = os.path.join(self.wd, f'{name}.gro')
         top_out = os.path.join(self.wd, f'{name}.top')
@@ -408,7 +463,11 @@ class MakeInputs:
 
         if is_membrane:
             if dict_to_work['ff']['code'] == 'Slipids_2020':
-                if not dict_to_work['ff']['path']:
+                # Retrieve internal Slipids_2020 only if the user did not provided this force field
+                if self.custom_ff_path:
+                    if 'Slipids_2020' not in os.listdir(self.custom_ff_path):
+                        get_gmx_ff('Slipids_2020', out_dir=self.wd)
+                else:
                     get_gmx_ff('Slipids_2020', out_dir=self.wd)
 
         # TODO Something strange is going on with the posre files. Those are not been used, however, the include statement should be in the topology
@@ -451,21 +510,9 @@ class MakeInputs:
         Parameters
         ----------
         ligand_definition : dict
-            This is a dictionary with:
-                * conf -> The path of the small molecule MOL/SDF file [mandatory].
-                In case that top is provided, this must be a .gro, a ValueError will be raised if it is not the case
-                the molecule will not get its parameters.
-                * top -> GROMACS topology [optional]. Must be a single file topology with all the force
-                field information and without the position restraint included, by default None
-                * ff:
-                    * type -> openff, gaff or espaloma
-                    * code -> force field code [optional], by default depending on type
-                        * openff -> openff_unconstrained-2.0.0.offxml
-                        * gaff -> gaff-2.11
-                        * espaloma -> espaloma-0.3.1
-                    * path -> for now this is not used
+            This is a dictionary with. Its definition is the same as mol_definition of the methods self.small_mol_process.
         """
-        print("\t* Processing system components")
+        logger.info("Processing system components")
         self.sys_ligand = self.small_mol_process(
             mol_definition=ligand_definition,
             name="LIG",
@@ -473,7 +520,7 @@ class MakeInputs:
 
         # Only if the class has not yet called the full build will be carry out.
         if self.__self_was_called:
-            print("\t\t- Reusing components from cache")
+            logger.info("Reusing components from cache")
         else:
             if self.cofactor:
                 self.sys_cofactor = self.small_mol_process(
@@ -484,7 +531,7 @@ class MakeInputs:
                 self.sys_cofactor = None
             self.sys_protein = self.gmx_process(mol_definition=self.protein)
             self.sys_membrane = self.gmx_process(mol_definition=self.membrane, is_membrane=True)
-        print("\t\t- Merging Components")
+        logger.info("Merging Components")
         # Cofactor at the end in case is a water molecule, not complains from GROMACS after solvation
         self.md_system = system_combiner(protein=self.sys_protein, membrane=self.sys_membrane, ligand=self.sys_ligand, cofactor=self.sys_cofactor)
 
@@ -514,31 +561,40 @@ class MakeInputs:
         Parameters
         ----------
         ligand_definition : Union[dict, PathLike]
-            In case of dictionary, it should be:
+            In case of dictionary, it should have:
+
                 * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided,
                 this must be a .gro, a ValueError will be raised if it is not the case
                 the molecule will not get its parameters.
+
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
                 information and without the position restraint included, by default None
+
                 * ff:
+
                     * type -> openff, gaff or espaloma
+
                     * code -> force field code [optional], by default depending on type
+
                         * openff -> openff_unconstrained-2.0.0.offxml
+
                         * gaff -> gaff-2.11
+
                         * espaloma -> espaloma-0.3.1
-                    * type -> openff, gaff or espaloma
-                    * path -> for now this is not used
-            In case of PathLike:
+
+                In case of PathLike:
+
                 * The path of the small MOL/SDF molecule file
+
         out_dir : str, optional
             Where you would like to export the generated files, by default 'abfe'
         """
-        print('\n\t'+42*"-")
+        logger.info(39*"-")
         if not isinstance(ligand_definition, dict):
             ligand_definition = {
                 'conf': ligand_definition
             }
-        print(f"Processing ligand: {ligand_definition['conf']}")
+        logger.info(f"Processing ligand: {ligand_definition['conf']}")
         # Update (on multiple calls) or just create the out_dir (first call)
         self.out_dir = out_dir
         if not os.path.exists(self.out_dir):
@@ -549,7 +605,7 @@ class MakeInputs:
         system_dir = os.path.join(self.wd, 'system')
         ligand_dir = os.path.join(self.wd, 'ligand')
 
-        print(f"\t* Solvating with {self.water_model}:")
+        logger.info(f"Solvating with {self.water_model}:")
         if self.membrane:
             # TODO: this is the easiest way to implement the position restraints changing the restraints
             # during different steps. However, we are not using different restraints for different molecules
@@ -560,10 +616,10 @@ class MakeInputs:
 
         with solvent.Solvate(self.water_model, builder_dir=os.path.join(self.wd, '.solvating')) as SolObj:
 
-            print("\t\t- Ligand in: ", ligand_dir)
+            logger.info(f"Ligand in: {ligand_dir}")
             SolObj(structure=self.sys_ligand, bt='octahedron', d=1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
 
-            print("\t\t- Complex in: ", system_dir)
+            logger.info(f"Complex in: {system_dir}")
             settles_to_constraints_on = None
             if self.cofactor:
                 if 'is_water' in self.cofactor:
@@ -595,12 +651,12 @@ class MakeInputs:
             open(os.path.join(system_dir, "index.ndx"), "w").close()
 
         # Construct ABFE system:
-        print(f"\t* Final build of ABFE directory on: {self.out_dir}")
+        logger.info(f"Final build of ABFE directory on: {self.out_dir}")
         make_abfe_dir(out_dir=self.out_dir, ligand_dir=ligand_dir, sys_dir=system_dir)
 
         # Change state
         self.__self_was_called = True
-        print("\n\t--------- Calculation Completed ----------\n")
+        logger.info("--------- Building Completed ----------\n")
 
 #############################################################################################
 
