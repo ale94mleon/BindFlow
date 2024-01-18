@@ -52,6 +52,7 @@ rule build_ligand_system:
             cofactor = config["inputs"]["cofactor"],
             cofactor_on_protein = config["cofactor_on_protein"],
             water_model = config["water_model"],
+            custom_ff_path = config["custom_ff_path"],
             hmr_factor = hmr_factor,
             builder_dir = os.path.join(out_ligand_path, "builder"),
         ) as builder:

@@ -16,6 +16,8 @@ from abfe.free_energy import gather_results
 from abfe.orchestration.flow_builder import approach_flow
 from abfe.utils import tools
 
+PathLike = Union[os.PathLike, str, bytes]
+
 
 def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], default_ff: Union[tools.PathLike, str],
                  default_ff_type: Union[str, None] = None, optional: bool = False) -> dict:
@@ -77,7 +79,6 @@ def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], d
             'top': None,
             'ff': {
                 'code': default_ff,
-                'path': None,
             }
         }
         if default_ff_type:
@@ -101,16 +102,6 @@ def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], d
                     raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
                 internal_dict['top'] = os.path.abspath(internal_dict['top'])
 
-            if internal_dict['ff']['path']:
-                if not os.path.exists(internal_dict['ff']['path']):
-                    raise FileNotFoundError(f"{internal_dict['ff']['path'] = } is not accessible.")
-                internal_dict['ff']['path'] = os.path.abspath(internal_dict['ff']['path'])
-
-            # Check if it is needed to copy the force field. the .ff suffix will be added and if the path exist
-            # then it will be copy
-            possible_path = f"{internal_dict['ff']}.ff"
-            if os.path.isdir(possible_path):
-                internal_dict['ff']['path'] = os.path.abspath(possible_path)
         # This is the case that only a path was provided
         else:
             if not os.path.exists(user_input):
@@ -135,6 +126,7 @@ def calculate_abfe(
         # protein, cofactors, membrane, ligands with the HMR already done
         hmr_factor: Union[float, None] = 3.0,
         water_model: str = 'amber/tip3p',
+        custom_ff_path: Union[None, PathLike] = None,
         # The maximum integration time in ps for all the steps in the workflow.
         # This will be overwrite by the definitions in the global_config
         dt_max: float = 0.004,
@@ -180,6 +172,7 @@ def calculate_abfe(
 
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
+    _global_config["custom_ff_path"] = custom_ff_path
     # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology
     _global_config["water_model"] = water_model
     _global_config["dt_max"] = dt_max
