@@ -371,7 +371,7 @@ class MakeInputs:
         if mol_definition:
             recursive_update_dict(dict_to_work, mol_definition)
             dict_to_work['ff']['type'] = str(dict_to_work['ff']['type']).lower()
-            if dict_to_work['ff']['type'] not in force_field_code_default:
+            if dict_to_work['ff']['type'] not in force_field_code_default and not dict_to_work['top']:
                 raise ValueError(f"Molecule {dict_to_work} has non valid type for the force field. Choose from {force_field_code_default.keys()}.")
             # Plug back the default option in case that the user defined None for the code but type was provided correctly
             if not dict_to_work['ff']['code']:
