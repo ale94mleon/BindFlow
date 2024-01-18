@@ -94,7 +94,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         The global configuration. It must contain:
         out_approach_path[PathLike], inputs[dict[dict]], water_model[str], cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
         ligand_names[list[str]], replicas[float], threads[int],
-        hmr_factor[float, None], cluster/type[str], cluster/options/calculation[dict]
+        hmr_factor[float, None], custom_ff_path[str, None], cluster/type[str], cluster/options/calculation[dict]
         num_max_thread: int, The maximum number of threads to be used on each simulation.
         mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True}
         extra_dependencies: A list of dependencies that must be run before gmx mdrun. Useful to launch modules as spack or conda.
@@ -125,6 +125,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],
         "hmr_factor": global_config["hmr_factor"],
+        "custom_ff_path": global_config["custom_ff_path"],
         'threads': global_config['threads'],
         'extra_directives': global_config['extra_directives'],
         'retries': 3,
