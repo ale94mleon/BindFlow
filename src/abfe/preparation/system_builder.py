@@ -278,7 +278,9 @@ class MakeInputs:
         hmr_factor : float, optional
             The Hydrogen Mass Factor to use, by default None
         water_model : str, optional
-            The water force field to use, by default amber/tip3p
+            The water force field to use, by default amber/tip3p.
+            if you would likle to use the flexible definition of the CHARMM TIP3P
+            you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
         custom_ff_path Union[None, PathLike], optional
             All the custom force field must be in this directory. The class will set:
 

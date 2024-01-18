@@ -125,6 +125,9 @@ def calculate_abfe(
         # And all the topologies should be provided
         # protein, cofactors, membrane, ligands with the HMR already done
         hmr_factor: Union[float, None] = 3.0,
+        # The water force field to use, by default amber/tip3p.
+        # if you would likle to use the flexible definition of the CHARMM TIP3P
+        # you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
         water_model: str = 'amber/tip3p',
         custom_ff_path: Union[None, PathLike] = None,
         # The maximum integration time in ps for all the steps in the workflow.
