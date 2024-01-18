@@ -220,9 +220,9 @@ class MakeInputs:
 
                     include "./charmm36-jul2022.ff/forcefield.itp"
 
-                You must change the statement to:
+                You must change the statement to the absolute path:
 
-                    include "charmm36-jul2022.ff/forcefield.itp"
+                    include "{prefix of the absolute path}/charmm36-jul2022.ff/forcefield.itp"
 
                 And copy the charmm36-jul2022.ff to custom_ff_path and set this parameter accordingly. If not
                 you may get some errors about files not founded. The force field directory
@@ -245,9 +245,9 @@ class MakeInputs:
 
                     include "./amber-lipids14.ff/forcefield.itp"
 
-                You must change the statement to:
+                You must change the statement to the absolute path:
 
-                    include "/amber-lipids14.ff/forcefield.itp"
+                    include "{prefix of the absolute path}/amber-lipids14.ff/forcefield.itp"
 
                 And copy theamber-lipids14.ff to custom_ff_path and set this parameter accordingly. If not
                 You may get some errors about files not founded. The force field directory

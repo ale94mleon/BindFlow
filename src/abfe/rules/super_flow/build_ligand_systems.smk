@@ -42,9 +42,12 @@ rule build_ligand_system:
         out_approach_path + "/{ligand_name}/input/ligand/ligand.top",
     threads: config["threads"]
     run:
+        import logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        
         out_ligand_path = os.path.join(out_approach_path, wildcards.ligand_name)
         out_ligand_input_path = os.path.join(out_ligand_path, 'input')
-
+        
         # Initialize the files builder
         with sb.MakeInputs(
             protein = config["inputs"]["protein"],
