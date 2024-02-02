@@ -108,7 +108,7 @@ html_theme_options = {
         }
     ],
 }
-html_logo = "source/_static/logo.png"
+html_logo = "source/_static/BindFlow-logo.svg"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
