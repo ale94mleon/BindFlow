@@ -418,7 +418,7 @@ def archive(root_path: PathLike, exclude_dirs_on_root: List[PathLike] = None, ex
             shutil.rmtree(full_dir_path)
 
 
-def _filter_helper(TarInfo: str, suffix: tuple[str], prefix:tuple[str] = ('main_project.tar')):
+def _filter_helper(TarInfo: str, suffix: tuple[str], prefix: tuple[str] = ('main_project.tar')):
     if suffix:
         if TarInfo.name.endswith(suffix):
             return TarInfo
@@ -430,6 +430,7 @@ def _filter_helper(TarInfo: str, suffix: tuple[str], prefix:tuple[str] = ('main_
                     return None
             return None
     return TarInfo
+
 
 def unarchive(archive_file: PathLike, target_path: PathLike, only_with_suffix: Union[None, List[str]] = None, prefix:tuple[str] = ('main_project.tar')):
     """It unarchive a project archived by the function :meth:`abfe.utils.tools.archive`
@@ -461,7 +462,7 @@ def unarchive(archive_file: PathLike, target_path: PathLike, only_with_suffix: U
         # Extract the XTC archive first
         with tarfile.open(archive_file, 'r') as archive:
             for member in archive.getmembers():
-                member = _filter_helper(member, only_with_suffix)
+                member = _filter_helper(member, only_with_suffix, prefix=prefix)
                 if member:
                     print(f"Decompressing: {member.name}")
                     if member.name.startswith('main_project.tar'):
@@ -475,7 +476,7 @@ def unarchive(archive_file: PathLike, target_path: PathLike, only_with_suffix: U
                         archive.extract(member, tmpdir)
                         with tarfile.open(main_archive_path, f'r:{compress_type}') as main_archive:
                             for main_member in main_archive.getmembers():
-                                main_member = _filter_helper(main_member, only_with_suffix)
+                                main_member = _filter_helper(main_member, only_with_suffix, prefix=prefix)
                                 if main_member:
                                     print(f"Decompressing: {main_member.name}")
                                     main_archive.extract(main_member, target_path)
