@@ -99,14 +99,14 @@ def abfe_check_results():
     parser.add_argument(
         '-os', '--out_csv_summary',
         help="The path to output the summary csv file, by default None",
-        dest='out_csv',
+        dest='out_csv_summary',
         nargs=argparse.OPTIONAL,
         default=None,
         type=str)
     parser.add_argument(
         '-or', '--out_csv_raw',
         help="The path to output the raw csv file, by default None",
-        dest='out_csv',
+        dest='out_csv_raw',
         nargs=argparse.OPTIONAL,
         default=None,
         type=str)
