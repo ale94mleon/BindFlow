@@ -203,6 +203,8 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
         # TODO DEBUG
         # "ntomp": nthreads,
         "nt": nthreads,
+        # TODO: this flag is deprecate in new GROMACS versions and in 2024 is not longer available
+        # This means that I have to build the mdrun command at rule level.
         "deffnm": name,
     }
     if mdrun_extra:
@@ -432,7 +434,8 @@ def _filter_helper(TarInfo: str, suffix: tuple[str], prefix: tuple[str] = ('main
     return TarInfo
 
 
-def unarchive(archive_file: PathLike, target_path: PathLike, only_with_suffix: Union[None, List[str]] = None, prefix:tuple[str] = ('main_project.tar')):
+def unarchive(archive_file: PathLike, target_path: PathLike,
+              only_with_suffix: Union[None, List[str]] = None, prefix: tuple[str] = ('main_project.tar')):
     """It unarchive a project archived by the function :meth:`abfe.utils.tools.archive`
 
     Parameters
