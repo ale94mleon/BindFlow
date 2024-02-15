@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from uncertainties import ufloat
+from pathlib import Path
+import json
 
 from abfe.utils.tools import PathLike
 
@@ -97,6 +99,70 @@ def get_all_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.Data
     else:
         print(f"There is not dG_results.csv yet on {root_folder_path}/*/*")
         return pd.DataFrame()
+
+
+def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
+    sample_data = []
+    root_folder_path = Path(root_folder_path).resolve()
+    for item1 in root_folder_path.iterdir():
+        if item1.is_dir():
+            ligand = item1.stem
+            for item2 in item1.iterdir():
+                if item2.is_dir():
+                    replica = item2.stem
+                    complex_json = item2 / "complex/fep/ana/dg_complex_contributions.json"
+                    ligand_json = item2 / "complex/fep/ana/dg_complex_contributions.json"
+                    if complex_json.is_file() and ligand_json.is_file():
+                        with open(complex_json, 'r') as cj:
+                            complex_data = json.load(cj)
+                        with open(ligand_json, 'r') as lj:
+                            ligand_data = json.load(lj)
+
+                        sample_data.append(
+                            [
+                                ligand,
+                                replica,
+                                complex_data['vdw']['MBAR']['value'],
+                                complex_data['coul']['MBAR']['value'],
+                                complex_data['bonded']['MBAR']['value'],
+                                ligand_data['vdw']['MBAR']['value'],
+                                ligand_data['coul']['MBAR']['value'],
+
+                                complex_data['vdw']['TI']['value'],
+                                complex_data['coul']['TI']['value'],
+                                complex_data['bonded']['TI']['value'],
+                                ligand_data['vdw']['TI']['value'],
+                                ligand_data['coul']['TI']['value'],
+
+                                complex_data['boresch'],
+
+                                complex_data['vdw']['MBAR']['error'],
+                                complex_data['coul']['MBAR']['error'],
+                                complex_data['bonded']['MBAR']['error'],
+                                ligand_data['vdw']['MBAR']['error'],
+                                ligand_data['coul']['MBAR']['error'],
+
+                                complex_data['vdw']['TI']['error'],
+                                complex_data['coul']['TI']['error'],
+                                complex_data['bonded']['TI']['error'],
+                                ligand_data['vdw']['TI']['error'],
+                                ligand_data['coul']['TI']['error'],
+                            ]
+                        )
+    df = pd.DataFrame(
+        sample_data,
+        columns=[
+            'ligand', 'replica',
+            'mbar_complex_vdw_value', 'mbar_complex_coul_value', 'mbar_complex_bonded_value', 'mbar_ligand_vdw_value', 'mbar_ligand_coul_value',
+            'ti_complex_vdw_value', 'ti_complex_coul_value', 'ti_complex_bonded_value', 'ti_ligand_vdw_value', 'ti_ligand_coul_value',
+            'boresch',
+            'mbar_complex_vdw_error', 'mbar_complex_coul_error', 'mbar_complex_bonded_error', 'mbar_ligand_vdw_error', 'mbar_ligand_coul_error',
+            'ti_complex_vdw_error', 'ti_complex_coul_error', 'ti_complex_bonded_error', 'ti_ligand_vdw_error', 'ti_ligand_coul_error',
+        ]
+        )
+    if out_csv:
+        df.to_csv(out_csv)
+    return df
 
 
 if __name__ == '__main__':

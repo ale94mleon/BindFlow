@@ -97,19 +97,31 @@ def abfe_check_results():
         help='abfe directory',
         type=str)
     parser.add_argument(
-        '-o', '--out_csv',
-        help="The path to output the csv file, by default None",
+        '-os', '--out_csv_summary',
+        help="The path to output the summary csv file, by default None",
+        dest='out_csv',
+        nargs=argparse.OPTIONAL,
+        default=None,
+        type=str)
+    parser.add_argument(
+        '-or', '--out_csv_raw',
+        help="The path to output the raw csv file, by default None",
         dest='out_csv',
         nargs=argparse.OPTIONAL,
         default=None,
         type=str)
     args = parser.parse_args()
-    df = gather_results.get_all_dgs(root_folder_path=args.root_folder_path)
-    if len(df):
-        df = df.sort_values(by='MBAR').reset_index()
-        if args.out_csv:
-            df.to_csv(args.out_csv)
-        print(df)
+
+    df_summary = gather_results.get_all_dgs(root_folder_path=args.root_folder_path)
+    if len(df_summary):
+        df_summary = df_summary.sort_values(by='MBAR').reset_index()
+        if args.out_csv_summary:
+            df_summary.to_csv(args.out_csv_summary)
+        print(df_summary)
+    df_raw = gather_results.get_raw_data(root_folder_path=args.root_folder_path)
+    if len(df_raw):
+        if args.out_csv_raw:
+            df_raw.to_csv(args.out_csv_raw)
 
 
 def abfe_archive():
