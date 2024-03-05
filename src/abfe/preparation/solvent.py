@@ -4,7 +4,7 @@ import os
 import shutil
 import tarfile
 import tempfile
-from typing import Iterable, Union
+from typing import Iterable, Union, Tuple
 
 import parmed
 import yaml
@@ -346,7 +346,7 @@ class Solvate:
         self.water_itp, self.ions_itp, self.ffnonbonded_itp, self.water_gro = self._get_gmx_water_model(self.water_model_dir)
         self.cwd = os.getcwd()
 
-    def _get_gmx_water_model(self, out_dir: tools.PathLike) -> tuple[tools.PathLike]:
+    def _get_gmx_water_model(self, out_dir: tools.PathLike) -> Tuple[tools.PathLike]:
         """
         Retrieve water model files
 
@@ -357,7 +357,7 @@ class Solvate:
 
         Returns
         -------
-        tuple[PathLike]
+        Tuple[PathLike]
             A tuple with the absolute path of (in this order):
                 * water itp file
                 * ions itp file

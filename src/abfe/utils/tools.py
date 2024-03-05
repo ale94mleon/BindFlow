@@ -2,7 +2,8 @@
 import os
 import subprocess
 import tempfile
-from typing import List, Union
+from pathlib import Path
+from typing import List, Union, Tuple
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -222,7 +223,7 @@ def paths_exist(paths: List, raise_error: bool = False, out: Union[str, None] = 
     paths : List
         A list of paths
     raise_error : bool, optional
-        If True will raise a RuntimeError when any path doe snot exist, by default False
+        If True will raise a RuntimeError when any path doe not exist, by default False
     out : Union[str, None], optional
         In case that all files exist and out is st to some file; the existence of this file could be
         used as a check that all paths exist (useful for sanekemake), by default None
@@ -270,36 +271,56 @@ def list_if_file(path: PathLike = '.', ext: str = None) -> List[str]:
     return files
 
 
-def find_xtc_files(root_path: PathLike, exclude: List[paths_exist] = None) -> List[PathLike]:
+def is_file_inside_directory(directory_path, file_path):
+    # Convert paths to Path objects
+    directory_path = Path(directory_path).resolve()
+    file_path = Path(file_path).resolve()
 
-    if not isinstance(exclude, list):
-        raise TypeError(f"exclude must be a list. Provided: {exclude}")
-
-    xtc_files = []
-
-    def should_exclude(file_path):
-        for excluded in exclude:
-            if str(file_path).startswith(str(excluded)):
-                print(3333, str(file_path), excluded, str(file_path).startswith(str(excluded)))
-                return True
-        return False
-
-    for root, _, files in os.walk(root_path):
-        for file in files:
-            if file.endswith('.xtc'):
-                xtc_file_path = os.path.relpath(os.path.join(root, file), root_path)
-                if should_exclude(xtc_file_path):
-                    print(f"Skipping XTC: {xtc_file_path}")
-                else:
-                    xtc_files.append(xtc_file_path)
-    return xtc_files
+    # Check if the file path starts with the directory path
+    # print(file_path.parts)
+    return file_path.parts[:len(directory_path.parts)] == directory_path.parts
 
 
-def archive(root_path: PathLike, exclude_dirs_on_root: List[PathLike] = None, exclude_file_ext: List[PathLike] = None, name: str = 'archive', compress_type: str = 'gz', remove_dirs: bool = False):
-    """It compress all the dirs inside root_path that are not specified in exclude. It will always create
-    a tar file with the XTC files (without compress) and a main_project.tar.{compress_type} with the rest of
-    directories. It will only compress those files included in main_project.tar.{compress_type}. If the archive worked as expected,
-    a file {name}_safe_remove.check will be written. In-house benchmark showed a compress
+def find_xtc(root_path: PathLike, exclude_suffixes: List[str] = None) -> List[PathLike]:
+    """Find all the files with the extension .xtc that does not have any
+    parent directory with any exclude_suffixes. If the name if the xtc file
+    has as suffix some of the ones specified in excluded_suffixes, it will also
+    discarded as well.
+
+    Parameters
+    ----------
+    root_path : PathLike
+        Root path to look for XTC files
+    exclude_suffixes : List[str], optional
+        list of suffixes to exclude from wither parent directories or the XTC files themself
+        , by default None
+
+    Returns
+    -------
+    List[PathLike]
+        LIst of XTC file paths
+    """
+    xtc_files = Path(root_path).resolve().rglob('*.xtc')
+    if exclude_suffixes:
+        exclude_suffixes = tuple(exclude_suffixes)
+        xtc_files_filtered = []
+        for xtc_file in xtc_files:
+            components = [xtc_file] + list(xtc_file.parents)
+            # any parent directories or the file itself has any of exclude_suffixes
+            test = any([True if component.endswith(exclude_suffixes) else False for component in components])
+            if not test:
+                xtc_files_filtered.append(xtc_file)
+        return xtc_files_filtered
+    else:
+        return xtc_files
+
+
+def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str = 'archive',
+            compress_type: str = 'gz', remove_dirs: bool = False, out_check_file: bool = True):
+    """Recursively archive root_path. Directories and/or files with ny suffixes from
+     exclude_suffixes are ignored . It creates a tar file with the XTC files (without compress)
+    and a main_project.tar.{compress_type} with the rest of directories. Compression will only be applied to
+    those files included in main_project.tar.{compress_type}. In-house benchmark showed a compress
     rate close to for a abfe campaign 1.8 using gz compression
     (data taken from MCL1).
     139 GB to 77 GB
@@ -307,6 +328,8 @@ def archive(root_path: PathLike, exclude_dirs_on_root: List[PathLike] = None, ex
     .. warning::
         It may be that the function fail because the directory is too large, in this case you must split the directory,
         this was the case for the p38 campaign (https://github.com/openforcefield/protein-ligand-benchmark) with 3 replicas
+
+        BE AWARE OF THE IMPLICATION TO DELETE A SIMULATION DIRECTORY with the option remove_dirs = True
 
     In-house benchmark showed:
 
@@ -324,19 +347,19 @@ def archive(root_path: PathLike, exclude_dirs_on_root: List[PathLike] = None, ex
     ----------
     root_path : PathLike
         The root path for which all the dirs will be compressed
-    exclude_dirs_on_root : List[PathLike], optional
-        List of dirs to exclude form compression directly located at root_path, by default None
-    exclude_file_ext : List[PathLike], optional
-        List of ext to exclude form compression. If you would like to exclude all the log and lis files then
-        you must provided [.log, .lis] with the dot you can also exclude files like _production.edr becasue the endwith method 
-        will be used to check. The only exception is `.xtc`, this `_extra_info.xtc` will not be ignored, if you want to ignore
-        all the xtc just give `[.xtc]` by default None
+    exclude_suffixes : List[PathLike], optional
+        List of suffix to exclude for compression either directories or files. The endswith method will be applied
+        Use case example could be: [.snakemake, .log, .edr, .lis, .err]. In this case the directory .snakemake
+        will be ignored and all the files with the specified extensions.
     name : str, optional
         Output name of the archive file, by default 'archive'
     compress_type : str, optional
         Type of compression to use, tar, gz, bz2 and xz are possible, by default 'gz'
     remove_dirs : bool, optional
-        Remove compressed dirs, by default False
+        Remove compressed root_path, by default False
+    out_check_file : bool, optional
+        If the archive worked as expected, a file {name}_safe_remove.check
+        will be written, by default True
 
     Raises
     ------
@@ -344,6 +367,8 @@ def archive(root_path: PathLike, exclude_dirs_on_root: List[PathLike] = None, ex
         If root_path does not exist
     ValueError
         Incorrect compress_type
+    ValueError
+        If the provided name lays on root_path, this is not expected.
     """
     import shutil
     import tarfile
@@ -352,33 +377,22 @@ def archive(root_path: PathLike, exclude_dirs_on_root: List[PathLike] = None, ex
     if not os.path.exists(root_path):
         raise FileNotFoundError(f"Directory '{root_path}' does not exist.")
 
-    # Create a list of directories to compress
-    if not exclude_dirs_on_root:
-        exclude_dirs_on_root = []
-    dirs = [d for d in list_if_dir(root_path) if d not in exclude_dirs_on_root]
-
-    if not dirs:
-        return "No directories to compress"
-
     # Define the name of the compressed file
     compress_type = compress_type.lower()
     valid_tar_exts = ['tar', 'gz', 'bz2', 'xz']
     if compress_type not in valid_tar_exts:
         raise ValueError(f"Unsupported compression type ({compress_type}). Use: {' '.join(valid_tar_exts)}.")
+    if is_file_inside_directory(root_path, f"{name}.tar"):
+        raise ValueError(f"Invalid {name=}. It lays in {root_path=}")
 
-    if isinstance(exclude_file_ext, bool):
-        raise ValueError("exclude_file_ext is a bool instance, only None or iterable")
     # Convert to list
-    if exclude_file_ext:
-        exclude_file_ext = list(exclude_file_ext)
+    if exclude_suffixes:
+        exclude_suffixes = list(set(exclude_suffixes))
     else:
-        exclude_file_ext = []
+        exclude_suffixes = []
 
     # Find and create a separate archive for XTC files
-    if '.xtc' in exclude_file_ext:
-        xtc_files = []
-    else:
-        xtc_files = find_xtc_files(root_path, exclude=exclude_dirs_on_root)
+    xtc_files = find_xtc(root_path=root_path, exclude_suffixes=exclude_suffixes)
 
     with tarfile.open(f"{name}.tar", 'w:tar') as project_archive:
         if xtc_files:
@@ -388,39 +402,33 @@ def archive(root_path: PathLike, exclude_dirs_on_root: List[PathLike] = None, ex
                 project_archive.add(xtc_file_path, arcname=xtc_file)
 
         with tempfile.TemporaryDirectory(prefix='.main_archive', dir='.') as tmpdir:
-
             # Create the compressed main_archive
             arcname = 'main_project.tar'
             if compress_type != 'tar':
                 arcname += f".{compress_type}"
-
-            internal_excluded_ext = tuple(set(exclude_file_ext.append('.xtc')))
+            # For the main archive always exclude XTC files
+            internal_excluded_ext = tuple(set(exclude_suffixes + ['.xtc']))
             with tarfile.open(os.path.join(tmpdir, arcname), f'w:{compress_type}') as main_archive:
-                for dir_name in dirs:
-                    full_dir_path = os.path.join(root_path, dir_name)
-                    print(f"Compressing: {full_dir_path}")
-                    for root, _, files in os.walk(full_dir_path):
-                        for file in files:
-                            if not file.endswith(internal_excluded_ext):
-                                file_path = os.path.relpath(os.path.join(root, file), root_path)
-                                main_archive.add(os.path.join(root, file), arcname=file_path)
-
+                for root, _, files in os.walk(root_path):
+                    for file in files:
+                        if not file.endswith(internal_excluded_ext):
+                            file_path = os.path.relpath(os.path.join(root, file), root_path)
+                            main_archive.add(os.path.join(root, file), arcname=file_path)
             print(f"Adding: {arcname}")
             project_archive.add(os.path.join(tmpdir, arcname), arcname=arcname)
 
+    if out_check_file:
+        with open(f"{name}_safe_remove.check", "w") as f:
+            f.write('All files were successfully archived!')
     # Optionally remove the source directories
-    with open(f"{name}_safe_remove.check", "w") as f:
-        f.write('All files were successfully archived!')
-
     if remove_dirs:
+        # TODO Check that f"{name}.tar" does not lay in root_dir
         print("Cleaning after compression:")
-        for dir_name in dirs:
-            full_dir_path = os.path.join(root_path, dir_name)
-            print(f"Removing: {full_dir_path}")
-            shutil.rmtree(full_dir_path)
+        print(f"Removing: {root_path}")
+        shutil.rmtree(root_path)
 
 
-def _filter_helper(TarInfo: str, suffix: tuple[str], prefix: tuple[str] = ('main_project.tar')):
+def _filter_helper(TarInfo: str, suffix: Tuple[str], prefix: Tuple[str] = ('main_project.tar')):
     if suffix:
         if TarInfo.name.endswith(suffix):
             return TarInfo
@@ -435,7 +443,7 @@ def _filter_helper(TarInfo: str, suffix: tuple[str], prefix: tuple[str] = ('main
 
 
 def unarchive(archive_file: PathLike, target_path: PathLike,
-              only_with_suffix: Union[None, List[str]] = None, prefix: tuple[str] = ('main_project.tar')):
+              only_with_suffix: Union[None, List[str]] = None, prefix: Tuple[str] = ('main_project.tar')):
     """It unarchive a project archived by the function :meth:`abfe.utils.tools.archive`
 
     Parameters
