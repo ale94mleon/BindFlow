@@ -167,5 +167,3 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
 
 if __name__ == '__main__':
     pass
-    root_folder_path = "/home/uds_alma015/GIT/BindFlow/examples/internal_example/CyclophilinD/abfe"
-    get_all_dgs(root_folder_path)
