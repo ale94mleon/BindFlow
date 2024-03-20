@@ -1,164 +1,101 @@
 BindFlow
 ========
 
-**WARNING The repo is currently under development - Test systems do not work, code might be instabil :)**
+|logo|
 
-A snakemake based workflow for Absolute Binding Free Energy calculations using GMX. The workflow can be scaled on Slurm Queuing systems. The here provided Cyclophilin D Test systems and experimental values originate from:
+.. list-table::
+    :widths: 12 35
 
-* `Alibay, I.; Magarkar, A.; Seeliger, D.; Biggin, P. C. Evaluating the use of absolute binding free energy in the fragment optimisation process. Communications Chemistry 2022, 5, 105. <https://doi.org/10.1038/s42004-022-00721-4>`__
-* `Grädler, U.; Schwarz, D.; Blaesse, M.; Leuthner, B.; Johnson, T. L.; Bernard, F.; Jiang, X.; Marx, A.; Gilardone, M.; Lemoine, H.; Roche, D.; Jorand-Lebrun, C. Discovery of novel Cyclophilin D inhibitors starting from three dimensional fragments with millimolar potencies. Bioorganic Medicinal Chemistry Letters 2019, 29, 126717. <https://doi.org/10.1016/j.bmcl.2019.126717>`__
+    * - **Documentation**
+      - |docs|
+    * - **Source Code**
+      - |github|
+    * - **License**
+      - |license|
 
-Here a visualization of the triggered process:
 
-|workflow|
+Description
+-----------
 
-TODO
-----
+**BindFlow** is a a snakemake-based workflow for ABFE calculations using GROMACS.
 
-Include user friendly options to use the force fields from openmm it is much much easier. The list of force filed for openmm is much higher and easy to access.
-In th4e data directory of openmm.
 
-.. code-block:: python
+You can try it out before any installation on `Binder <https://mybinder.org/v2/gh/ale94mleon/BindFlow/HEAD?labpath=%2Fdocs%2Fnotebooks%2F>`__.
 
-  import parmed as chem
-  import parmed.unit as u
+You can use `BindFlow-Dashboard <https://BindFlow-dashboard.streamlit.app/>`__ to process the results.
 
-  from simtk.openmm import app
-  from simtk import openmm as mm
+Documentation
+-------------
 
-  pdb = app.PDBFile('/home/ale/GIT/protein-ligand-benchmark/plbenchmark/BindFlowData/mcl1/01_protein/crd/protein.pdb')
-  forcefield = app.ForceField('amber99sbildn.xml', 'tip3p.xml')
-  system = forcefield.createSystem(pdb.topology,)# nonbondedMethod=app.PME, nonbondedCutoff=1*u.nanometer)
+The installation instructions, documentation and tutorials can be found online on `ReadTheDocs <https://BindFlow.readthedocs.io/en/latest/>`_.
 
-  struct = chem.openmm.load_topology(pdb.topology, system, xyz = pdb.positions)
-  for path in ['conf.gro', 'topol.top']:
-      struct.save(path, overwrite = True)
+Issues
+------
 
-Install
+If you have found a bug, please open an issue on the `GitHub Issues <https://github.com/ale94mleon/BindFlow/issues>`_.
+
+Discussion
+----------
+
+If you have questions on how to use **BindFlow**, or if you want to give feedback or share ideas and new features, please head to the `GitHub Discussions <https://github.com/ale94mleon/BindFlow/discussions>`_.
+
+Citing **BindFlow**
+------------------
+
+Please refer to the `citation page <https://BindFlow.readthedocs.io/en/latest/source/citations.html>`__ on the documentation.
+
+Funding
 -------
 
-We will use `mamba <https://mamba.readthedocs.io/en/latest/>`__. First, you must download `environment.yml <https://github.com/bigginlab/ABFE_workflow/blob/main/environment.yml>`__.
-
-If you do not have ``mamba`` installed, then:
-
-.. code-block:: bash
-
-  conda install mamba -n base -c conda-forge
-
-.. warning::
-
-  You could try also with `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html>`__ but it could take a while.
-
-.. code-block:: bash
-
-  mamba env create -f environment.yml
-
-Usage
------
-
-An example usage is provided with the `examples/example_execution.sh <https://github.com/bigginlab/ABFE_workflow/blob/main/examples/example_execution.sh>`__.
-
-Additional script information is provided via ``abfe-run -h``:
-
-Output:
-
-.. code-block:: bash
-
-  usage: abfe-run [-h] -p PROTEIN_PDB_PATH -l LIGAND_MOL_DIR -o OUTPUT_DIR_PATH [-c COFACTOR_MOL_PATH] [-m MEMBRANE_PDB_PATH] [-hmr HMR_FACTOR] [-nr NUMBER_OF_REPLICATES]
-                  [-njr NUMBER_OF_PARALLEL_RECEPTOR_JOBS] [-njl NUMBER_OF_PARALLEL_LIGAND_JOBS] [-ncl NUMBER_OF_CPUS_PER_LIGAND_JOB] [-sc SLRUM_CONFIG] [-submit] [-v]
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -p PROTEIN_PDB_PATH, --protein_pdb_path PROTEIN_PDB_PATH
-                          Input protein pdb file path
-    -l LIGAND_MOL_DIR, --ligand_mol_dir LIGAND_MOL_DIR
-                          Input ligand(s) mol file path
-    -o OUTPUT_DIR_PATH, --output_dir_path OUTPUT_DIR_PATH
-                          Output approach folder
-    -c COFACTOR_MOL_PATH, --cofactor_mol_path COFACTOR_MOL_PATH
-                          Input cofactor(s) mol file path
-    -m MEMBRANE_PDB_PATH, --membrane_pdb_path MEMBRANE_PDB_PATH
-                          Input membrane pdb file path. WARNING: The CRYST1 information of this PDB will be used for solvating the system.The protein-membrane system MUST be aligned
-                          to the Z-axis (needed for pressure couple scheme).CHARMM-GUI is a good option to get this file.
-    -hmr HMR_FACTOR, --hmr_factor HMR_FACTOR
-                          The Hydrogen Mass Repartition factor to use. 4 fs of integration time step will be used no matter what hmf_factor is provided. Values greater than 2 are
-                          advised, if not the system may be unstable.
-    -nr NUMBER_OF_REPLICATES, --number_of_replicates NUMBER_OF_REPLICATES
-                          Number of replicates
-    -njr NUMBER_OF_PARALLEL_RECEPTOR_JOBS, --number_of_parallel_receptor_jobs NUMBER_OF_PARALLEL_RECEPTOR_JOBS
-                          Number of jobs in parallel for receptor workflow
-    -njl NUMBER_OF_PARALLEL_LIGAND_JOBS, --number_of_parallel_ligand_jobs NUMBER_OF_PARALLEL_LIGAND_JOBS
-                          Number of jobs in parallel for ligand workflow
-    -ncl NUMBER_OF_CPUS_PER_LIGAND_JOB, --number_of_cpus_per_ligand_job NUMBER_OF_CPUS_PER_LIGAND_JOB
-                          Number of cpus per ligand job
-    -sc SLURM_CONFIG, --slrum_config SLURM_CONFIG
-                          This is the configuration YAML file of your Slurm cluster. If nothing is provided: partition = cpu time=60:00:00 mem=5000
-    -submit               Will automatically submit the ABFE calculations
-    -v, --version         show program's version number and exit
-
-Input
------
-
-The input is suggested to be structured as follows for the command line option:
-
-::
-
-  inputs
-  ├── dummy_cofactor_23.mol
-  ├── ligands
-  │   ├── inhibitor_11.mol
-  │   ├── inhibitor_12.mol
-  │   ├── inhibitor_17.mol
-  │   ├── inhibitor_24.mol
-  │   ├── inhibitor_28.mol
-  │   ├── inhibitor_2.mol
-  │   ├── inhibitor_3.mol
-  │   ├── inhibitor_4.mol
-  │   ├── inhibitor_6.mol
-  │   ├── inhibitor_9.mol
-  │   └── ligand.mol
-  ├── membrane.pdb
-  └── protein.pdb
-
-Running
--------
-
-If the input is set-up correctly and can be parsed, give it a run! (if you want to do the calculation don't forget to `submit`)
-
-Running an ABFE Campaign from Bash:
-
-.. code-block:: bash
-
-  conda activate abfe
-  abfe-run -p <path>/receptor.pdb -l <path>/myligands -o <path>/Out -submit
-
-Running an ABFE Campaign from Python
-
-.. code-block:: python
-
-  import glob
-  from abfe import calculate_abfe
-
-  ligand_mols = glob.glob("inputs/ligands/*mol")
-
-  out_folder = "abfe"
-
-  calculate_abfe(
-      protein_pdb_path='inputs/protein.pdb',
-      ligand_mol_paths=ligand_mols,
-      out_root_folder_path="abfe",
-      membrane_pdb_path = 'inputs/membrane.pdb',
-      cofactor_mol_path = 'inputs/dummy_cofactor_23.mol',
-      hmr_factor = 3,
-      approach_name = "",
-      n_cores_per_job= 8,
-      num_jobs_receptor_workflow= None,
-      num_jobs_per_ligand= 40,
-      num_replicas = 3,
-      submit= False,
-      cluster_config = {})
+This project received funding from `Marie Skłodowska-Curie Actions <https://cordis.europa.eu/project/id/860592>`__. It was developed in the 
+`Computational Biophysics Group <https://biophys.uni-saarland.de/>`__ of `Saarland University <https://www.uni-saarland.de/en/home.html>`__ in collaboration
+with the pharmaceutical company `Boehringer Ingelheim <https://www.boehringer-ingelheim.com/de/>`__.
 
 
-..  |workflow|  image:: https://github.com/bigginlab/ABFE_workflow/blob/main/.img/full_snakemake_DAG.png?raw=true
-    :target: https://github.com/bigginlab/ABFE_workflow/blob/main/.img/full_snakemake_DAG.png
+..  |logo|  image:: https://github.com/ale94mleon/BindFlow/blob/main/docs/source/_static/BindFlow-logo.svg?raw=true
+    :target: https://github.com/ale94mleon/BindFlow/
     :alt: logo
+.. ..  |docs|  image:: https://readthedocs.org/projects/BindFlow/badge/?version=latest
+..     :target: https://BindFlow.readthedocs.io/en/latest/?badge=latest
+..     :alt: Documentation
+.. ..  |binder| image:: https://mybinder.org/badge_logo.svg
+..     :target: https://mybinder.org/v2/gh/ale94mleon/BindFlow/HEAD?labpath=%2Fdocs%2Fnotebooks%2F
+..     :alt: binder
+.. ..  |tests| image:: https://github.com/ale94mleon/BindFlow/actions/workflows/tests.yml/badge.svg
+..     :target: https://github.com/ale94mleon/BindFlow/actions/workflows/tests.yml
+..     :alt: tests
+.. ..  |codacy-codecove| image:: https://app.codacy.com/project/badge/Coverage/08a3ac7c13df4339b8a1da0e8d31810e
+..     :target: https://app.codacy.com/gh/ale94mleon/BindFlow/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage
+..     :alt: codacy-codecove
+.. ..  |codacy-grade| image:: https://app.codacy.com/project/badge/Grade/08a3ac7c13df4339b8a1da0e8d31810e
+..     :target: https://app.codacy.com/gh/ale94mleon/BindFlow/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
+..     :alt: codacy-grade
+.. ..  |CodeQL| image:: https://github.com/ale94mleon/BindFlow/actions/workflows/codeql-analysis.yml/badge.svg
+..     :target: https://github.com/ale94mleon/BindFlow/actions/workflows/codeql-analysis.yml
+..     :alt: CodeQL
+.. ..  |pypi-version|  image:: https://img.shields.io/pypi/v/BindFlow.svg
+..     :target: https://pypi.python.org/pypi/BindFlow/
+..     :alt: pypi-version
+.. ..  |conda|  image:: https://anaconda.org/ale94mleon/BindFlow/badges/version.svg
+..     :target: https://anaconda.org/ale94mleon/BindFlow
+..     :alt: conda
+..  |github|    image:: https://badgen.net/badge/icon/github?icon=github&label
+    :target: https://github.com/ale94mleon/BindFlow
+    :alt: GitHub-Repo
+.. ..  |pyversions|    image:: https://img.shields.io/pypi/pyversions/BindFlow.svg
+..     :target: https://pypi.python.org/pypi/BindFlow/
+..  |rdkit| image:: https://img.shields.io/static/v1?label=Powered%20by&message=RDKit&color=3838ff&style=flat&logo=data:image/x-icon;base64,AAABAAEAEBAQAAAAAABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAAAAMAABILAAASCwAAAAAAAAAAAADc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nz/FBT/FBT/FBT/FBT/FBT/FBTc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nz/FBT/PBT/PBT/PBT/PBT/PBT/PBT/FBTc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nz/FBT/PBT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/PBT/FBTc3Nzc3Nzc3Nzc3Nzc3Nz/FBT/PBT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/PBT/FBTc3Nzc3Nzc3Nz/FBT/PBT/ZGT/ZGT/ZGT/jIz/jIz/jIz/jIz/ZGT/ZGT/ZGT/PBT/FBTc3Nzc3Nz/FBT/PBT/ZGT/ZGT/jIz/jIz/jIz/jIz/jIz/jIz/ZGT/ZGT/PBT/FBTc3Nzc3Nz/FBT/PBT/ZGT/ZGT/jIz/jIz/tLT/tLT/jIz/jIz/ZGT/ZGT/PBT/FBTc3Nzc3Nz/FBT/PBT/ZGT/ZGT/jIz/jIz/tLT/tLT/jIz/jIz/ZGT/ZGT/PBT/FBTc3Nzc3Nz/FBT/PBT/ZGT/ZGT/jIz/jIz/jIz/jIz/jIz/jIz/ZGT/ZGT/PBT/FBTc3Nzc3Nz/FBT/PBT/ZGT/ZGT/ZGT/jIz/jIz/jIz/jIz/ZGT/ZGT/ZGT/PBT/FBTc3Nzc3Nzc3Nz/FBT/PBT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/PBT/FBTc3Nzc3Nzc3Nzc3Nzc3Nz/FBT/PBT/ZGT/ZGT/ZGT/ZGT/ZGT/ZGT/PBT/FBTc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nz/FBT/PBT/PBT/PBT/PBT/PBT/PBT/FBTc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nz/FBT/FBT/FBT/FBT/FBT/FBTc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nz/////+B////AP///gB///wAP//4AB//+AAf//gAH//4AB//+AAf//gAH//8AD///gB///8A////gf////////
+    :target: https://www.rdkit.org/docs/index.html
+    :alt: rdkit
+.. ..  |meeko| image:: https://img.shields.io/static/v1?label=Powered%20by&message=Meeko&color=6858ff&style=flat
+..     :target: https://github.com/forlilab/Meeko
+..     :alt: Meeko
+.. ..  |crem| image:: https://img.shields.io/static/v1?label=Powered%20by&message=CReM&color=9438ff&style=flat
+..     :target: https://crem.readthedocs.io/en/latest/
+..     :alt: crem
+..  |license| image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
+    :target: https://github.com/ale94mleon/BindFlow/?tab=Apache-2.0-1-ov-file#readme
+    :alt: license
+.. ..  |downloads| image:: https://static.pepy.tech/personalized-badge/BindFlow?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads
+..     :target: https://pepy.tech/project/BindFlow
+..     :alt: download
