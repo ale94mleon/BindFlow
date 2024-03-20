@@ -578,7 +578,7 @@ def config_validator(global_config: dict) -> List:
 
         # Always allow continuation in case the user did not defined
         if "cpi" not in global_config["extra_directives"]["mdrun"][key]:
-            global_config["extra_directives"]["mdrun"]['cpi'][key] = True
+            global_config["extra_directives"]["mdrun"][key]['cpi'] = True
 
     # After the update keywords, keep all is not needed any more
     del global_config["extra_directives"]["mdrun"]['all']
