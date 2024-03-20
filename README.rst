@@ -53,9 +53,7 @@ Funding
 -------
 
 This project received funding from `Marie Skłodowska-Curie Actions <https://cordis.europa.eu/project/id/860592>`__. It was developed in the 
-`Computational Biophysics Group <https://biophys.uni-saarland.de/>`__ of `Saarland University <https://www.uni-saarland.de/en/home.html>`__ in collaboration
-with the pharmaceutical company `Boehringer Ingelheim <https://www.boehringer-ingelheim.com/de/>`__.
-
+`Computational Biophysics Group <https://biophys.uni-saarland.de/>`__ of `Saarland University <https://www.uni-saarland.de/en/home.html>`__.
 
 ..  |logo|  image:: https://github.com/ale94mleon/BindFlow/blob/main/docs/source/_static/BindFlow-logo-full.svg?raw=true
     :target: https://github.com/ale94mleon/BindFlow/
