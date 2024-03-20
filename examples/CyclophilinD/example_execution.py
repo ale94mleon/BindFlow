@@ -5,7 +5,7 @@ This script is an example execution running for membrane systems.
 """
 import yaml
 import glob
-from abfe import calculate_abfe
+from bindflow import calculate_abfe
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 
