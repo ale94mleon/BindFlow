@@ -1,0 +1,27 @@
+#Setup: FEP dir structure and make mdp files from templates
+if config["complex_type"] == 'soluble':
+    include: 'complex/soluble/setup.smk'
+    include: 'complex/soluble/simulation.smk'
+
+elif config["complex_type"] == 'membrane':
+    include: 'complex/membrane/setup.smk'
+    include: 'complex/membrane/simulation.smk'
+
+else:
+    rule fep_not_implemented:
+        output:
+            "fep_not_implemented.txt"
+        shell:
+            "echo 'fep simulations, you must give complex_type = soluble or membrane' > {output}"
+
+
+# Ligand
+include: 'ligand/setup.smk'
+include: 'ligand/simulation.smk'
+include: 'ligand/ana.smk'
+
+# Do complex analysis
+include: 'complex/ana.smk'
+
+# Final Result:
+include: "calculate_result.smk"

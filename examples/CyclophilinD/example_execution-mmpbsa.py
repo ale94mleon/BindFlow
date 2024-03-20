@@ -5,17 +5,17 @@ This script is an example execution running for membrane systems.
 """
 import yaml
 import glob
-from bindflow import calculate_abfe
+from bindflow import calculate_mmpbsa
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 
 with open("config.yml", "r") as c:
     global_config = yaml.safe_load(c)
 
-calculate_abfe(
+calculate_mmpbsa(
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
-    out_root_folder_path="abfe",
+    out_root_folder_path="mmpbsa",
     cofactor='inputs/dummy_cofactor_30.mol',
     membrane=None,
     hmr_factor=2.5,

@@ -12,9 +12,9 @@ build-backend = "setuptools.build_meta"
 "Issues" = "https://github.com/ale94mleon/BindFlow/issues"
 
 [project]
-name = "abfe"
+name = "bindflow"
 dynamic = ["version"]
-description = "A snakemake based workflow for ABFE calculations using GMX."
+description = "A snakemake-based workflow for ABFE calculations using GROMACS."
 readme = "README.rst"
 
 authors=[
@@ -72,7 +72,7 @@ match = ["*"]
 default-tag = "0.0.0"
 
 [tool.versioningit.write]
-file = "src/abfe/_version.py"
+file = "src/bindflow/_version.py"
 
 [tool.setuptools]
 include-package-data = true
@@ -81,7 +81,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-abfe = [
+bindflow = [
     "LICENSE",
     "data/gmx_ff/*.tar.gz",
     "data/water_models/*.tar.gz",
@@ -94,8 +94,8 @@ abfe = [
 ]
 
 [project.scripts]
-abfe-run = "abfe.cli:abfe_run"
-abfe-dag = "abfe.cli:abfe_dag"
-abfe-check_results = "abfe.cli:abfe_check_results"
-abfe-archive = 'abfe.cli:abfe_archive'
-abfe-unarchive = 'abfe.cli:abfe_unarchive'
+abfe-run = "bindflow.cli:abfe_run"
+abfe-dag = "bindflow.cli:abfe_dag"
+abfe-check_results = "bindflow.cli:abfe_check_results"
+abfe-archive = 'bindflow.cli:abfe_archive'
+abfe-unarchive = 'bindflow.cli:abfe_unarchive'
