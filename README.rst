@@ -5,6 +5,8 @@ BindFlow
 
 .. list-table::
     :widths: 12 35
+
+
     * - **Source Code**
       - |github|
     * - **License**
@@ -15,6 +17,8 @@ BindFlow
       - |rdkit|
     * - **License**
       - |license|
+
+
 Description
 -----------
 
