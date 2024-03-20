@@ -411,8 +411,4 @@ def create_scheduler(scheduler_type: str, **kwargs) -> Scheduler:
 
 
 if __name__ == "__main__":
-
-    s = FrontEnd(cluster_config=None, out_dir='.', prefix_name='lig1', snake_executor_file='pepe.sh')
-    print(s)
-    s.build_snakemake()
-    s.submit()
+    pass

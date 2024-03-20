@@ -25,8 +25,12 @@ rule gather_receptor_results:
 # Do Equilibration
 include: abfe_root_path + '/rules/equi/Snakefile'
 
-# Do FEP
-include: abfe_root_path + '/rules/fep/Snakefile'
-
+if config["calculation_type"] == "fep":
+    # Do FEP
+    include: abfe_root_path + '/rules/fep/Snakefile'
+elif config["calculation_type"] == "mmpbsa":
+    # Do MMPBSA
+    include: abfe_root_path + '/rules/mmpbsa/Snakefile'
+    
 # System Generation
 include: 'build_ligand_systems.smk'

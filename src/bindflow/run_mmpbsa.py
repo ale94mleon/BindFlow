@@ -110,7 +110,7 @@ def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], d
         return copy.deepcopy(internal_dict)
 
 
-def calculate_abfe(
+def calculate_mmpbsa(
         protein: Union[tools.PathLike, dict],  # conf, top, ff
         ligands: Union[tools.PathLike, List[dict]],
         out_root_folder_path: tools.PathLike,
@@ -164,6 +164,7 @@ def calculate_abfe(
 
     # IO:
     # Initialize inputs on config
+    _global_config["calculation_type"] = 'mmpbsa'  # To leave room for other type of calculations
     _global_config["inputs"] = {}
     _global_config["inputs"]["protein"] = input_helper(arg_name='protein', user_input=protein, default_ff='amber99sb-ildn', optional=False)
     _global_config["inputs"]["ligands"] = [input_helper(arg_name='ligand', user_input=ligand,

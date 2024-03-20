@@ -118,6 +118,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     global_config = update_nwindows_config(global_config)
 
     approach_config = {
+        "calculation_type": global_config["calculation_type"],
         "out_approach_path": global_config["out_approach_path"],
         "inputs": global_config["inputs"],
         "water_model": global_config["water_model"],
@@ -131,7 +132,9 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         'retries': 3,
         'dt_max': global_config['dt_max'],
         # With this implementation the user can select the number of windows setting them up on the global configuration.
-        'lambdas': {
+    }
+    if global_config["calculation_type"] == 'fep':
+        approach_config['lambdas'] = {
             'ligand': {
                 'vdw': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['vdw']), 2)),
                 'coul': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['coul']), 2)),
@@ -141,8 +144,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
                 'coul': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['coul']), 2)),
                 'bonded': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['bonded']), 2)),
             },
-        },
-    }
+        }
 
     # Specify the complex type
     if global_config["inputs"]["membrane"]:
