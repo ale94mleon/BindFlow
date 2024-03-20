@@ -5,15 +5,16 @@ BindFlow
 
 .. list-table::
     :widths: 12 35
-
-    * - **Documentation**
-      - |docs|
     * - **Source Code**
       - |github|
     * - **License**
       - |license|
-
-
+    * - **Source Code**
+      - |github|
+    * - **Dependencies**
+      - |rdkit|
+    * - **License**
+      - |license|
 Description
 -----------
 
@@ -52,7 +53,7 @@ This project received funding from `Marie Skłodowska-Curie Actions <https://cor
 with the pharmaceutical company `Boehringer Ingelheim <https://www.boehringer-ingelheim.com/de/>`__.
 
 
-..  |logo|  image:: https://github.com/ale94mleon/BindFlow/blob/main/docs/source/_static/BindFlow-logo.svg?raw=true
+..  |logo|  image:: https://github.com/ale94mleon/BindFlow/blob/main/docs/source/_static/BindFlow-logo-full.svg?raw=true
     :target: https://github.com/ale94mleon/BindFlow/
     :alt: logo
 .. ..  |docs|  image:: https://readthedocs.org/projects/BindFlow/badge/?version=latest
