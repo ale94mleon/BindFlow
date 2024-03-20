@@ -16,8 +16,3 @@ extra_directives: # Optional
   dependencies:
     - 'source /groups/CBG/opt/spack-0.18.1/shared.bash'
     - 'module load gromacs/2022.4'
-  mdrun:
-    # bonded: gpu
-    cpi: True
-    stepout: 5000
-    v: True

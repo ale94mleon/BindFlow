@@ -13,18 +13,17 @@ with open("config.yml", "r") as c:
     global_config = yaml.safe_load(c)
 
 calculate_abfe(
-    protein_pdb_path='inputs/protein.pdb',
-    ligand_mol_paths=ligand_mols,
+    protein='inputs/protein.pdb',
+    ligands=ligand_mols,
     out_root_folder_path="abfe",
-    cofactor_mol_path = 'inputs/dummy_cofactor_30.mol',
-    membrane_pdb_path = None,
-    hmr_factor = 2.5,
-    threads = 12,
-    ligand_jobs = 1,
-    jobs_per_ligand_job = 100000, # I think tht it is better jobs_per_ligand_job
-    replicas = 3,
-    submit= True,
-    global_config = global_config)
+    cofactor='inputs/dummy_cofactor_30.mol',
+    membrane=None,
+    hmr_factor=2.5,
+    threads=12,
+    num_jobs=100000,
+    replicas=3,
+    submit=False,
+    global_config=global_config)
 
 
 # rm -r abfe/slurm_logs/* abfe/*/*/slurm_logs/* abfe/.snakemake/ abfe/*/*/.snakemake abfe/*/*/ligand/ abfe/*/*/complex/
