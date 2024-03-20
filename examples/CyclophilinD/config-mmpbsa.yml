@@ -1,0 +1,18 @@
+cluster:
+  type: SLURM
+  options:
+    calculation:
+      partition: uds-hub
+      time: "2-00:00:00"
+      # gpus: 1
+      mem: '4G'
+      # constraint: Ryzen_3975WX enverimental 
+    job: # optional
+      partition: uds-hub
+      time: "2-00:00:00"
+      mem: '1G'
+      cpus-per-task: 6
+extra_directives: # Optional
+  dependencies:
+    - 'source /groups/CBG/opt/spack-0.18.1/shared.bash'
+    - 'module load gromacs/2022.4'
