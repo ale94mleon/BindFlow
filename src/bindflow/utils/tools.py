@@ -307,7 +307,7 @@ def find_xtc(root_path: PathLike, exclude_suffixes: List[str] = None) -> List[Pa
         for xtc_file in xtc_files:
             components = [xtc_file] + list(xtc_file.parents)
             # any parent directories or the file itself has any of exclude_suffixes
-            test = any([True if component.endswith(exclude_suffixes) else False for component in components])
+            test = any([True if str(component).endswith(exclude_suffixes) else False for component in components])
             if not test:
                 xtc_files_filtered.append(xtc_file)
         return xtc_files_filtered
