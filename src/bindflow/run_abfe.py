@@ -208,6 +208,9 @@ def calculate_abfe(
     print("\tstarting preparing ABFE-ligand file structure")
 
     print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
+    if not _global_config["ligand_names"]:
+        raise ValueError("No ligands found")
+
     expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
 
     result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/dG*csv")
