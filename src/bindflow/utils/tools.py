@@ -84,7 +84,7 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     -------
     .. ipython:: python
 
-        from abfe.utils import tools
+        from bindflow.utils import tools
         @tools.gmx_command()
         def mdrun(
                 **kwargs

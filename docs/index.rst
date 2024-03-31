@@ -13,7 +13,7 @@ Welcome to BindFlow's documentation!
 
    source/installation
    source/citations
-   source/CHANGELOG
+   source/CHANGELOG.md
 
 .. toctree::
    :caption: Tutorials
@@ -27,7 +27,9 @@ Welcome to BindFlow's documentation!
    :glob:
 
    source/api
+   source/faq.md
    source/modules/*
+
 
 Indices and tables
 ==================
