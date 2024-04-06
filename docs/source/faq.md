@@ -95,4 +95,29 @@ protein = {
     'top': 'inputs/protein/protein-amber14-all/protein.top',
 }
 ```
-<!-- ::: -->
+
+## Intramolecular Interactions: To Couple or Not to Couple
+
+The thermodynamic cycle employed by BindFlow involves the parameter `couple-intramol = yes`, indicating that the intramolecular interactions of the ligand change alongside the λ parameter. For instance, upon removing Coulomb and van der Waals interactions in the water box, the ligand ceases to interact with the solvent while also disengaging from self-interactions via non-bonded interactions.
+
+This configuration proves advantageous for larger molecules wherein intramolecular interactions may occur over considerable distances. Otherwise, distant regions of the molecule would overly interact via explicit pair interactions, leading to artificially strong bonding, which could bias the resulting free energy.
+
+Although `couple-intramol = yes` is primarily beneficial for large molecules, BindFlow sets the default value to `yes` due to the uncertainty of the molecules being processed.
+
+Consequently, the energy contributions term `{complex, ligand}_{coul, vdw}` no longer solely denotes the change in free energy for the coupling/decoupling of `{coul, vdw}` interactions of the ligand in the `{protein, solvent}` environment. It encompasses the free energy difference for coupling/decoupling these interactions in the `{protein, solvent}` environment plus the free energy variation when the ligand's intramolecular interaction (`{coul, vdw}`) is also coupled/decoupled. This explains some big values that are usually obtained for the `coul` contribution whcih is mainly formed by the intramolecular contribution
+
+BindFlow uses the same λ-schedule for the simulations of the ligand in the water solvent and in the binding pocket of the protein (same simulation time and same λ-values). This means that the contribution of coupling/decoupling the ligand intramolecular interaction is the same but with the opposite sign for each contribution (either `coul` or `vdw`). This helps us to recover some useful information from the energetic contributions. the following sums will cancel out the ligand intramolecular contribution
+
+- $\text{complex\_vdw} + \text{ligand\_vdw} = \text{vdw\_contrib}$ -> estimation of the van der Waal contribution to the binding
+- $\text{complex\_coul} + \text{ligand\_coul} = \text{coul\_contrib}$ -> estimation of the Coulomb contribution to the binding
+
+Then the equation of the cycle:
+$$
+\Delta G = \text{ligand\_coul} + \text{ligand\_vdw} - \text{boresch} + \text{complex\_vdw} + \text{complex\_coul} - \text{bonded}
+$$
+
+We can rewrite it as:
+
+$$
+\Delta G = \text{vdw\_contrib} + \text{coul\_contrib} - \text{boresch} - \text{bonded}
+$$
