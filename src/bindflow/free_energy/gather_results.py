@@ -111,7 +111,7 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
                 if item2.is_dir():
                     replica = item2.stem
                     complex_json = item2 / "complex/fep/ana/dg_complex_contributions.json"
-                    ligand_json = item2 / "complex/fep/ana/dg_complex_contributions.json"
+                    ligand_json = item2 / "ligand/fep/ana/dg_ligand_contributions.json"
                     if complex_json.is_file() and ligand_json.is_file():
                         with open(complex_json, 'r') as cj:
                             complex_data = json.load(cj)
