@@ -205,9 +205,9 @@ def calculate_mmpbsa(
     _global_config["threads"] = threads
 
     print("Prepare")
-    print("\tstarting preparing ABFE-ligand file structure")
+    print("\tstarting preparing MMPBSA/GBSA-ligand file structure")
 
-    print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
+    print("\tStarting preparing MMPBSA/GBSA-Approach file structure: ", out_root_folder_path)
     expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
 
     result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/dG*csv")

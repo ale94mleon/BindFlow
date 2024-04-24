@@ -9,7 +9,7 @@ from bindflow import calculate_mmpbsa
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 
-with open("config.yml", "r") as c:
+with open("config-mmpbsa.yml", "r") as c:
     global_config = yaml.safe_load(c)
 
 calculate_mmpbsa(
@@ -21,7 +21,7 @@ calculate_mmpbsa(
     hmr_factor=2.5,
     threads=12,
     num_jobs=100000,
-    replicas=3,
+    replicas=1,
     submit=False,
     global_config=global_config)
 

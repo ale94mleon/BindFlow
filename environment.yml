@@ -17,3 +17,8 @@ dependencies:
   # - nvidia::cuda-toolkit=11.4.2
   # - pip:
   #   - git+https://github.com/ale94mleon/BindFlow.git
+
+  # MMPBSA DEPS START
+  - ambertools<=23.3
+  - mpi4py<=3.1.5
+  # MMPBSA DEPS END
