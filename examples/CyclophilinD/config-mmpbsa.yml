@@ -32,7 +32,7 @@ mdp: # optional
       prod:
         nsteps: 1000
         nstxout-compressed: 100
-#mmpbsa_config: 
+#mmpbsa: 
 #  general: 
 #    c2_entropy: 1
 #    #qh_entropy: 1

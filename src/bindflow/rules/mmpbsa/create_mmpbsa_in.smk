@@ -12,8 +12,8 @@ rule create_mmpbsa_in:
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
         
         mmpbsa_config = {}
-        if "mmpbsa_config" in config.keys():
-            mmpbsa_config = config["mmpbsa_config"]
+        if "mmpbsa" in config.keys():
+            mmpbsa_config = config["mmpbsa"]
         if not "pb" in mmpbsa_config.keys() and not "gb" in mmpbsa_config.keys():
             mmpbsa_config["pb"] = True
 

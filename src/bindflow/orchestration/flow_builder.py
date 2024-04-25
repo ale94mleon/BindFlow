@@ -145,9 +145,9 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
                 'bonded': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['bonded']), 2)),
             },
         }
-    if global_config["calculation_type"] == 'mmpbsa':
-        if "mmpbsa_config" in global_config.keys():
-            approach_config["mmpbsa_config"] = global_config["mmpbsa_config"]
+    elif global_config["calculation_type"] == 'mmpbsa':
+        if "mmpbsa" in global_config.keys():
+            approach_config["mmpbsa"] = global_config["mmpbsa"]
 
     # Specify the complex type
     if global_config["inputs"]["membrane"]:
