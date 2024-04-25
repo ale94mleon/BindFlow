@@ -1,4 +1,4 @@
-include: "create_mmpbsa_in.smk"
+include: "setup.smk"
 include: "post_process_prod.smk"
 
 # Final Result:
