@@ -14,8 +14,7 @@ rule run_gmxmmpbsa:
         in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod_noPBC.xtc",
         in_top = approach_path + "/{ligand_name}/input/complex/complex.top",
         in_mmpbsa_in_file = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/mmpbsa.in",
-        in_index = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/index.ndx",
-        in_group = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/groups.json",
+        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
     output:
         out_gmxmmpbsa_res = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/COMPACT_MMXSA_RESULTS.mmxsa",
     params:
@@ -23,16 +22,17 @@ rule run_gmxmmpbsa:
     run:
         out_ligand_path = os.path.join(out_approach_path, wildcards.ligand_name)
         builder_dir = os.path.join(out_ligand_path, "builder")
-
+        
+        # TODO: Use a temporal directory instead of the builder_dir and pass all the files to where they are needed.
+        # TODO: try to avoid changing directory, check how to handled output of gmx_MMPBSA
         cwd = os.getcwd()
         os.makedirs(builder_dir, exist_ok=True)
         os.chdir(builder_dir)
         try:
-            with open(input.in_group, "r") as group_file:
-                groups = json.load(group_file)
-            protein_group = groups["protein_group"]
-            ligand_group = groups["ligand_group"]
-            gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.in_mmpbsa_in_file} -cs {params.in_tpr} -ci {input.in_index} -cg {protein_group} {ligand_group} -ct {input.in_xtc} -cp {input.in_top} -o res.dat -nogui"
+            # The index file generated in bindflow.preparation.system_builder.MakeInputs.__call__
+            # will always have as first group receptor and as second group ligand
+            # therefore, we can pass to the flag -cg <Receptor group> <Ligand group>" = -cg 1 2
+            gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.in_mmpbsa_in_file} -cs {params.in_tpr} -ci {input.ndx} -cg 1 2 -ct {input.in_xtc} -cp {input.in_top} -o res.dat -nogui"
             bindflow.utils.tools.run(gmx_mmpbsa_command)
             print(os.path.join(builder_dir,"COMPACT_MMXSA_RESULTS.mmxsa"))
             print(output.out_gmxmmpbsa_res)
