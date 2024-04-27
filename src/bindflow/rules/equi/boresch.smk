@@ -26,13 +26,14 @@ rule equil_complex_get_boresch_restraints:
                     host_name = os.environ['abfe_debug_host_name']
                 if 'abfe_debug_host_selection' in os.environ:
                     host_selection = os.environ['abfe_debug_host_selection']
+
         # Fix trajectory.
-        tools.makedirs(params.run_dir)
-        tools.run(f"export GMX_MAXBACKUP=-1; echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.in_xtc} -o {params.run_dir}/whole.xtc -pbc whole")
-        tools.run(f"export GMX_MAXBACKUP=-1; echo 'System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/whole.xtc -o {params.run_dir}/nojump.xtc -pbc nojump")
-        tools.run(f"export GMX_MAXBACKUP=-1; echo '{host_name} System' | gmx trjconv -s {params.in_tpr} -f {params.run_dir}/nojump.xtc -o {params.run_dir}/prod_center.xtc -pbc mol -center -ur compact")
-        # Clean
-        tools.run(f"rm {params.run_dir}/whole.xtc {params.run_dir}/nojump.xtc")
+        tools.center_xtc(
+            tpr=params.in_tpr,
+            xtc=params.in_xtc,
+            run_dir=params.run_dir,
+            host_name=host_name
+        )
 
         # Getting Borech restraints
         mdp_params = mdp.MDP().from_file(input.mdp).parameters
@@ -42,10 +43,10 @@ rule equil_complex_get_boresch_restraints:
             temperature = float(mdp_params['ref_t'].split()[0])
         boresch.gen_restraint(
             topology = params.in_tpr,
-            trajectory = f"{params.run_dir}/prod_center.xtc",
+            trajectory = f"{params.run_dir}/center.xtc",
             outpath = params.run_dir,
             temperature = temperature,
             host_selection = host_selection
         )
         # Clean
-        tools.run(f"rm {params.run_dir}/prod_center.xtc")
+        tools.run(f"rm {params.run_dir}/center.xtc")
