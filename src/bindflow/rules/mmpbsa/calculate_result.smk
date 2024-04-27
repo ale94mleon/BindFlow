@@ -10,13 +10,13 @@ approach_path = config["out_approach_path"]
 
 rule run_gmxmmpbsa:
     input:
-        complex_equi_finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
-        in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod_noPBC.xtc",
-        in_top = approach_path + "/{ligand_name}/input/complex/complex.top",
-        in_mmpbsa_in_file = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/mmpbsa.in",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
+        xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod_noPBC.xtc",
+        top = approach_path + "/{ligand_name}/input/complex/complex.top",
+        mmpbsa_in = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/mmpbsa.in",
         ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
     output:
-        out_gmxmmpbsa_res = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/COMPACT_MMXSA_RESULTS.mmxsa",
+        gmxmmpbsa_res = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/COMPACT_MMXSA_RESULTS.mmxsa",
     params:
         in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
     run:
@@ -32,11 +32,11 @@ rule run_gmxmmpbsa:
             # The index file generated in bindflow.preparation.system_builder.MakeInputs.__call__
             # will always have as first group receptor and as second group ligand
             # therefore, we can pass to the flag -cg <Receptor group> <Ligand group>" = -cg 1 2
-            gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.in_mmpbsa_in_file} -cs {params.in_tpr} -ci {input.ndx} -cg 1 2 -ct {input.in_xtc} -cp {input.in_top} -o res.dat -nogui"
+            gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 1 2 -ct {input.xtc} -cp {input.top} -o res.dat -nogui"
             bindflow.utils.tools.run(gmx_mmpbsa_command)
             print(os.path.join(builder_dir,"COMPACT_MMXSA_RESULTS.mmxsa"))
-            print(output.out_gmxmmpbsa_res)
-            shutil.move(os.path.join(builder_dir,"COMPACT_MMXSA_RESULTS.mmxsa"), output.out_gmxmmpbsa_res)
+            print(output.gmxmmpbsa_res)
+            shutil.move(os.path.join(builder_dir,"COMPACT_MMXSA_RESULTS.mmxsa"), output.gmxmmpbsa_res)
         finally:
             os.chdir(cwd)
             try:
@@ -47,13 +47,13 @@ rule run_gmxmmpbsa:
 
 rule mmpbsa_get_dg_cycle:
     input:
-        in_gmxmmpbsa_res = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/COMPACT_MMXSA_RESULTS.mmxsa",
+        gmxmmpbsa_res = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/COMPACT_MMXSA_RESULTS.mmxsa",
     output:
         out_file_path = approach_path + "/{ligand_name}/{replica}/dG_results.csv",
     run:
         gmx_api = GMXMMPBSA.API.MMPBSA_API()
         gmx_api.setting_time()
-        gmx_api.load_file(input.in_gmxmmpbsa_res)
+        gmx_api.load_file(input.gmxmmpbsa_res)
         
         entropies = {"method": [], "value": [], "error": []}
         def __apend_empty(name):

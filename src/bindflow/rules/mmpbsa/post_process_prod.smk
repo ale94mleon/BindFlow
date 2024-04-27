@@ -9,14 +9,16 @@ load_dependencies = config['extra_directives']['dependencies']
 
 
 # TODO: use the same scheme used for boresch restraint to fix the trajectory, maybe inside the rule of gmx_run, 
+# Here I need to avoid duplication of xtc file, the size of the simulation increases
+# This must go inside the running of gmx_MMPBSA
 rule remove_PBC_in_trajectory:
     input:
-        complex_equi_finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
     output:
-        out_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod_noPBC.xtc",
+        xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod_noPBC.xtc",
     params:
-        in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
-        in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
+        tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
+        xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
     run:
         import logging
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
@@ -24,4 +26,4 @@ rule remove_PBC_in_trajectory:
         @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies, interactive_script=["1", "0"])
         def trjconv(**kwargs): ...
 
-        trjconv(s=params.in_tpr, f=params.in_xtc, o=output.out_xtc, pbc="mol", center=True, ur="compact")
+        trjconv(s=params.tpr, f=params.xtc, o=output.xtc, pbc="mol", center=True, ur="compact")
