@@ -13,7 +13,7 @@ rule run_gmxmmpbsa:
         finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
         xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod_noPBC.xtc",
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
-        mmpbsa_in = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/mmpbsa.in",
+        mmpbsa_in = approach_path + "/{ligand_name}/input/mmpbsa.in",
         ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
     output:
         gmxmmpbsa_res = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/COMPACT_MMXSA_RESULTS.mmxsa",
