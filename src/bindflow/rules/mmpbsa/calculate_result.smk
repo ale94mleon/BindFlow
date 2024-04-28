@@ -147,3 +147,37 @@ rule mmpbsa_get_dg_cycle:
         __create_dg_dict("gb", "ie_gb", "gb_ie")
         __create_dg_dict("gb", "qh", "gb_qh")
         pd.DataFrame.from_dict(delta_gs).to_csv(output.out_file_path, index=False)
+
+
+def __convert_format_flatten(df, ligand_name, replica):
+    res = { "name":[ligand_name], "replica":[replica], 
+            "pb_c2_val":[], "pb_c2_err":[], "pb_ie_val":[], "pb_ie_err":[], "pb_qh_val":[], "pb_qh_err":[], 
+            "gb_c2_val":[], "gb_c2_err":[], "gb_ie_val":[], "gb_ie_err":[], "gb_qh_val":[], "gb_qh_err":[]}
+    
+    def __set_row(name):
+        extracted_row = df[df["method"] == name]
+        res[name+"_val"].append(extracted_row.iat[0,1])
+        res[name+"_err"].append(extracted_row.iat[0,2])
+    __set_row("pb_c2")
+    __set_row("pb_ie")
+    __set_row("pb_qh")
+    __set_row("gb_c2")
+    __set_row("gb_ie")
+    __set_row("gb_qh")
+    
+    return pd.DataFrame.from_dict(res)
+
+
+rule gather_mmpbsa_results:
+    input:
+        prior_result_paths = expand(out_approach_path + "/{ligand_names}/{replica}/dG_results.csv",ligand_names = config['ligand_names'],replica = list(map(str, range(1,1 + config['replicas']))))
+    output:
+        out_dg_file=out_approach_path + "/mmpbsa_results.csv",
+    run:
+        collected_dfs = []
+        for inp_file in input.prior_result_paths:
+            string_data = inp_file.removeprefix(out_approach_path).split("/")
+            extracted_df = __convert_format_flatten(pd.read_csv(inp_file), string_data[1], string_data[2])
+            collected_dfs.append(extracted_df)
+        final_df = pd.concat(collected_dfs, ignore_index=True)
+        final_df.to_csv(output.out_dg_file, index=False)

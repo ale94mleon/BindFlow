@@ -58,7 +58,7 @@ def update_nwindows_config(config: dict) -> dict:
     return config
 
 
-def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> None:
+def generate_approach_snake_file(out_file_path: str, conf_file_path: str, computation_type="abfe") -> None:
     """Used to generate the main Snakefile
 
     Parameters
@@ -74,14 +74,19 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> Non
         "# Start Flow\n"\
         f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
         "# Specify targets and dependencies\n"\
-        "rule RuleThemAll:\n"\
-        "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
+        "rule RuleThemAll:\n"
+    if computation_type == "abfe":
+        file_str += "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
+    elif computation_type == "mmpbsa":
+        file_str += "    input: config[\"out_approach_path\"] + \"/mmpbsa_results.csv\""
+    else:
+        raise ValueError(f"Unknown computation type {computation_type}.")
 
     with open(out_file_path, 'w') as out:
         out.write(file_str)
 
 
-def approach_flow(global_config: dict, submit: bool = False) -> str:
+def approach_flow(global_config: dict, submit: bool = False, computation_type="abfe") -> str:
     """This is the main workflow, it controls the rest of the workflows
     that make the actual calculations. It will only hang and wait till the rest
     subprocess finish. In case that cluster/options/job is defined in global_config,
@@ -196,7 +201,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     with open(approach_conf_path, "w") as out_IO:
         json.dump(approach_config, out_IO, indent=4)
 
-    generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path)
+    generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path, computation_type=computation_type)
 
     scheduler = generate_scheduler.create_scheduler(
         scheduler_type=global_config["cluster"]["type"],

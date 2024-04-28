@@ -215,7 +215,7 @@ def calculate_mmpbsa(
     # Only if there is something missing
     if (len(result_paths) != expected_out_paths):
         print("\tBuild approach struct")
-        job_id = approach_flow(global_config=_global_config, submit=submit)
+        job_id = approach_flow(global_config=_global_config, submit=submit, computation_type="mmpbsa")
     else:
         job_id = None
     print("Do")
