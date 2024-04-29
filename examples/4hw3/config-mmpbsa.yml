@@ -1,0 +1,43 @@
+cluster:
+  type: FrontEnd
+  options:
+    calculation: None   
+extra_directives: # Optional
+  dependencies:
+    - 'export GMX_MAXBACKUP=-1'
+  mdrun:
+    all:
+      cpi: False
+      stepout: 5000
+      v: True
+nwindows: # optional
+  ligand:
+      vdw: 6
+      coul: 6
+  complex:
+      vdw: 6
+      coul: 6
+      bonded: 6
+mdp: # optional
+  complex:
+    equi:
+      00_min:
+        nsteps: 100
+      01_nvt:
+          nsteps: 15
+      02_nvt:
+          nsteps: 15
+      03_npt:
+        nsteps: 15
+      04_npt:
+        nsteps: 15
+      prod:
+        nsteps: 1000
+        nstxout-compressed: 100
+mmpbsa_config: 
+#  general: 
+#    c2_entropy: 1
+#    #qh_entropy: 1
+#    #interaction_entropy: 1
+  pb: True
+  gb: True
