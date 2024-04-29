@@ -328,7 +328,7 @@ class FrontEnd(Scheduler):
                 verbose = True
                 debug_dag = True
                 keep_going = False
-        command = f"snakemake --jobs {jobs} --latency-wait {latency_wait} "
+        command = f"snakemake --jobs {jobs} --latency-wait {latency_wait} --resources FRONTEND_RUNNER_GPU_LOCK=1 "
         if verbose:
             command += "--verbose "
         if debug_dag:

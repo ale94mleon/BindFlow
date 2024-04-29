@@ -21,6 +21,8 @@ nwindows: # optional
 mdp: # optional
   complex:
     equi:
+      00_min:
+        nsteps: 100
       01_nvt:
           nsteps: 15
       02_nvt:

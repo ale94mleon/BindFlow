@@ -7,6 +7,8 @@ retries = config['retries']
 load_dependencies = config['extra_directives']['dependencies']
 mdrun_extra = config['extra_directives']['mdrun']
 rule equil_complex_00_min:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
         gro = approach_path + "/{ligand_name}/input/complex/complex.gro",
@@ -29,6 +31,8 @@ rule equil_complex_00_min:
         )
 
 rule equil_complex_01_nvt:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
         gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/00_min/00_min.gro",
@@ -55,6 +59,8 @@ rule equil_complex_01_nvt:
         tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_02_nvt:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
         finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/01_nvt/01_nvt.finished",
@@ -84,6 +90,8 @@ rule equil_complex_02_nvt:
         tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_03_npt:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
         finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/02_nvt/02_nvt.finished",
@@ -113,6 +121,8 @@ rule equil_complex_03_npt:
         tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_04_npt:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
         finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/03_npt/03_npt.finished",
@@ -142,6 +152,8 @@ rule equil_complex_04_npt:
         tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule equil_complex_prod:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
         finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/04_npt/04_npt.finished",

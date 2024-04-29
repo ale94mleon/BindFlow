@@ -21,7 +21,7 @@ calculate_mmpbsa(
     hmr_factor=2.5,
     threads=12,
     num_jobs=100000,
-    replicas=1,
+    replicas=2,
     submit=False,
     global_config=global_config)
 
