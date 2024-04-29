@@ -1,9 +1,10 @@
 import bindflow.mmpbsa_in.mmpbsa_in_load_defaults
-from bindflow.mdp.templates import mdp
-from bindflow.mdp.templates import TemplatePath
 from bindflow.utils import tools
-import os
-import tmpfile
+from bindflow.mdp import mdp
+from bindflow.mdp.templates import TemplatePath
+from pathlib import Path
+import shutil
+import tempfile
 approach_path = config["out_approach_path"]
 
 
