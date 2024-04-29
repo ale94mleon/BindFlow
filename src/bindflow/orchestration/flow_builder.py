@@ -148,6 +148,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     elif global_config["calculation_type"] == 'mmpbsa':
         if "mmpbsa" in global_config.keys():
             approach_config["mmpbsa"] = global_config["mmpbsa"]
+            approach_config["samples"] = global_config["samples"]
 
     # Specify the complex type
     if global_config["inputs"]["membrane"]:
