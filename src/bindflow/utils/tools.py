@@ -109,7 +109,8 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
                 value = kwargs[key]
                 if value:
                     if isinstance(value, bool):
-                        cmd += f" -{key}"
+                        if value:
+                            cmd += f" -{key}"
                     else:
                         cmd += f" -{key} {value}"
             if stdout_file:
