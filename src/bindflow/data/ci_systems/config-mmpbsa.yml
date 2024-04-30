@@ -28,3 +28,10 @@ mdp: # optional
     mmpbsa:
       prod:
         nsteps: 25000
+mmpbsa: 
+  general: 
+    c2_entropy: 1
+    qh_entropy: 1
+    interaction_entropy: 1
+  pb: True
+  gb: True
