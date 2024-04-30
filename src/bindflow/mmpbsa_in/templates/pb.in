@@ -14,7 +14,7 @@ Be careful with the variables you modify, some can have severe consequences on t
   qh_entropy           = 0                                              # Do quasi-harmonic calculation
   interaction_entropy  = 0                                              # Do Interaction Entropy calculation
   ie_segment           = 25                                             # Trajectory segment to calculate interaction entropy
-  c2_entropy           = 1                                              # Do C2 Entropy calculation
+  c2_entropy           = 0                                              # Do C2 Entropy calculation
   assign_chainID       = 0                                              # Assign chains ID
   exp_ki               = 0.0                                            # Experimental Ki in nM
   full_traj            = 0                                              # Print a full traj. AND the thread trajectories
