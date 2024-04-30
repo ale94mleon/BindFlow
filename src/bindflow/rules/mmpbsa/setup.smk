@@ -5,16 +5,20 @@ from bindflow.mdp.templates import TemplatePath
 from pathlib import Path
 import shutil
 import tempfile
+
+# Common to all sub-workflows
 approach_path = config["out_approach_path"]
+ligand_names = config["ligand_names"]
+samples = list(map(str, range(1,1 + config["samples"])))
 
 
 # TODO
 # The parameters should be expose to user customization. A Class like the MDP class may do the job
 # Then the new parameters are read from the yml file and update the default values, forcefields and other should be protected and not mutable for MMPBSA (force fields are 
 # generated at the beginning.)
-rule create_mmpbsa_in:
+rule create_mmxbsa_in:
     output:
-        mmpbsa_in = approach_path + "/{ligand_name}/input/mmpbsa.in",
+        mmpbsa_in = expand(approach_path + "/{ligand_name}/input/mmpbsa.in", ligand_name = ligand_names),
     run:
         import logging
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
@@ -26,19 +30,21 @@ rule create_mmpbsa_in:
             mmpbsa_config["pb"] = True
 
         input_file = bindflow.mmpbsa_in.mmpbsa_in_load_defaults.gmxmmpbsa_input_file(mmpbsa_in_opts = mmpbsa_config)
-        input_file.store_template(output.mmpbsa_in)
+        
+        for mmpbsa_in in output.mmpbsa_in:
+            input_file.store_template(mmpbsa_in)
 
-rule mmpbsa_setup:
+rule mmxbsa_setup:
     input:
-        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
-        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp",
+        finished = "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
+        mdp = "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp"
     output:
-        mdp = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp", sample = range(config['samples'])),
-        gro = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/init.gro", sample = range(config['samples']))
+        mdp = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp", sample=samples),
+        gro = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/init.gro", sample=samples)
     params:
         in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
         in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
-        simulation_dir = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation"
+        sim_dir = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation",
     run:
         # Update MDP with user provided options
         if config["complex_type"] == 'soluble':
@@ -52,16 +58,16 @@ rule mmpbsa_setup:
             mdp_template.set_parameters(**config['mdp']['complex']['mmpbsa']['prod'])
         except KeyError:
             pass
-
-        simulation_dir = Path(params.simulation_dir).resolve()
-        simulation_dir.mkdir(exist_ok=True, parents=True)
+        
+        sim_dir = Path(params.sim_dir).resolve()
+        sim_dir.mkdir(exist_ok=True, parents=True)
 
         # Get frequency of gro writing
         equil_prod_mdp = mdp.MDP().from_file(input.mdp).parameters
         # The 2 is just to be sure of having enough frames
         skip = int((int(equil_prod_mdp['nsteps'].split(';')[0]) / int(equil_prod_mdp['nstxout-compressed'].split(';')[0])) / (config['samples'] + 2))
 
-        with tempfile.TemporaryDirectory(prefix='split_', dir=simulation_dir) as tmp_dir:
+        with tempfile.TemporaryDirectory(prefix='split_', dir=sim_dir) as tmp_dir:
             # Get initial configuration from equil/prod
             tools.run(f"export GMX_MAXBACKUP=-1; echo \"System\" | gmx trjconv -f {params.in_xtc} -s {params.in_tpr} -o {tmp_dir}/.gro -sep -skip {skip}")
             frames = list(Path(tmp_dir).glob('*.gro'))
@@ -72,4 +78,4 @@ rule mmpbsa_setup:
                     shutil.copy(frame, gro)
                     mdp_template.write(mdp_file)
             else:
-                raise RuntimeError("Not enough frames in equil/prod/prod.xtc")
+                raise RuntimeError("Not enough frames in equil-mdsim/prod/prod.xtc")

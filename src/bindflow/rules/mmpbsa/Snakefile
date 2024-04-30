@@ -1,5 +1,7 @@
 include: "setup.smk"
-include: "post_process_prod.smk"
+include: "simulation.smk"
+include: "ana.smk"
 
 # Final Result:
 include: "calculate_result.smk"
+include: "gather_receptor_results.smk"
