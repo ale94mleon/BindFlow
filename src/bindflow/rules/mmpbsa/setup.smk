@@ -36,11 +36,11 @@ rule create_mmxbsa_in:
 
 rule mmxbsa_setup:
     input:
-        finished = "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
-        mdp = "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp"
+        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
+        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp"
     output:
-        mdp = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp", sample=samples),
-        gro = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/init.gro", sample=samples)
+        mdp = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp", sample=samples, allow_missing=True),
+        gro = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/init.gro", sample=samples, allow_missing=True)
     params:
         in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
         in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
