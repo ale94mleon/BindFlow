@@ -8,6 +8,7 @@ import math
 import tempfile
 
 approach_path = config["out_approach_path"]
+samples = list(map(str, range(1,1 + config["samples"])))
 
 rule get_mmxbsa_result:
     input:
