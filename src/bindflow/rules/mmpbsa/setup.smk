@@ -11,29 +11,6 @@ approach_path = config["out_approach_path"]
 ligand_names = config["ligand_names"]
 samples = list(map(str, range(1,1 + config["samples"])))
 
-
-# TODO
-# The parameters should be expose to user customization. A Class like the MDP class may do the job
-# Then the new parameters are read from the yml file and update the default values, forcefields and other should be protected and not mutable for MMPBSA (force fields are 
-# generated at the beginning.)
-rule create_mmxbsa_in:
-    output:
-        mmpbsa_in = expand(approach_path + "/{ligand_name}/input/mmpbsa.in", ligand_name = ligand_names),
-    run:
-        if "mmpbsa" in config.keys():
-            mmpbsa_config = config["mmpbsa"]
-        else:
-            mmpbsa_config = {}
-
-        # FIXME: Pass the temperature of the simulation from any mdp file used on the equilibration
-        # Ion concentration is used for gb calculation
-        # also there is a membrane parameter 
-        
-        input_file = GMXMMPBSAInputMaker(**mmpbsa_config)
-        
-        for mmpbsa_in in output.mmpbsa_in:
-            input_file.write(mmpbsa_in)
-
 rule mmxbsa_setup:
     input:
         finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
@@ -82,3 +59,36 @@ rule mmxbsa_setup:
                     mdp_template.write(mdp_file)
             else:
                 raise RuntimeError("Not enough frames in equil-mdsim/prod/prod.xtc")
+
+rule create_mmxbsa_in:
+    input:
+        # All ligand simulations use the same temperature
+        mdp = approach_path + f"/{ligand_names[0]}/1/complex/mmpbsa/simulation/rep.1/prod.mdp"
+    output:
+        mmpbsa_in = expand(approach_path + "/{ligand_name}/input/mmpbsa.in", ligand_name = ligand_names)
+    run:
+        if "mmpbsa" in config.keys():
+            mmpbsa_config = config["mmpbsa"]
+        else:
+            mmpbsa_config = {}
+        
+        # Get simulation temperature
+        mdp_params = mdp.MDP().from_file(input.mdp).parameters
+        if 'ref-t' in mdp_params:
+            temperature = float(mdp_params['ref-t'].split()[0])
+        elif 'ref_t' in mdp_params:
+            temperature = float(mdp_params['ref_t'].split()[0])
+        
+        if 'general' in mmpbsa_config:
+            mmpbsa_config['general']['temperature'] = temperature
+        else:
+            mmpbsa_config['general'] = dict(temperature=temperature)
+        
+        # FIXME:
+        # Ion concentration is used for gb calculation, this is set during solvation step, not sure if needed
+        # There is also a membrane parameter 
+        
+        input_file = GMXMMPBSAInputMaker(**mmpbsa_config)
+        
+        for mmpbsa_in in output.mmpbsa_in:
+            input_file.write(mmpbsa_in)
