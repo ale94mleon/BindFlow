@@ -24,14 +24,16 @@ mdp: # optional
       04_npt:
         nsteps: 25
       prod:
-        nsteps: 25
+        nsteps: 50
+        nstxout-compressed: 2
     mmpbsa:
       prod:
-        nsteps: 25000
-mmpbsa: 
+        nsteps: 250
+        nstxout-compressed: 5
+mmpbsa:
   general: 
     c2_entropy: 1
     qh_entropy: 1
     interaction_entropy: 1
-  pb: True
-  gb: True
+  pb: {}
+  # gb: {}
