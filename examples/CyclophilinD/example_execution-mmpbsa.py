@@ -12,6 +12,8 @@ ligand_mols = glob.glob("inputs/ligands/*mol")
 with open("config-mmpbsa.yml", "r") as c:
     global_config = yaml.safe_load(c)
 
+global_config['extra_directives']['mdrun']['all']['ntmpi'] = 1
+
 calculate_mmpbsa(
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
@@ -22,6 +24,7 @@ calculate_mmpbsa(
     threads=12,
     num_jobs=100000,
     replicas=1,
+    samples=2,
     submit=True,
     global_config=global_config)
 
