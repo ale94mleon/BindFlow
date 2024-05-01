@@ -1,4 +1,4 @@
-import bindflow.mmpbsa_in.mmpbsa_in_load_defaults
+from bindflow.mmpbsa_in.input_loader import GMXMMPBSAInputMaker
 from bindflow.utils import tools
 from bindflow.mdp import mdp
 from bindflow.mdp.templates import TemplatePath
@@ -20,19 +20,19 @@ rule create_mmxbsa_in:
     output:
         mmpbsa_in = expand(approach_path + "/{ligand_name}/input/mmpbsa.in", ligand_name = ligand_names),
     run:
-        import logging
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-        
-        mmpbsa_config = {}
         if "mmpbsa" in config.keys():
             mmpbsa_config = config["mmpbsa"]
-        if not "pb" in mmpbsa_config.keys() and not "gb" in mmpbsa_config.keys():
-            mmpbsa_config["pb"] = True
+        else:
+            mmpbsa_config = {}
 
-        input_file = bindflow.mmpbsa_in.mmpbsa_in_load_defaults.gmxmmpbsa_input_file(mmpbsa_in_opts = mmpbsa_config)
+        # FIXME: Pass the temperature of the simulation from any mdp file used on the equilibration
+        # Ion concentration is used for gb calculation
+        # also there is a membrane parameter 
+        
+        input_file = GMXMMPBSAInputMaker(**mmpbsa_config)
         
         for mmpbsa_in in output.mmpbsa_in:
-            input_file.store_template(mmpbsa_in)
+            input_file.write(mmpbsa_in)
 
 rule mmxbsa_setup:
     input:
@@ -69,7 +69,10 @@ rule mmxbsa_setup:
 
         with tempfile.TemporaryDirectory(prefix='split_', dir=sim_dir) as tmp_dir:
             # Get initial configuration from equil/prod
-            tools.run(f"export GMX_MAXBACKUP=-1; echo \"System\" | gmx trjconv -f {params.in_xtc} -s {params.in_tpr} -o {tmp_dir}/.gro -sep -skip {skip}")
+            cmd = f"export GMX_MAXBACKUP=-1; echo \"System\" | gmx trjconv -f {params.in_xtc} -s {params.in_tpr} -o {tmp_dir}/.gro -sep"
+            if skip > 0:
+                cmd += f" -skip {skip}"
+            tools.run(cmd)
             frames = list(Path(tmp_dir).glob('*.gro'))
 
             if len(frames) >= len(output.gro):
