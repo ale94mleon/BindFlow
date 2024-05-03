@@ -1,4 +1,5 @@
-from bindflow.free_energy import gather_results
+from bindflow.free_energy import mmxbsa_analysis
+import pandas as pd
 
 out_approach_path = config["out_approach_path"]
 
@@ -10,5 +11,11 @@ rule gather_receptor_results:
         out_dg_file=out_approach_path + "/mmxbsa_results.csv",
         out_raw_file=out_approach_path + "/mmxbsa_results_raw.csv",
     run:
-        pass
-        # Implementation
+        collected_dfs = []
+        for inp_file in input.mmxbsa_csv: # collecting all of the mmxbsa.csv files and concatenating into 1 file
+            string_data = inp_file.removeprefix(out_approach_path).split("/")
+            ligand_name, replica, sample = string_data[1], string_data[2], string_data[6].removeprefix("rep.")
+            collected_dfs.append(mmxbsa_analysis.convert_format_flatten(pd.read_csv(inp_file), ligand_name, replica, sample))
+        full_df = pd.concat(collected_dfs, ignore_index=True)
+        full_df.to_csv(output.out_raw_file, index=False)
+        full_df.to_csv(output.out_dg_file, index=False) # TODO: maybe add some postprocessing to this file like filter for abnormaly high errors and compute the mean etc.

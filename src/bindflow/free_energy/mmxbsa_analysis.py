@@ -3,6 +3,25 @@ import math
 import pandas as pd
 
 
+def convert_format_flatten(df, ligand_name, replica, sample):
+    res = { "name":[ligand_name], "replica":[replica], "sample":[sample], 
+            "pb_c2_val":[], "pb_c2_err":[], "pb_ie_val":[], "pb_ie_err":[], "pb_qh_val":[], "pb_qh_err":[], 
+            "gb_c2_val":[], "gb_c2_err":[], "gb_ie_val":[], "gb_ie_err":[], "gb_qh_val":[], "gb_qh_err":[]}
+    
+    def __set_row(name):
+        extracted_row = df[df["method"] == name]
+        res[name+"_val"].append(extracted_row.iat[0,1])
+        res[name+"_err"].append(extracted_row.iat[0,2])
+    __set_row("pb_c2")
+    __set_row("pb_ie")
+    __set_row("pb_qh")
+    __set_row("gb_c2")
+    __set_row("gb_ie")
+    __set_row("gb_qh")
+    
+    return pd.DataFrame.from_dict(res)
+
+
 def compute_dg(energy_value, error_energy, entropy_value, error_entropy):
     if energy_value is None or entropy_value is None:
         return None, None
