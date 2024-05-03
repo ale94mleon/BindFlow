@@ -1,4 +1,5 @@
 from bindflow.utils import tools
+from bindflow.free_energy import mmxbsa_analysis
 from pathlib import Path
 import tempfile
 import os
@@ -16,7 +17,7 @@ rule run_gmx_mmpbsa:
         mmpbsa_in = approach_path + "/{ligand_name}/input/mmpbsa.in",
         ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
     output:
-        mmxbsa_dat = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/mmxbsa.dat",
+        mmxbsa_csv = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/mmxbsa.csv",
     params:
         in_tpr = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.tpr",
         in_xtc = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.xtc",
@@ -44,14 +45,15 @@ rule run_gmx_mmpbsa:
         # will always have as first group receptor and as second group ligand
         # therefore, we can pass to the flag -cg <Receptor group> <Ligand group>" = -cg 0 1
         
-        gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {params.in_xtc} -cp {input.top} -o result.dat -nogui"
+        gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {params.in_xtc} -cp {input.top} -o res.dat -nogui"
     
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory(prefix='build_', dir=params.run_dir) as tmp_dir:
             try:
                 os.chdir(tmp_dir)
                 tools.run(gmx_mmpbsa_command)
-                shutil.copy('result.dat', output.mmxbsa_dat)
+                mmxbsa_data = mmxbsa_analysis.GmxMmxbsaDataRetriever("COMPACT_MMXSA_RESULTS.mmxsa")
+                mmxbsa_data.get_dg().to_csv(output.mmxbsa_csv)
             finally:
                 os.chdir(cwd)
                 # Clean centered trajectory

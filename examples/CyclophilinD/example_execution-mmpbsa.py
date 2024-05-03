@@ -25,7 +25,7 @@ calculate_mmpbsa(
     num_jobs=100000,
     replicas=1,
     samples=2,
-    submit=True,
+    submit=False,
     global_config=global_config)
 
 
