@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This script is an example execution running for protein systems.
+This script is an example execution running for membrane systems.
 """
 import yaml
 import glob
@@ -11,8 +11,6 @@ ligand_mols = glob.glob("inputs/ligands/*mol")
 
 with open("config-mmpbsa.yml", "r") as c:
     global_config = yaml.safe_load(c)
-
-global_config['extra_directives']['mdrun']['all']['ntmpi'] = 1
 
 calculate_mmpbsa(
     protein='inputs/protein.pdb',
@@ -27,3 +25,6 @@ calculate_mmpbsa(
     samples=2,
     submit=False,
     global_config=global_config)
+
+
+# rm -r abfe/slurm_logs/* abfe/*/*/slurm_logs/* abfe/.snakemake/ abfe/*/*/.snakemake abfe/*/*/ligand/ abfe/*/*/complex/
