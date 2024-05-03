@@ -7,7 +7,7 @@ Be careful with the variables you modify, some can have severe consequences on t
   startframe           = 1                                              # First frame to analyze
   endframe             = 9999999                                        # Last frame to analyze
   interval             = 1                                              # Number of frames between adjacent frames analyzed
-  forcefields          = "leaprc.protein.ff19SB"                        # Define the force field to build the Amber topology
+  forcefields          = ""                                             # Define the force field to build the Amber topology
   ions_parameters      = 1                                              # Define ions parameters to build the Amber topology
   PBRadii              = 3                                              # Define PBRadii to build amber topology from GROMACS files
   temperature          = 298.15                                         # Temperature

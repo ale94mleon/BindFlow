@@ -24,7 +24,7 @@ class DotDict:
         return self.__dict__
 
 
-def run(command: str, shell: bool = True, executable: str = '/bin/bash', interactive: bool = False, interactive_script: List[str] = None) -> subprocess.CompletedProcess:
+def run(command: str, shell: bool = True, executable: str = '/bin/bash', interactive: bool = False) -> subprocess.CompletedProcess:
     """A simple wrapper around subprocess.Popen/subprocess.run
 
     Parameters
@@ -54,35 +54,17 @@ def run(command: str, shell: bool = True, executable: str = '/bin/bash', interac
         if returncode != 0:
             raise RuntimeError(f'Command {command} returned non-zero exit status {returncode}')
     else:
-        if interactive_script:
-            with subprocess.Popen(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, text=True) as proc:
-                interactive_input = "\n".join(interactive_script) + "\n"
-                stdout_data, stderr_data = proc.communicate(interactive_input)
-                process = subprocess.CompletedProcess(command, proc.returncode, stdout_data, stderr_data)
-        else:
-            process = subprocess.run(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            returncode = process.returncode
+        process = subprocess.run(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        returncode = process.returncode
 
-            if returncode != 0:
-                print(f'Command {command} returned non-zero exit status {returncode}')
-                raise RuntimeError(process.stderr)
+        if returncode != 0:
+            print(f'Command {command} returned non-zero exit status {returncode}')
+            raise RuntimeError(process.stderr)
 
     return process
 
 
-def load_dependencies_for_shell(load_dependencies):
-    """Loads the dependencies and returns the prefix of the shell script
-    """
-    if load_dependencies:
-        cmd = " && ".join(load_dependencies)
-        cmd += " && "
-    else:
-        cmd = ''
-    return cmd
-
-
-
-def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, stdout_file: PathLike = None, interactive_script: List[str] = None):
+def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, stdout_file: PathLike = None):
     """Lazy wrapper of gmx commands
 
     Parameters
@@ -94,9 +76,6 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
         In case, and interactive section is desired, by default False
     stdout_file : bool
         IF provided, it will append to the command ` >& {stdout_file}`, by default None
-    interactive_script: List[str]
-        If the command is interactive like for example gmx make_ndx, then provide the interactive steps as a list of strings e.g. ["1", "q"], by default None
-        Note that it is only used, if interactive is False
 
 
     A typical function will be:
@@ -120,13 +99,18 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     """
     def decorator(gmx_function: object):
         def wrapper(**kwargs):
-            cmd = load_dependencies_for_shell(load_dependencies)
+            if load_dependencies:
+                cmd = " && ".join(load_dependencies)
+                cmd += " && "
+            else:
+                cmd = ''
             cmd += f"gmx {gmx_function.__name__}"
             for key in kwargs:
                 value = kwargs[key]
                 if value:
                     if isinstance(value, bool):
-                        cmd += f" -{key}"
+                        if value:
+                            cmd += f" -{key}"
                     else:
                         cmd += f" -{key} {value}"
             if stdout_file:
@@ -136,23 +120,9 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
             if interactive:
                 return run(cmd, interactive=True)
             else:
-                return run(cmd, interactive_script=interactive_script)
+                return run(cmd)
         return wrapper
     return decorator
-
-
-# Because of how snakemake handles environmental variables that
-# are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
-# We have to hard code the unset of some of them
-# TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
-hard_code_dependencies = [
-    'unset OMP_NUM_THREADS',
-    'unset GOTO_NUM_THREADS',
-    'unset OPENBLAS_NUM_THREADS',
-    'unset MKL_NUM_THREADS',
-    'unset VECLIB_MAXIMUM_THREADS',
-    'unset NUMEXPR_NUM_THREADS',
-]
 
 
 def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoint: PathLike = None, index: PathLike = None,
@@ -200,6 +170,19 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
 
     name = os.path.splitext(os.path.basename(mdp))[0]
 
+    # Because of how snakemake handles environmental variables that
+    # are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
+    # We have to hard code the unset of some of them
+    # TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
+    hard_code_dependencies = [
+        'unset OMP_NUM_THREADS',
+        'unset GOTO_NUM_THREADS',
+        'unset OPENBLAS_NUM_THREADS',
+        'unset MKL_NUM_THREADS',
+        'unset VECLIB_MAXIMUM_THREADS',
+        'unset NUMEXPR_NUM_THREADS',
+    ]
+
     @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies)
     def grompp(**kwargs): ...
 
@@ -231,6 +214,35 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
     mdrun(**mdrun_kwargs)
 
     os.chdir(cwd)
+
+
+def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str = 'Protein') -> PathLike:
+    """Center an xtc file
+
+    Parameters
+    ----------
+    tpr : PathLike
+        Binary GROMACS topology
+    xtc : PathLike
+        Trajectory file
+    run_dir : PathLike
+        Directory to run and save the center trajectory
+    host_name : str, optional
+        Name of the host/receptor, by default 'Protein'
+
+    Returns
+    -------
+    PathLike
+        The path of the center trajectory: {run_dir}/center.xtc
+    """
+    makedirs(run_dir)
+    no_backup = "export GMX_MAXBACKUP=-1"
+    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {xtc} -o {run_dir}/whole.xtc -pbc whole")
+    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {run_dir}/whole.xtc -o {run_dir}/nojump.xtc -pbc nojump")
+    run(f"{no_backup}; echo '{host_name} System' | gmx trjconv -s {tpr} -f {run_dir}/nojump.xtc -o {run_dir}/center.xtc -pbc mol -center -ur compact")
+    # Clean
+    run(f"rm {run_dir}/whole.xtc {run_dir}/nojump.xtc")
+    return f"{run_dir}/center.xtc"
 
 
 def paths_exist(paths: List, raise_error: bool = False, out: Union[str, None] = None) -> None:

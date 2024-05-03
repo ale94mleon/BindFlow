@@ -90,6 +90,7 @@ bindflow = [
     "data/ci_systems/**/*.yml",
     "data/ci_systems/**/*.tar.gz",
     "mdp/templates/**/*.mdp",
+    "mmpbsa_in/templates/*.in",
     "rules/**/*.smk",
     "rules/**/Snakefile"
 ]

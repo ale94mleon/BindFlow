@@ -138,6 +138,7 @@ def calculate_mmpbsa(
         # Maximum number of jobs to run in parallel
         num_jobs: int = 10000,
         replicas: int = 3,
+        samples: int = 10,
         submit: bool = False,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
@@ -202,6 +203,7 @@ def calculate_mmpbsa(
     _global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol['conf']))[0] for mol in _global_config["inputs"]["ligands"]]
     _global_config["num_jobs"] = num_jobs
     _global_config["replicas"] = replicas
+    _global_config["samples"] = samples
     _global_config["threads"] = threads
 
     print("Prepare")

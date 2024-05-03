@@ -1,0 +1,88 @@
+;====================================================
+; Production simulation
+;====================================================
+
+;----------------------------------------------------
+; HEADER
+;----------------------------------------------------
+title        = NPT-production
+
+;----------------------------------------------------
+; RUN CONTROL
+;----------------------------------------------------
+integrator   = sd            ; Langevin integrator
+ld-seed      = -1            ; Langevin seed [-1]
+nsteps       = 250000       ; 4 * 2,500,000 fs = 10 ns
+dt           = 0.004         ; 4 fs
+pbc          = xyz           ; Periodic boundary conditions
+comm-mode    = Linear        ; remove center of mass translation
+nstcomm      = 50            ; frequency for center of mass motion removal
+
+;----------------------------------------------------
+; OUTPUT CONTROL
+;----------------------------------------------------
+; TRR options
+nstxout                = 0          ; don't save coordinates to .trr
+nstvout                = 0          ; don't save velocities to .trr
+nstfout                = 0          ; don't save forces to .trr
+; XTC options
+nstxout-compressed     = 125       ; xtc write frequency [steps]
+compressed-x-precision = 100       ; xtc precision [1000]
+; Log & energy file options
+nstlog                 = 0       ; log update frequency [steps]
+nstenergy              = 1000       ; energy update frequency [steps]
+nstcalcenergy          = 50         ; calculate energies every 100 steps
+
+;----------------------------------------------------
+; BONDS
+;----------------------------------------------------
+constraint_algorithm   = lincs      ; holonomic constraints
+constraints            = all-bonds  ; hydrogens only are constrained
+lincs_iter             = 1          ; lincs corr iterations [1]
+lincs_order            = 6          ; highest order in expansions [4]
+lincs-warnangle        = 30         ; max angle rot of bond [4]
+continuation           = yes        ; formerly known as 'unconstrained-start' - useful for exact continuations and reruns
+
+;----------------------------------------------------
+; NEIGHBOR SEARCHING
+;----------------------------------------------------
+cutoff-scheme   = Verlet
+ns-type         = grid   ; search neighboring grid cells
+nstlist         = 10     ; with very let this is a minimum
+rlist           = 1.2    ; short-range neighborlist cutoff (in nm)
+
+;----------------------------------------------------
+; ELECTROSTATICS
+;----------------------------------------------------
+coulombtype      = PME      ; Long range electrostatics treatment
+rcoulomb         = 1.0      ; Electrostatics cutoff [nm]
+ewald_geometry   = 3d       ; Ewald sum is performed in all 3Ds
+pme-order        = 4        ; interpolation order for PME [4]
+fourierspacing   = 0.10     ; grid spacing for FFT [0.12 nm]
+ewald-rtol       = 1e-6     ; relative strength of the Ewald-shifted direct potential at rcoulomb [1e-5]
+
+;----------------------------------------------------
+; VDW
+;----------------------------------------------------
+vdwtype                 = Cut-off  ; Type of VDW handling
+rvdw                    = 1.0      ; Cutoff distance [nm]
+vdw-modifier            = Potential-Shift-Verlet ; Shift potential so zero energy at cutoff
+DispCorr                = EnerPres ; Apply long range dispersion corr for Ener and Pres
+
+;----------------------------------------------------
+; TEMPERATURE & PRESSURE COUPL
+;----------------------------------------------------
+tc-grps          = System   ; Treat everything as a single group
+tau-t            = 2.0      ; Inverse friction with sd
+ref-t            = 298.15   ; Set temp at 298.15 K
+pcoupl           = Parrinello-Rahman ; Correct ensemble method
+pcoupltype       = isotropic ; Not in a membrane
+tau-p            = 2.0       ; time constant [ps] (PR works better with a longer tau allegedly?)
+ref-p            = 1.01325   ; reference pressure [bar] (1 atm)
+compressibility  = 4.5e-05   ; isothermal compressibility of water [bar^-1]
+
+;----------------------------------------------------
+; VELOCITY GENERATION
+;----------------------------------------------------
+gen_vel      = no      ; Velocity generation is off
+

@@ -1,0 +1,39 @@
+cluster:
+  type: FrontEnd
+  options:
+    calculation: None   
+extra_directives: # Optional
+  dependencies:
+    # - 'source /data/shared/spack-0.19.1/shared.bash'
+    # - 'module load gromacs/2022.4'
+    - 'export GMX_MAXBACKUP=-1'
+  mdrun:
+    all:
+      cpi: False
+      stepout: 5000
+      v: True
+mdp: # optional
+  complex:
+    equi:
+      01_nvt:
+          nsteps: 25
+      02_nvt:
+          nsteps: 25
+      03_npt:
+        nsteps: 25
+      04_npt:
+        nsteps: 25
+      prod:
+        nsteps: 50
+        nstxout-compressed: 2
+    mmpbsa:
+      prod:
+        nsteps: 250
+        nstxout-compressed: 5
+mmpbsa:
+  general: 
+    c2_entropy: 1
+    qh_entropy: 1
+    interaction_entropy: 1
+  pb: {}
+  # gb: {}

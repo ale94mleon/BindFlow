@@ -25,3 +25,6 @@ include: 'complex/ana.smk'
 
 # Final Result:
 include: "calculate_result.smk"
+
+# Gather results
+include: "gather_receptor_results.smk"

@@ -21,6 +21,8 @@ nwindows: # optional
 mdp: # optional
   complex:
     equi:
+      00_min:
+        nsteps: 15
       01_nvt:
           nsteps: 15
       02_nvt:
@@ -30,12 +32,15 @@ mdp: # optional
       04_npt:
         nsteps: 15
       prod:
-        nsteps: 1000
+        nsteps: 300
         nstxout-compressed: 100
-#mmpbsa_config: 
+    mmpbsa:
+      prod:
+        nsteps: 1000
+#mmpbsa:
 #  general: 
 #    c2_entropy: 1
-#    #qh_entropy: 1
-#    #interaction_entropy: 1
-#  pb: True
-#  gb: True
+#    qh_entropy: 1
+#    interaction_entropy: 1
+#  pb: {}
+#  gb: {}
