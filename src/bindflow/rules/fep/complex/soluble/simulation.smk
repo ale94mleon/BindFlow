@@ -10,6 +10,8 @@ mdrun_extra = config['extra_directives']['mdrun']
 
 
 rule fep_complex_00_min:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
         gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
@@ -32,6 +34,8 @@ rule fep_complex_00_min:
         )
 
 rule fep_complex_01_nvt:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
         gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.gro",
@@ -58,6 +62,8 @@ rule fep_complex_01_nvt:
         tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule fep_complex_02_npt:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
         finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
@@ -87,6 +93,8 @@ rule fep_complex_02_npt:
         tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule fep_complex_03_npt_norest:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
         finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.finished",
@@ -116,6 +124,8 @@ rule fep_complex_03_npt_norest:
         tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
 
 rule fep_complex_prod:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
         finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",

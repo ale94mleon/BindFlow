@@ -10,6 +10,8 @@ mdrun_extra = config['extra_directives']['mdrun']
 
 
 rule mmxbsa_sample_prod:
+    resources:
+        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top = approach_path + "/{ligand_name}/input/complex/complex.top",
         mdp = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",
