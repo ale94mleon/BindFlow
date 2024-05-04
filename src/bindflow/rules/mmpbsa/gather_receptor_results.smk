@@ -18,4 +18,5 @@ rule gather_receptor_results:
             collected_dfs.append(mmxbsa_analysis.convert_format_flatten(pd.read_csv(inp_file), ligand_name, replica, sample))
         full_df = pd.concat(collected_dfs, ignore_index=True)
         full_df.to_csv(output.out_raw_file, index=False)
-        full_df.to_csv(output.out_dg_file, index=False) # TODO: maybe add some postprocessing to this file like filter for abnormaly high errors and compute the mean etc.
+        
+        mmxbsa_analysis.prettify_df(full_df).to_csv(output.out_dg_file, index=False)

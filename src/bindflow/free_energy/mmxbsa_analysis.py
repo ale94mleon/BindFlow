@@ -3,6 +3,43 @@ import math
 import pandas as pd
 
 
+def prettify_df(full_df):
+    prettified_dict = {
+        "name": [],
+
+        "dG_pb_c2": [],
+        "dG_pb_c2_err": [],
+        "dG_pb_ie": [],
+        "dG_pb_ie_err": [],
+        "dG_pb_qh": [],
+        "dG_pb_qh_err": [],
+
+        "dG_gb_c2": [],
+        "dG_gb_c2_err": [],
+        "dG_gb_ie": [],
+        "dG_gb_ie_err": [],
+        "dG_gb_qh": [],
+        "dG_gb_qh_err": [],
+        }
+    groups = full_df.groupby("name")
+    for group_name, group_df in groups:
+        prettified_dict["name"].append(group_name)
+        prettified_dict["dG_pb_c2"].append(group_df["pb_c2_val"].mean())
+        prettified_dict["dG_pb_c2_err"].append(group_df["pb_c2_val"].std())
+        prettified_dict["dG_pb_ie"].append(group_df["pb_ie_val"].mean())
+        prettified_dict["dG_pb_ie_err"].append(group_df["pb_ie_val"].std())
+        prettified_dict["dG_pb_qh"].append(group_df["pb_qh_val"].mean())
+        prettified_dict["dG_pb_qh_err"].append(group_df["pb_qh_val"].std())
+        prettified_dict["dG_gb_c2"].append(group_df["gb_c2_val"].mean())
+        prettified_dict["dG_gb_c2_err"].append(group_df["gb_c2_val"].std())
+        prettified_dict["dG_gb_ie"].append(group_df["gb_ie_val"].mean())
+        prettified_dict["dG_gb_ie_err"].append(group_df["gb_ie_val"].std())
+        prettified_dict["dG_gb_qh"].append(group_df["gb_qh_val"].mean())
+        prettified_dict["dG_gb_qh_err"].append(group_df["gb_qh_val"].std())
+    
+    return pd.DataFrame(prettified_dict)
+
+
 def convert_format_flatten(df, ligand_name, replica, sample):
     res = { "name":[ligand_name], "replica":[replica], "sample":[sample], 
             "pb_c2_val":[], "pb_c2_err":[], "pb_ie_val":[], "pb_ie_err":[], "pb_qh_val":[], "pb_qh_err":[], 
