@@ -3,9 +3,22 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
 
 PathLike = Union[os.PathLike, str, bytes]
+
+# Because of how snakemake handles environmental variables that
+# are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
+# We have to hard code the unset of some of them
+# TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
+HARD_CODE_DEPENDENCIES = [
+    'unset OMP_NUM_THREADS',
+    'unset GOTO_NUM_THREADS',
+    'unset OPENBLAS_NUM_THREADS',
+    'unset MKL_NUM_THREADS',
+    'unset VECLIB_MAXIMUM_THREADS',
+    'unset NUMEXPR_NUM_THREADS',
+]
 
 
 class DotDict:
@@ -170,23 +183,10 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
 
     name = os.path.splitext(os.path.basename(mdp))[0]
 
-    # Because of how snakemake handles environmental variables that
-    # are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
-    # We have to hard code the unset of some of them
-    # TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
-    hard_code_dependencies = [
-        'unset OMP_NUM_THREADS',
-        'unset GOTO_NUM_THREADS',
-        'unset OPENBLAS_NUM_THREADS',
-        'unset MKL_NUM_THREADS',
-        'unset VECLIB_MAXIMUM_THREADS',
-        'unset NUMEXPR_NUM_THREADS',
-    ]
-
-    @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies)
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies)
     def grompp(**kwargs): ...
 
-    @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies, stdout_file=f"{name}.lis")
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies, stdout_file=f"{name}.lis")
     def mdrun(**kwargs): ...
 
     cwd = os.getcwd()
