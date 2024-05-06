@@ -37,7 +37,8 @@ class DotDict:
         return self.__dict__
 
 
-def run(command: str, shell: bool = True, executable: str = '/bin/bash', interactive: bool = False) -> subprocess.CompletedProcess:
+def run(command: str, shell: bool = True, executable: str = '/bin/bash', interactive: bool = False,
+        stdin_command: Union[None, str] = None) -> subprocess.CompletedProcess:
     """A simple wrapper around subprocess.Popen/subprocess.run
 
     Parameters
@@ -50,6 +51,8 @@ def run(command: str, shell: bool = True, executable: str = '/bin/bash', interac
         what executable to use, pass `sys.executable` to check yours, by default '/bin/bash'
     interactive : bool, optional
         To interact with the command, by default False. If True, you can access stdout and stderr of the returned process.
+    stdin_command : Union[None, str], optional
+        Command to pipe to the main command, by default None.
 
     Returns
     -------
@@ -67,7 +70,13 @@ def run(command: str, shell: bool = True, executable: str = '/bin/bash', interac
         if returncode != 0:
             raise RuntimeError(f'Command {command} returned non-zero exit status {returncode}')
     else:
-        process = subprocess.run(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if stdin_command:
+            stdin_process = subprocess.Popen(stdin_command, shell=shell, executable=executable, stdout=subprocess.PIPE, text=True)
+            process = subprocess.run(command, shell=shell, executable=executable, stdin=stdin_process.stdout,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        else:
+            process = subprocess.run(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         returncode = process.returncode
 
         if returncode != 0:
@@ -77,7 +86,7 @@ def run(command: str, shell: bool = True, executable: str = '/bin/bash', interac
     return process
 
 
-def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, stdout_file: PathLike = None):
+def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, stdout_file: PathLike = None, stdin_command: Union[None, str] = None):
     """Lazy wrapper of gmx commands
 
     Parameters
@@ -88,7 +97,9 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     interactive : bool
         In case, and interactive section is desired, by default False
     stdout_file : bool
-        IF provided, it will append to the command ` >& {stdout_file}`, by default None
+        If provided, it will append to the command ` >& {stdout_file}`, by default None
+    stdin_command : Union[None, str], optional
+        Command to pipe to the main command, by default None.
 
 
     A typical function will be:
@@ -99,9 +110,7 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
 
         from bindflow.utils import tools
         @tools.gmx_command()
-        def mdrun(
-                **kwargs
-                ):...
+        def mdrun(**kwargs): ...
 
     The important parts are:
 
@@ -109,6 +118,31 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     #. You must return the local variables of the function
     #. The names of the keywords are exactly the same name as got it by the respective function.
     #. For flags, a boolean will be provided as value, for example v = True, if you want to be verbose.
+
+    Some GROMACS functions need the user inputs (E.g. pdb2gmx, trjconv, make_ndx). For those cases we can use interactive mode
+    or pipe the input as echo to the gmx command, for example:
+
+    .. code-block:: bash
+
+        echo 'System' | gmx trjconv -s prod.tpr -f prod.xtc -o whole.xtc -pbc whole
+
+    To achieve this with gmx_command, we can:
+
+    .. code-block:: python
+
+        @gmx_command(stdin_command="echo 'System'")
+        def trjconv(**kwargs): ...
+        trjconv(s='prod.tpr', f='prod.xtc', o='whole.xtc', pbc='whole')
+
+    It is important to remark that every time that `trjconv` is executed, the output of the echo command will be passed.
+    To change this you have to redefine the function.
+
+    .. code-block:: python
+
+        @gmx_command(stdin_command="echo 'Protein'")
+        def trjconv(**kwargs): ...
+        trjconv(s='prod.tpr', f='prod.xtc', o='whole.xtc', pbc='whole')
+
     """
     def decorator(gmx_function: object):
         def wrapper(**kwargs):
@@ -133,7 +167,10 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
             if interactive:
                 return run(cmd, interactive=True)
             else:
-                return run(cmd)
+                if stdin_command:
+                    return run(cmd, stdin_command=stdin_command)
+                else:
+                    return run(cmd)
         return wrapper
     return decorator
 
