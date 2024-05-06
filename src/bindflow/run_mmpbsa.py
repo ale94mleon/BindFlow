@@ -210,8 +210,7 @@ def calculate_mmpbsa(
     print("\tstarting preparing MMPBSA/GBSA-ligand file structure")
 
     print("\tStarting preparing MMPBSA/GBSA-Approach file structure: ", out_root_folder_path)
-    expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
-
+    expected_out_paths = replicas * samples * len(_global_config["ligand_names"])
     result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
 
     # Only if there is something missing
