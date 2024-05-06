@@ -9,10 +9,12 @@ __PathDir__ = {
         'membrane': {
             'equi': os.path.join(root_path, 'templates', 'complex', 'membrane', 'equi'),
             'fep':  os.path.join(root_path, 'templates', 'complex', 'membrane', 'fep'),
+            'mmpbsa': os.path.join(root_path, 'templates', 'complex', 'membrane', 'mmpbsa'),
         },
         'soluble': {
             'equi': os.path.join(root_path, 'templates', 'complex', 'soluble', 'equi'),
             'fep':  os.path.join(root_path, 'templates', 'complex', 'soluble', 'fep'),
+            'mmpbsa': os.path.join(root_path, 'templates', 'complex', 'soluble', 'mmpbsa'),
         },
     },
     'ligand': {

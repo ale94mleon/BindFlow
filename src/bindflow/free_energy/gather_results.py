@@ -9,6 +9,7 @@ from uncertainties import ufloat
 from pathlib import Path
 import json
 
+from bindflow.free_energy import mmxbsa_analysis
 from bindflow.utils.tools import PathLike
 
 
@@ -163,6 +164,25 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
     if out_csv:
         df.to_csv(out_csv)
     return df
+
+
+def get_mmpbsa_partial_results(root_folder_path: PathLike, out_csv_raw: PathLike = None, out_csv_pretty: PathLike = None):
+    collected_dfs = []
+    collected_files = glob.glob(root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
+    if len(collected_files) == 0:
+        return None
+    for inp_file in collected_files: # collecting all of the mmxbsa.csv files
+        string_data = inp_file.removeprefix(root_folder_path).split("/")
+        ligand_name, replica, sample = string_data[1], string_data[2], string_data[6].removeprefix("rep.")
+        collected_dfs.append(mmxbsa_analysis.convert_format_flatten(pd.read_csv(inp_file), ligand_name, replica, sample))
+    full_df = pd.concat(collected_dfs, ignore_index=True)
+    if out_csv_raw:
+        full_df.to_csv(out_csv_raw, index=False)
+    
+    if out_csv_pretty:
+        mmxbsa_analysis.prettify_df(full_df).to_csv(out_csv_pretty, index=False)
+    
+    return full_df
 
 
 if __name__ == '__main__':

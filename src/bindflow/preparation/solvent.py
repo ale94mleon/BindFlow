@@ -626,8 +626,10 @@ def index_for_membrane_system(
         cofactor_on_protein: bool = True):
     """Make the index file for membrane systems with SOLU, MEMB and SOLV. It uses gmx make_ndx and select internally.
     One examples selection that can be created with ligand_name = LIG; cofactor_name = COF and cofactor_on_protein = True is:
-        #. "SOLU" group Protein or resname LIG or resname COF;
-        #. "MEMB" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname LIG) and ! (resname COF);
+        #. "RECEPTOR" group Protein;
+        #. "LIGAND" resname {ligand_name};
+        #. "SOLU" group Protein or resname {ligand_name} or resname COF;
+        #. "MEMB" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname {ligand_name}) and ! (resname COF);
         #. "SOLV" group Water_and_ions;
 
 
@@ -648,6 +650,8 @@ def index_for_membrane_system(
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
     # Nice use of gmx select, see the use of the parenthesis
+    sele_RECEPTOR = "\"RECEPTOR\" group Protein"
+    sele_LIGAND = f"\"LIGAND\" resname {lignad_name}"
     sele_MEMB = f"\"MEMB\" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname {lignad_name})"
     sele_SOLU = f"\"SOLU\" group Protein or resname {lignad_name}"
     sele_SOLV = "\"SOLV\" group Water_and_ions"
@@ -659,16 +663,77 @@ def index_for_membrane_system(
             sele_SOLV += f" or resname {cofactor_name}"
 
     logger.info("Groups in the index.ndx file:")
+    logger.info(f"\t{sele_RECEPTOR}")
+    logger.info(f"\t{sele_LIGAND}")
     logger.info(f"\t{sele_SOLU}")
     logger.info(f"\t{sele_MEMB}")
     logger.info(f"\t{sele_SOLV}")
 
+    sele_RECEPTOR += ";\n"
+    sele_LIGAND += ";\n"
     sele_SOLU += ";\n"
     sele_MEMB += ";\n"
     sele_SOLV += ";\n"
 
     with open(tmpopt.name, "w") as opt:
-        opt.write(sele_SOLU + sele_MEMB + sele_SOLV)
+        opt.write(sele_RECEPTOR + sele_LIGAND + sele_SOLU + sele_MEMB + sele_SOLV)
+    tools.run(f"""
+                export GMX_MAXBACKUP=-1
+                echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
+                gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
+                """)
+
+    # deleting the line _f0_t0.000 in the file
+    with open(ndxout, "r") as index:
+        data = index.read()
+        data = data.replace("_f0_t0.000", "")
+    with open(ndxout, "w") as index:
+        index.write(data)
+
+    tmpopt.close()
+    tmpndx.close()
+
+
+def index_for_soluble_system(
+        configuration_file: tools.PathLike,
+        ndxout: tools.PathLike = "index.ndx",
+        lignad_name: str = 'LIG'):
+    """Make the index file for soluble system. This is only needed in case MMPBSA calculation;
+        #. "RECEPTOR" group Protein; {it use os.environ['abfe_debug_host_name'] (if deffined) in case os.environ['abfe_debug'] == 'True'}
+        #. "LIGAND" resname {ligand_name};
+
+    Parameters
+    ----------
+    configuration_file : PathLike
+        PDB or GRO file of the system.
+    ndxout : PathLike
+        Path to output the index file.
+    lignad_name : str
+        The residue name for the ligand in the configuration file, bt default LIG.
+    """
+    tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
+    tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
+
+    # TODO extend to more general name for receptor
+    host_name = 'Protein'
+    # Only if debug is activated, update name and selection based on environment variable
+    if 'abfe_debug' in os.environ:
+        if os.environ['abfe_debug'] == 'True':  # environ save the variables as strings
+            if 'abfe_debug_host_name' in os.environ:
+                host_name = os.environ['abfe_debug_host_name']
+
+    sele_RECEPTOR = f"\"RECEPTOR\" group {host_name}"
+    sele_LIGAND = f"\"LIGAND\" resname {lignad_name}"
+
+    logger.info("Groups in the index.ndx file:")
+    logger.info(f"\t{sele_RECEPTOR}")
+    logger.info(f"\t{sele_LIGAND}")
+
+    sele_RECEPTOR += ";\n"
+    sele_LIGAND += ";\n"
+
+    with open(tmpopt.name, "w") as opt:
+        opt.write(sele_RECEPTOR + sele_LIGAND)
     tools.run(f"""
                 export GMX_MAXBACKUP=-1
                 echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}

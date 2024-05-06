@@ -58,7 +58,7 @@ def update_nwindows_config(config: dict) -> dict:
     return config
 
 
-def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> None:
+def generate_approach_snake_file(out_file_path: str, conf_file_path: str, calculation_type: str) -> None:
     """Used to generate the main Snakefile
 
     Parameters
@@ -67,15 +67,25 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str) -> Non
         Path to write the Snakefile
     conf_file_path : str
         Path of the yml workflow configuration file.
+    calculation_type : str
+        Either mmpbsa or fep.
     """
+    # Sanity check
+    valid_calculation_type = ['mmpbsa', 'fep']
+    if calculation_type not in valid_calculation_type:
+        raise ValueError(f"{calculation_type} is an invalid calculation_type, choose from {valid_calculation_type}")
     file_str = "# Load Config:\n"\
         f"configfile: \'{conf_file_path}\'\n"\
         "approach_path = config['out_approach_path']\n\n"\
         "# Start Flow\n"\
         f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
         "# Specify targets and dependencies\n"\
-        "rule RuleThemAll:\n"\
-        "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
+        "rule RuleThemAll:\n"
+
+    if calculation_type == 'fep':
+        file_str += "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
+    elif calculation_type == 'mmpbsa':
+        file_str += "    input: config[\"out_approach_path\"] + \"/mmxbsa_results.csv\""
 
     with open(out_file_path, 'w') as out:
         out.write(file_str)
@@ -145,6 +155,10 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
                 'bonded': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['bonded']), 2)),
             },
         }
+    elif global_config["calculation_type"] == 'mmpbsa':
+        approach_config["samples"] = global_config["samples"]
+        if "mmpbsa" in global_config.keys():
+            approach_config["mmpbsa"] = global_config["mmpbsa"]
 
     # Specify the complex type
     if global_config["inputs"]["membrane"]:
@@ -193,7 +207,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     with open(approach_conf_path, "w") as out_IO:
         json.dump(approach_config, out_IO, indent=4)
 
-    generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path)
+    generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path, calculation_type=global_config["calculation_type"])
 
     scheduler = generate_scheduler.create_scheduler(
         scheduler_type=global_config["cluster"]["type"],

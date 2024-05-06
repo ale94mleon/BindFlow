@@ -109,7 +109,8 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
                 value = kwargs[key]
                 if value:
                     if isinstance(value, bool):
-                        cmd += f" -{key}"
+                        if value:
+                            cmd += f" -{key}"
                     else:
                         cmd += f" -{key} {value}"
             if stdout_file:
@@ -213,6 +214,35 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
     mdrun(**mdrun_kwargs)
 
     os.chdir(cwd)
+
+
+def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str = 'Protein') -> PathLike:
+    """Center an xtc file
+
+    Parameters
+    ----------
+    tpr : PathLike
+        Binary GROMACS topology
+    xtc : PathLike
+        Trajectory file
+    run_dir : PathLike
+        Directory to run and save the center trajectory
+    host_name : str, optional
+        Name of the host/receptor, by default 'Protein'
+
+    Returns
+    -------
+    PathLike
+        The path of the center trajectory: {run_dir}/center.xtc
+    """
+    makedirs(run_dir)
+    no_backup = "export GMX_MAXBACKUP=-1"
+    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {xtc} -o {run_dir}/whole.xtc -pbc whole")
+    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {run_dir}/whole.xtc -o {run_dir}/nojump.xtc -pbc nojump")
+    run(f"{no_backup}; echo '{host_name} System' | gmx trjconv -s {tpr} -f {run_dir}/nojump.xtc -o {run_dir}/center.xtc -pbc mol -center -ur compact")
+    # Clean
+    run(f"rm {run_dir}/whole.xtc {run_dir}/nojump.xtc")
+    return f"{run_dir}/center.xtc"
 
 
 def paths_exist(paths: List, raise_error: bool = False, out: Union[str, None] = None) -> None:

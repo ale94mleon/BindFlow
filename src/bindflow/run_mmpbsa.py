@@ -138,6 +138,7 @@ def calculate_mmpbsa(
         # Maximum number of jobs to run in parallel
         num_jobs: int = 10000,
         replicas: int = 3,
+        samples: int = 10,
         submit: bool = False,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
@@ -202,15 +203,15 @@ def calculate_mmpbsa(
     _global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol['conf']))[0] for mol in _global_config["inputs"]["ligands"]]
     _global_config["num_jobs"] = num_jobs
     _global_config["replicas"] = replicas
+    _global_config["samples"] = samples
     _global_config["threads"] = threads
 
     print("Prepare")
-    print("\tstarting preparing ABFE-ligand file structure")
+    print("\tstarting preparing MMPBSA/GBSA-ligand file structure")
 
-    print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
-    expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
-
-    result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/dG*csv")
+    print("\tStarting preparing MMPBSA/GBSA-Approach file structure: ", out_root_folder_path)
+    expected_out_paths = replicas * samples * len(_global_config["ligand_names"])
+    result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
 
     # Only if there is something missing
     if (len(result_paths) != expected_out_paths):
@@ -224,6 +225,5 @@ def calculate_mmpbsa(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        gather_results.get_all_dgs(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results.csv'))
-        gather_results.get_raw_data(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results_raw.csv'))
+        gather_results.get_mmpbsa_partial_results(root_folder_path=out_root_folder_path, out_csv_pretty=os.path.join(out_root_folder_path, 'mmpbsa_partial_results.csv'), out_csv_raw=os.path.join(out_root_folder_path, 'mmpbsa_partial_results_raw.csv'))
     os.chdir(orig_dir)

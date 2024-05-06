@@ -146,8 +146,8 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
     sim_dir : PathLike
         Where the simulation suppose to run
     template_dir : PathLike
-        This is the directory that storage the mdp templates: abfe.mdp.templates.TemplatePath.ligand.fep or
-        abfe.mdp.templates.TemplatePath.complex.fep
+        This is the directory that storage the mdp templates: bindflow.mdp.templates.TemplatePath.ligand.fep or
+        bindlfow.mdp.templates.TemplatePath.complex.fep
     lambda_values : List[float]
         This is a the list of lambda values to be used inside the mdp on the entrance {lambda_type}-lambdas
     lambda_type : str

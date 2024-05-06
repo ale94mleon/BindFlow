@@ -53,6 +53,7 @@ dependencies = [
     "tabulate == 0.8.10", # TODO update to new
     "pyyaml",
     "uncertainties",
+    "gmx_MMPBSA", # MMPBSA DEPENDENCY
 ]
 
 [project.optional-dependencies]
@@ -89,6 +90,7 @@ bindflow = [
     "data/ci_systems/**/*.yml",
     "data/ci_systems/**/*.tar.gz",
     "mdp/templates/**/*.mdp",
+    "mmpbsa_in/templates/*.in",
     "rules/**/*.smk",
     "rules/**/Snakefile"
 ]

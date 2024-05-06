@@ -12,13 +12,11 @@ ligand_mols = glob.glob("inputs/ligands/*mol")
 with open("config-mmpbsa.yml", "r") as c:
     global_config = yaml.safe_load(c)
 
-global_config['extra_directives']['mdrun']['all']['ntmpi'] = 1
-
 calculate_mmpbsa(
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
     out_root_folder_path="mmpbsa",
-    cofactor='inputs/dummy_cofactor_30.mol',
+    cofactor=None,
     membrane=None,
     hmr_factor=2.5,
     threads=12,

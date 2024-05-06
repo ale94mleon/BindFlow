@@ -649,8 +649,13 @@ class MakeInputs:
                 cofactor_on_protein=self.cofactor_on_protein,
             )
         else:
-            # Create a dummy index.ndx file. It is needed for the Snakemake workflow
+            # This index file is only needed in case of MMPBSA
             open(os.path.join(system_dir, "index.ndx"), "w").close()
+            solvent.index_for_soluble_system(
+                configuration_file=os.path.join(system_dir, "solvated.gro"),
+                ndxout=os.path.join(system_dir, "index.ndx"),
+                lignad_name='LIG',
+            )
 
         # Construct ABFE system:
         logger.info(f"Final build of ABFE directory on: {self.out_dir}")

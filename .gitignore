@@ -1,6 +1,7 @@
 #python gedoens
 __pycache__
 *.pyc
+.idea
 jupyter_execute
 
 #snake fun
@@ -12,6 +13,7 @@ data/*
 /examples/internal_example
 /examples/2VT4/extra
 /examples/2VT4/abfe
+/examples/4HW3/mmpbsa
 
 public
 
