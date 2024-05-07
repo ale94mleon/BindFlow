@@ -253,7 +253,7 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
     os.chdir(cwd)
 
 
-def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str = 'Protein') -> PathLike:
+def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str = 'Protein', load_dependencies: List[str] = None) -> PathLike:
     """Center an xtc file
 
     Parameters
@@ -266,19 +266,38 @@ def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str =
         Directory to run and save the center trajectory
     host_name : str, optional
         Name of the host/receptor, by default 'Protein'
+    load_dependencies : List[str], optional
+        It is used in case some previous loading steps are needed;
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
 
     Returns
     -------
     PathLike
         The path of the center trajectory: {run_dir}/center.xtc
     """
+    dependencies = HARD_CODE_DEPENDENCIES + ["export GMX_MAXBACKUP=-1"]
+    if load_dependencies:
+        dependencies += load_dependencies
+        if isinstance(load_dependencies, List):
+            dependencies += load_dependencies
+        else:
+            raise ValueError(f"load_dependencies must be an List. Provided: {load_dependencies}")
+
     makedirs(run_dir)
-    no_backup = "export GMX_MAXBACKUP=-1"
-    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {xtc} -o {run_dir}/whole.xtc -pbc whole")
-    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {run_dir}/whole.xtc -o {run_dir}/nojump.xtc -pbc nojump")
-    run(f"{no_backup}; echo '{host_name} System' | gmx trjconv -s {tpr} -f {run_dir}/nojump.xtc -o {run_dir}/center.xtc -pbc mol -center -ur compact")
+
+    @gmx_command(load_dependencies=dependencies, stdin_command="echo 'System'")
+    def trjconv(**kwargs): ...
+    trjconv(s=tpr, f=xtc, o=f"{run_dir}/whole.xtc", pbc="whole")
+    trjconv(s=tpr, f=f"{run_dir}/whole.xtc", o=f"{run_dir}/nojump.xtc", pbc="nojump")
+
+    @gmx_command(load_dependencies=dependencies, stdin_command=f"echo '{host_name} System'")
+    def trjconv(**kwargs): ...
+    trjconv(s=tpr, f=f"{run_dir}/nojump.xtc", o=f"{run_dir}/center.xtc", pbc="mol", center=True, ur="compact")
+
     # Clean
-    run(f"rm {run_dir}/whole.xtc {run_dir}/nojump.xtc")
+    (Path(run_dir) / "whole.xtc").unlink()
+    (Path(run_dir) / "nojump.xtc").unlink()
+
     return f"{run_dir}/center.xtc"
 
 

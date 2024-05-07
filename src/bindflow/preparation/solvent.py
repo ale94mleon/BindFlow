@@ -4,7 +4,7 @@ import os
 import shutil
 import tarfile
 import tempfile
-from typing import Iterable, Union, Tuple
+from typing import Iterable, Union, Tuple, List
 
 import parmed
 import yaml
@@ -275,7 +275,7 @@ def _tip3p_settles_to_constraints(top: tools.PathLike, molecule: str, out_top: U
 
 
 class Solvate:
-    def __init__(self, water_model_code: str, builder_dir: tools.PathLike = '.solvate') -> None:
+    def __init__(self, water_model_code: str, builder_dir: tools.PathLike = '.solvate', load_dependencies: List[str] = None) -> None:
         """Class to solvate GMX systems.
         Force fields were extracted from `GMX topologies <https://gitlab.com/gromacs/gromacs/-/tree/main/share/top?ref_type=heads>`__.
 
@@ -311,6 +311,9 @@ class Solvate:
             Water model code in the form: "{force field family}/{water model}"
         builder_dir : tools.PathLik, optional
             Where the temporal files will be written.
+        load_dependencies : List[str], optional
+            It is used in case some previous loading steps are needed for GROMACS commands;
+            e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
         Raises
         ------
         ValueError
@@ -345,6 +348,11 @@ class Solvate:
         self.water_model = water_model
         self.water_itp, self.ions_itp, self.ffnonbonded_itp, self.water_gro = self._get_gmx_water_model(self.water_model_dir)
         self.cwd = os.getcwd()
+        if load_dependencies:
+            if isinstance(load_dependencies, List):
+                self.load_dependencies = tools.HARD_CODE_DEPENDENCIES + ["export GMX_MAXBACKUP=-1"] + load_dependencies
+            else:
+                raise ValueError(f"load_dependencies must be an List. Provided: {load_dependencies}")
 
     def _get_gmx_water_model(self, out_dir: tools.PathLike) -> Tuple[tools.PathLike]:
         """
@@ -478,15 +486,19 @@ class Solvate:
 
         os.chdir(self.solvated_dir)
 
-        editconf_cmd = f"gmx editconf -f {gro} -o {gro} -bt {bt}"
+        editconf_kwargs = dict(
+            f=gro,
+            o=gro,
+            bt=bt
+        )
         if box:
-            editconf_cmd += f" -box {' '.join([str(i) for i in box])}"
+            editconf_kwargs['box'] = ' '.join([str(i) for i in box])
         if angles:
-            editconf_cmd += f" -angles {' '.join([str(i) for i in angles])}"
+            editconf_kwargs['angles'] = ' '.join([str(i) for i in angles])
         if d:
-            editconf_cmd += f" -d {d}"
+            editconf_kwargs['d'] = d
         if c:
-            editconf_cmd += " -c"
+            editconf_kwargs['c'] = True
 
         # First write an mdp file.
         with open("ions.mdp", "w") as file:
@@ -502,17 +514,24 @@ class Solvate:
 
         # It is failing becasue There is not define the atom type for the water molecules
 
-        tools.run(f"""
-            export GMX_MAXBACKUP=-1
-            {editconf_cmd}
-            gmx solvate -cp {gro} -p {top} -cs {self.water_gro} -o {gro}
-        """)
+        # Define GMX functions
+        @tools.gmx_command(load_dependencies=self.load_dependencies)
+        def editconf(**kwargs): ...
 
-        tools.run(f"""
-            export GMX_MAXBACKUP=-1
-            gmx grompp -f ions.mdp -c {gro} -p {top} -o ions.tpr
-            echo "SOL" | gmx genion -s ions.tpr -p {top} -o {gro} -neutral -pname {pname} -nname {nname} -rmin {rmin} -conc {ion_conc}
-        """)
+        @tools.gmx_command(load_dependencies=self.load_dependencies)
+        def solvate(**kwargs): ...
+
+        @tools.gmx_command(load_dependencies=self.load_dependencies)
+        def grompp(**kwargs): ...
+
+        @tools.gmx_command(load_dependencies=self.load_dependencies, stdin_command="echo \"SOL\"")
+        def genion(**kwargs): ...
+
+        # Execute the GMX functions
+        editconf(**editconf_kwargs)
+        solvate(cp=gro, p=top, cs=self.water_gro, o=gro)
+        grompp(f="ions.mdp", c=gro, p=top, o="ions.tpr")
+        genion(s="ions.tpr", p=top, o=gro, neutral=True, pname=pname, nname=nname, rmin=rmin, conc=ion_conc)
 
         # Just to clean the topology. In this way only the used atom types are written.
         # And the include statements are removed
