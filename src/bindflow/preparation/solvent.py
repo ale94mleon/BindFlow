@@ -321,6 +321,8 @@ class Solvate:
         ValueError
             Invalid water model for the selected force field
         """
+        self.load_dependencies = load_dependencies
+        
         self.builder_dir = os.path.abspath(builder_dir)
         tools.makedirs(self.builder_dir)
 

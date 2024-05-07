@@ -46,7 +46,7 @@ rule mmxbsa_setup:
         skip = int((int(equil_prod_mdp['nsteps'].split(';')[0]) / int(equil_prod_mdp['nstxout-compressed'].split(';')[0])) / (config['samples'] + 2))
 
         with tempfile.TemporaryDirectory(prefix='split_', dir=sim_dir) as tmp_dir:
-            @tools.gmx_command(load_dependencies=self.load_dependencies, stdin_command="echo \"System\"")
+            @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"System\"")
             def trjconv(**kwargs): ...
 
             # Get initial configuration from equil/prod
