@@ -89,7 +89,7 @@ rule create_mmxbsa_in:
         if 'general' in mmpbsa_config:
             mmpbsa_config['general']['temperature'] = temperature
         else:
-            mmpbsa_config['general'] = dict(temperature=temperature)
+            mmpbsa_config['general'] = {"temperature":temperature}
         
         # FIXME:
         # Ion concentration is used for gb calculation, this is set during solvation step, not sure if needed
