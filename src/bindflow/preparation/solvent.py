@@ -777,11 +777,11 @@ def index_for_soluble_system(
 
     make_ndx(f=configuration_file, o=tmpndx.name)
     select(s=configuration_file, sf=tmpopt.name, n=tmpndx.name, on=ndxout)
-    tools.run(f"""
-                export GMX_MAXBACKUP=-1
-                echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
-                gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
-                """)
+    #tools.run(f"""
+    #            export GMX_MAXBACKUP=-1
+    #            echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
+    #            gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
+    #            """)
 
     # deleting the line _f0_t0.000 in the file
     with open(ndxout, "r") as index:
