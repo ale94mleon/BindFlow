@@ -662,6 +662,7 @@ class MakeInputs:
                 lignad_name='LIG',
                 cofactor_name='COF' if self.cofactor else None,
                 cofactor_on_protein=self.cofactor_on_protein,
+                load_dependencies=self.load_dependencies
             )
         else:
             # This index file is only needed in case of MMPBSA
@@ -670,6 +671,7 @@ class MakeInputs:
                 configuration_file=os.path.join(system_dir, "solvated.gro"),
                 ndxout=os.path.join(system_dir, "index.ndx"),
                 lignad_name='LIG',
+                load_dependencies=self.load_dependencies
             )
 
         # Construct ABFE system:

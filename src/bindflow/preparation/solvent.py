@@ -642,7 +642,8 @@ def index_for_membrane_system(
         ndxout: tools.PathLike = "index.ndx",
         lignad_name: str = 'LIG',
         cofactor_name: str = None,
-        cofactor_on_protein: bool = True):
+        cofactor_on_protein: bool = True,
+        load_dependencies: List[str] = None):
     """Make the index file for membrane systems with SOLU, MEMB and SOLV. It uses gmx make_ndx and select internally.
     One examples selection that can be created with ligand_name = LIG; cofactor_name = COF and cofactor_on_protein = True is:
         #. "RECEPTOR" group Protein;
@@ -665,6 +666,9 @@ def index_for_membrane_system(
     cofactor_on_protein : bool
         It only works if cofactor_name is provided. If True, the cofactor will be part of the protein and the lignad
         if False will be part of the solvent and ions, bt default True
+    load_dependencies : List[str], optional
+        It is used in case some previous loading steps are needed for GROMACS commands;
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
     """
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
@@ -696,11 +700,19 @@ def index_for_membrane_system(
 
     with open(tmpopt.name, "w") as opt:
         opt.write(sele_RECEPTOR + sele_LIGAND + sele_SOLU + sele_MEMB + sele_SOLV)
-    tools.run(f"""
-                export GMX_MAXBACKUP=-1
-                echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
-                gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
-                """)
+    @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"q\"")
+    def make_ndx(**kwargs): ...
+
+    @tools.gmx_command(load_dependencies=load_dependencies)
+    def select(**kwargs): ...
+
+    make_ndx(f=configuration_file, o=tmpndx.name)
+    select(s=configuration_file, sf=tmpopt.name, n=tmpndx.name, on=ndxout)
+    #tools.run(f"""
+    #            export GMX_MAXBACKUP=-1
+    #            echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
+    #            gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
+    #            """)
 
     # deleting the line _f0_t0.000 in the file
     with open(ndxout, "r") as index:
@@ -716,7 +728,8 @@ def index_for_membrane_system(
 def index_for_soluble_system(
         configuration_file: tools.PathLike,
         ndxout: tools.PathLike = "index.ndx",
-        lignad_name: str = 'LIG'):
+        lignad_name: str = 'LIG',
+        load_dependencies: List[str] = None):
     """Make the index file for soluble system. This is only needed in case MMPBSA calculation;
         #. "RECEPTOR" group Protein; {it use os.environ['abfe_debug_host_name'] (if deffined) in case os.environ['abfe_debug'] == 'True'}
         #. "LIGAND" resname {ligand_name};
@@ -729,6 +742,9 @@ def index_for_soluble_system(
         Path to output the index file.
     lignad_name : str
         The residue name for the ligand in the configuration file, bt default LIG.
+    load_dependencies : List[str], optional
+        It is used in case some previous loading steps are needed for GROMACS commands;
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
     """
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
@@ -753,6 +769,14 @@ def index_for_soluble_system(
 
     with open(tmpopt.name, "w") as opt:
         opt.write(sele_RECEPTOR + sele_LIGAND)
+    @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"q\"")
+    def make_ndx(**kwargs): ...
+
+    @tools.gmx_command(load_dependencies=load_dependencies)
+    def select(**kwargs): ...
+
+    make_ndx(f=configuration_file, o=tmpndx.name)
+    select(s=configuration_file, sf=tmpopt.name, n=tmpndx.name, on=ndxout)
     tools.run(f"""
                 export GMX_MAXBACKUP=-1
                 echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
