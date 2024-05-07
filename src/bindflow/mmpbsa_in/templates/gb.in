@@ -30,7 +30,7 @@ Be careful with the variables you modify, some can have severe consequences on t
   igb                  = 5                                              # GB model to use
   intdiel              = 1.0                                            # Internal dielectric constant for sander
   extdiel              = 78.5                                           # External dielectric constant for sander
-  saltcon              = 0.0                                            # Salt concentration (M)
+  saltcon              = 0.150                                          # Salt concentration (M)
   surften              = 0.0072                                         # Surface tension
   surfoff              = 0.0                                            # Surface tension offset
   molsurf              = 0                                              # Use Connelly surface ('molsurf' program)
