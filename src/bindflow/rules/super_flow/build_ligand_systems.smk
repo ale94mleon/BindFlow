@@ -6,6 +6,8 @@ import shutil
 
 out_approach_path = config["out_approach_path"]
 
+load_dependencies = config['extra_directives']['dependencies']
+
 ligand_paths = [mol['conf'] for mol in config["inputs"]["ligands"]]
 ligand_basenames = [os.path.basename(path) for path in ligand_paths]
 ligand_names = [os.path.splitext(ligand_basename)[0] for ligand_basename in ligand_basenames]
@@ -58,6 +60,7 @@ rule build_ligand_system:
             custom_ff_path = config["custom_ff_path"],
             hmr_factor = hmr_factor,
             builder_dir = os.path.join(out_ligand_path, "builder"),
+            load_dependencies = load_dependencies,
         ) as builder:
 
             # Create topologies and input files
