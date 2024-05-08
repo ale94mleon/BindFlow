@@ -229,5 +229,11 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
             mdp_template.write(sim_dir + f"/simulation/{lambda_type}.{i}/{step}/{step}.mdp")
 
 
+
+def get_number_of_frames(input_mdp):
+    loaded_mdp_params = MDP().from_file(input_mdp).parameters
+    return -(int(loaded_mdp_params['nsteps'].split(';')[0]) // -int(loaded_mdp_params['nstxout-compressed'].split(';')[0])) # ceiling to the next int
+
+
 if __name__ == "__main__":
     pass
