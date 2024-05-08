@@ -40,10 +40,8 @@ rule mmxbsa_setup:
         sim_dir = Path(params.sim_dir).resolve()
         sim_dir.mkdir(exist_ok=True, parents=True)
 
-        # Get frequency of gro writing
-        equil_prod_mdp = mdp.MDP().from_file(input.mdp).parameters
         # The 2 is just to be sure of having enough frames
-        skip = int((int(equil_prod_mdp['nsteps'].split(';')[0]) / int(equil_prod_mdp['nstxout-compressed'].split(';')[0])) / (config['samples'] + 2))
+        skip = int(mdp.get_number_of_frames(input.mdp) / (config['samples'] + 2))
 
         with tempfile.TemporaryDirectory(prefix='split_', dir=sim_dir) as tmp_dir:
             @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"System\"")
