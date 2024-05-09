@@ -10,14 +10,6 @@ extra_directives: # Optional
       cpi: False
       stepout: 5000
       v: True
-nwindows: # optional
-  ligand:
-      vdw: 6
-      coul: 6
-  complex:
-      vdw: 6
-      coul: 6
-      bonded: 6
 mdp: # optional
   complex:
     equi:
