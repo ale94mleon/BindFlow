@@ -49,10 +49,8 @@ rule run_gmx_mmpbsa:
         # therefore, we can pass to the flag -cg <Receptor group> <Ligand group>" = -cg 0 1
         
         max_parallel = min(threads, mdp.get_number_of_frames(params.in_mdp))
-        print(f"RUNNING {max_parallel}")
-        print(f"RUNNING {threads}")
-        print(f"RUNNING {mdp.get_number_of_frames(params.in_mdp)}")
-        gmx_mmpbsa_command = f"mpirun -np {max_parallel} gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {params.in_xtc} -cp {input.top} -o res.dat -nogui"
+        print(f"Estimated number of frames {mdp.get_number_of_frames(params.in_mdp)} are run with {max_parallel} threads.")
+        gmx_mmpbsa_command = f"mpirun -np {max_parallel} gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {centered_xtc} -cp {input.top} -o res.dat -nogui"
     
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory(prefix='build_', dir=params.run_dir) as tmp_dir:
