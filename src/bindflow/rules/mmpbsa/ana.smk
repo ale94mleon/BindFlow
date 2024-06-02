@@ -1,5 +1,6 @@
 from bindflow.utils import tools
 from bindflow.free_energy import mmxbsa_analysis
+from bindflow.mdp import mdp
 from pathlib import Path
 import tempfile
 import os
@@ -21,7 +22,9 @@ rule run_gmx_mmpbsa:
     params:
         in_tpr = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.tpr",
         in_xtc = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.xtc",
+        in_mdp = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",
         run_dir = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/"
+    threads: 32
     run:
         # Set default host name (reachable as gmx index)
         host_name = 'Protein'
@@ -45,7 +48,9 @@ rule run_gmx_mmpbsa:
         # will always have as first group receptor and as second group ligand
         # therefore, we can pass to the flag -cg <Receptor group> <Ligand group>" = -cg 0 1
         
-        gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {params.in_xtc} -cp {input.top} -o res.dat -nogui"
+        max_parallel = min(threads, mdp.get_number_of_frames(params.in_mdp))
+        print(f"Estimated number of frames {mdp.get_number_of_frames(params.in_mdp)} are run with {max_parallel} threads.")
+        gmx_mmpbsa_command = f"mpirun -np {max_parallel} gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {centered_xtc} -cp {input.top} -o res.dat -nogui"
     
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory(prefix='build_', dir=params.run_dir) as tmp_dir:
