@@ -9,6 +9,7 @@ import shutil
 
 approach_path = config["out_approach_path"]
 samples = list(map(str, range(1,1 + config["samples"])))
+threads = config['threads']
         
 
 rule run_gmx_mmpbsa:
@@ -24,7 +25,7 @@ rule run_gmx_mmpbsa:
         in_xtc = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.xtc",
         in_mdp = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",
         run_dir = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/"
-    threads: 32
+    threads: threads
     run:
         # Set default host name (reachable as gmx index)
         host_name = 'Protein'
