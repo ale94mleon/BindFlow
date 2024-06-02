@@ -670,7 +670,7 @@ class MakeInputs:
             solvent.index_for_soluble_system(
                 configuration_file=os.path.join(system_dir, "solvated.gro"),
                 ndxout=os.path.join(system_dir, "index.ndx"),
-                lignad_name='LIG',
+                ligand_name='LIG',
                 load_dependencies=self.load_dependencies
             )
 

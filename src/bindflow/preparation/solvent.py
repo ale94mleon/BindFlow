@@ -730,7 +730,7 @@ def index_for_membrane_system(
 def index_for_soluble_system(
         configuration_file: tools.PathLike,
         ndxout: tools.PathLike = "index.ndx",
-        lignad_name: str = 'LIG',
+        ligand_name: str = 'LIG',
         load_dependencies: List[str] = None):
     """Make the index file for soluble system. This is only needed in case MMPBSA calculation;
         #. "RECEPTOR" group Protein; {it use os.environ['abfe_debug_host_name'] (if deffined) in case os.environ['abfe_debug'] == 'True'}
@@ -742,7 +742,7 @@ def index_for_soluble_system(
         PDB or GRO file of the system.
     ndxout : PathLike
         Path to output the index file.
-    lignad_name : str
+    ligand_name : str
         The residue name for the ligand in the configuration file, bt default LIG.
     load_dependencies : List[str], optional
         It is used in case some previous loading steps are needed for GROMACS commands;
@@ -760,7 +760,7 @@ def index_for_soluble_system(
                 host_name = os.environ['abfe_debug_host_name']
 
     sele_RECEPTOR = f"\"RECEPTOR\" group {host_name}"
-    sele_LIGAND = f"\"LIGAND\" resname {lignad_name}"
+    sele_LIGAND = f"\"LIGAND\" resname {ligand_name}"
 
     logger.info("Groups in the index.ndx file:")
     logger.info(f"\t{sele_RECEPTOR}")
