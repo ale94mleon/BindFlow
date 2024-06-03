@@ -10,6 +10,7 @@ import tempfile
 approach_path = config["out_approach_path"]
 ligand_names = config["ligand_names"]
 samples = list(map(str, range(1,1 + config["samples"])))
+load_dependencies = config['extra_directives']['dependencies']
 
 rule mmxbsa_setup:
     input:
@@ -39,17 +40,21 @@ rule mmxbsa_setup:
         sim_dir = Path(params.sim_dir).resolve()
         sim_dir.mkdir(exist_ok=True, parents=True)
 
-        # Get frequency of gro writing
-        equil_prod_mdp = mdp.MDP().from_file(input.mdp).parameters
         # The 2 is just to be sure of having enough frames
-        skip = int((int(equil_prod_mdp['nsteps'].split(';')[0]) / int(equil_prod_mdp['nstxout-compressed'].split(';')[0])) / (config['samples'] + 2))
+        skip = int(mdp.get_number_of_frames(input.mdp) / (config['samples'] + 2))
 
         with tempfile.TemporaryDirectory(prefix='split_', dir=sim_dir) as tmp_dir:
+            @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"System\"")
+            def trjconv(**kwargs): ...
+
             # Get initial configuration from equil/prod
-            cmd = f"export GMX_MAXBACKUP=-1; echo \"System\" | gmx trjconv -f {params.in_xtc} -s {params.in_tpr} -o {tmp_dir}/.gro -sep"
+            #cmd = f"export GMX_MAXBACKUP=-1; echo \"System\" | gmx trjconv -f {params.in_xtc} -s {params.in_tpr} -o {tmp_dir}/.gro -sep"
             if skip > 0:
-                cmd += f" -skip {skip}"
-            tools.run(cmd)
+                trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True, skip=skip)
+                #cmd += f" -skip {skip}"
+            else:
+                trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True)
+            #tools.run(cmd)
             frames = list(Path(tmp_dir).glob('*.gro'))
 
             if len(frames) >= len(output.gro):
@@ -82,7 +87,7 @@ rule create_mmxbsa_in:
         if 'general' in mmpbsa_config:
             mmpbsa_config['general']['temperature'] = temperature
         else:
-            mmpbsa_config['general'] = dict(temperature=temperature)
+            mmpbsa_config['general'] = {"temperature":temperature}
         
         # FIXME:
         # Ion concentration is used for gb calculation, this is set during solvation step, not sure if needed

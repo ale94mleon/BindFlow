@@ -3,9 +3,22 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
 
 PathLike = Union[os.PathLike, str, bytes]
+
+# Because of how snakemake handles environmental variables that
+# are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
+# We have to hard code the unset of some of them
+# TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
+HARD_CODE_DEPENDENCIES = [
+    'unset OMP_NUM_THREADS',
+    'unset GOTO_NUM_THREADS',
+    'unset OPENBLAS_NUM_THREADS',
+    'unset MKL_NUM_THREADS',
+    'unset VECLIB_MAXIMUM_THREADS',
+    'unset NUMEXPR_NUM_THREADS',
+]
 
 
 class DotDict:
@@ -24,7 +37,8 @@ class DotDict:
         return self.__dict__
 
 
-def run(command: str, shell: bool = True, executable: str = '/bin/bash', interactive: bool = False) -> subprocess.CompletedProcess:
+def run(command: str, shell: bool = True, executable: str = '/bin/bash', interactive: bool = False,
+        stdin_command: Union[None, str] = None) -> subprocess.CompletedProcess:
     """A simple wrapper around subprocess.Popen/subprocess.run
 
     Parameters
@@ -37,6 +51,8 @@ def run(command: str, shell: bool = True, executable: str = '/bin/bash', interac
         what executable to use, pass `sys.executable` to check yours, by default '/bin/bash'
     interactive : bool, optional
         To interact with the command, by default False. If True, you can access stdout and stderr of the returned process.
+    stdin_command : Union[None, str], optional
+        Command to pipe to the main command, by default None.
 
     Returns
     -------
@@ -54,7 +70,13 @@ def run(command: str, shell: bool = True, executable: str = '/bin/bash', interac
         if returncode != 0:
             raise RuntimeError(f'Command {command} returned non-zero exit status {returncode}')
     else:
-        process = subprocess.run(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if stdin_command:
+            stdin_process = subprocess.Popen(stdin_command, shell=shell, executable=executable, stdout=subprocess.PIPE, text=True)
+            process = subprocess.run(command, shell=shell, executable=executable, stdin=stdin_process.stdout,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        else:
+            process = subprocess.run(command, shell=shell, executable=executable, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         returncode = process.returncode
 
         if returncode != 0:
@@ -64,7 +86,7 @@ def run(command: str, shell: bool = True, executable: str = '/bin/bash', interac
     return process
 
 
-def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, stdout_file: PathLike = None):
+def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, stdout_file: PathLike = None, stdin_command: Union[None, str] = None):
     """Lazy wrapper of gmx commands
 
     Parameters
@@ -75,7 +97,9 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     interactive : bool
         In case, and interactive section is desired, by default False
     stdout_file : bool
-        IF provided, it will append to the command ` >& {stdout_file}`, by default None
+        If provided, it will append to the command ` >& {stdout_file}`, by default None
+    stdin_command : Union[None, str], optional
+        Command to pipe to the main command, by default None.
 
 
     A typical function will be:
@@ -86,9 +110,7 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
 
         from bindflow.utils import tools
         @tools.gmx_command()
-        def mdrun(
-                **kwargs
-                ):...
+        def mdrun(**kwargs): ...
 
     The important parts are:
 
@@ -96,6 +118,31 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     #. You must return the local variables of the function
     #. The names of the keywords are exactly the same name as got it by the respective function.
     #. For flags, a boolean will be provided as value, for example v = True, if you want to be verbose.
+
+    Some GROMACS functions need the user inputs (E.g. pdb2gmx, trjconv, make_ndx). For those cases we can use interactive mode
+    or pipe the input as echo to the gmx command, for example:
+
+    .. code-block:: bash
+
+        echo 'System' | gmx trjconv -s prod.tpr -f prod.xtc -o whole.xtc -pbc whole
+
+    To achieve this with gmx_command, we can:
+
+    .. code-block:: python
+
+        @gmx_command(stdin_command="echo 'System'")
+        def trjconv(**kwargs): ...
+        trjconv(s='prod.tpr', f='prod.xtc', o='whole.xtc', pbc='whole')
+
+    It is important to remark that every time that `trjconv` is executed, the output of the echo command will be passed.
+    To change this you have to redefine the function.
+
+    .. code-block:: python
+
+        @gmx_command(stdin_command="echo 'Protein'")
+        def trjconv(**kwargs): ...
+        trjconv(s='prod.tpr', f='prod.xtc', o='whole.xtc', pbc='whole')
+
     """
     def decorator(gmx_function: object):
         def wrapper(**kwargs):
@@ -120,7 +167,10 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
             if interactive:
                 return run(cmd, interactive=True)
             else:
-                return run(cmd)
+                if stdin_command:
+                    return run(cmd, stdin_command=stdin_command)
+                else:
+                    return run(cmd)
         return wrapper
     return decorator
 
@@ -170,23 +220,10 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
 
     name = os.path.splitext(os.path.basename(mdp))[0]
 
-    # Because of how snakemake handles environmental variables that
-    # are used by GROMACS (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html)
-    # We have to hard code the unset of some of them
-    # TODO, check the implications of such modifications. I hope that only affects the specific rule where GROMACS is called
-    hard_code_dependencies = [
-        'unset OMP_NUM_THREADS',
-        'unset GOTO_NUM_THREADS',
-        'unset OPENBLAS_NUM_THREADS',
-        'unset MKL_NUM_THREADS',
-        'unset VECLIB_MAXIMUM_THREADS',
-        'unset NUMEXPR_NUM_THREADS',
-    ]
-
-    @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies)
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies)
     def grompp(**kwargs): ...
 
-    @gmx_command(load_dependencies=hard_code_dependencies + load_dependencies, stdout_file=f"{name}.lis")
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies, stdout_file=f"{name}.lis")
     def mdrun(**kwargs): ...
 
     cwd = os.getcwd()
@@ -216,7 +253,7 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
     os.chdir(cwd)
 
 
-def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str = 'Protein') -> PathLike:
+def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str = 'Protein', load_dependencies: List[str] = None) -> PathLike:
     """Center an xtc file
 
     Parameters
@@ -229,19 +266,38 @@ def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str =
         Directory to run and save the center trajectory
     host_name : str, optional
         Name of the host/receptor, by default 'Protein'
+    load_dependencies : List[str], optional
+        It is used in case some previous loading steps are needed;
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
 
     Returns
     -------
     PathLike
         The path of the center trajectory: {run_dir}/center.xtc
     """
+    dependencies = HARD_CODE_DEPENDENCIES + ["export GMX_MAXBACKUP=-1"]
+    if load_dependencies:
+        dependencies += load_dependencies
+        if isinstance(load_dependencies, List):
+            dependencies += load_dependencies
+        else:
+            raise ValueError(f"load_dependencies must be an List. Provided: {load_dependencies}")
+
     makedirs(run_dir)
-    no_backup = "export GMX_MAXBACKUP=-1"
-    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {xtc} -o {run_dir}/whole.xtc -pbc whole")
-    run(f"{no_backup}; echo 'System' | gmx trjconv -s {tpr} -f {run_dir}/whole.xtc -o {run_dir}/nojump.xtc -pbc nojump")
-    run(f"{no_backup}; echo '{host_name} System' | gmx trjconv -s {tpr} -f {run_dir}/nojump.xtc -o {run_dir}/center.xtc -pbc mol -center -ur compact")
+
+    @gmx_command(load_dependencies=dependencies, stdin_command="echo 'System'")
+    def trjconv(**kwargs): ...
+    trjconv(s=tpr, f=xtc, o=f"{run_dir}/whole.xtc", pbc="whole")
+    trjconv(s=tpr, f=f"{run_dir}/whole.xtc", o=f"{run_dir}/nojump.xtc", pbc="nojump")
+
+    @gmx_command(load_dependencies=dependencies, stdin_command=f"echo '{host_name} System'")
+    def trjconv(**kwargs): ...
+    trjconv(s=tpr, f=f"{run_dir}/nojump.xtc", o=f"{run_dir}/center.xtc", pbc="mol", center=True, ur="compact")
+
     # Clean
-    run(f"rm {run_dir}/whole.xtc {run_dir}/nojump.xtc")
+    (Path(run_dir) / "whole.xtc").unlink()
+    (Path(run_dir) / "nojump.xtc").unlink()
+
     return f"{run_dir}/center.xtc"
 
 

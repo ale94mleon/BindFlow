@@ -6,7 +6,7 @@ import os
 import shutil
 import tarfile
 import warnings
-from typing import Union
+from typing import Union, List
 
 from parmed.gromacs import GromacsGroFile, GromacsTopologyFile
 from parmed.structure import Structure
@@ -15,6 +15,7 @@ from toff import Parameterize
 
 from bindflow.home import home
 from bindflow.preparation import solvent
+from bindflow.utils import tools
 from bindflow.utils.tools import PathLike, recursive_update_dict, run
 
 # from pdbfixer import PDBFixer
@@ -203,7 +204,7 @@ class MakeInputs:
     def __init__(self, protein: dict = None, membrane: dict = None, cofactor: dict = None,
                  cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
                  custom_ff_path: Union[None, PathLike] = None, hmr_factor: Union[float, None] = None,
-                 builder_dir: PathLike = 'builder'):
+                 builder_dir: PathLike = 'builder', load_dependencies: List[str] = None):
         """Constructor
 
         Parameters
@@ -288,6 +289,10 @@ class MakeInputs:
 
         builder_dir : PathLike, optional
             Where all the building files. After completion you can safely remove calling the method clean, by default builder
+
+        load_dependencies : List[str], optional
+            It is used in case some previous loading steps are needed for GROMACS commands;
+            e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
         """
         self.protein = protein
         self.membrane = membrane
@@ -295,6 +300,7 @@ class MakeInputs:
         self.cofactor_on_protein = cofactor_on_protein
         self.hmr_factor = hmr_factor
         self.water_model = water_model
+        self.load_dependencies = load_dependencies
         self.wd = os.path.abspath(builder_dir)
         os.makedirs(self.wd, exist_ok=True)
         self.__self_was_called = False
@@ -479,20 +485,29 @@ class MakeInputs:
         if dict_to_work['top']:
             shutil.copy(dict_to_work['top'], top_out)
             if ext == '.pdb':
-                run(f"gmx editconf -f {dict_to_work['conf']} -o {gro_out}")
+                @tools.gmx_command(load_dependencies=self.load_dependencies)
+                def editconf(**kwargs): ...
+
+                #run(f"gmx editconf -f {dict_to_work['conf']} -o {gro_out}")
+                editconf(f=dict_to_work['conf'], o=gro_out)
             elif ext == '.gro':
                 shutil.copy(dict_to_work['conf'], gro_out)
             else:
                 raise ValueError(f"Extension of {dict_to_work['conf']} must be .gro or .pdb")
         else:
+            @tools.gmx_command(load_dependencies=self.load_dependencies)
+            def pdb2gmx(**kwargs): ...
+
             if is_membrane:
-                run(f"gmx pdb2gmx -f {dict_to_work['conf']} -ff {dict_to_work['ff']['code']} -water none -o {gro_out} -p {top_out} -i {posre_out}")
+                pdb2gmx(f=dict_to_work['conf'], ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out)
+                #run(f"gmx pdb2gmx -f {dict_to_work['conf']} -ff {dict_to_work['ff']['code']} -water none -o {gro_out} -p {top_out} -i {posre_out}")
             else:
                 env_prefix = os.environ["CONDA_PREFIX"]
                 fixed_pdb = os.path.join(self.wd, f"{name}_fixed.pdb")
                 run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
-                run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} "
-                    f"-water none -o {gro_out} -p {top_out} -i {posre_out} -ignh")
+                pdb2gmx(f=fixed_pdb, merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out, ignh=True)
+                #run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} "
+                #    f"-water none -o {gro_out} -p {top_out} -i {posre_out} -ignh")
         os.chdir(self.cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn
@@ -647,6 +662,7 @@ class MakeInputs:
                 lignad_name='LIG',
                 cofactor_name='COF' if self.cofactor else None,
                 cofactor_on_protein=self.cofactor_on_protein,
+                load_dependencies=self.load_dependencies
             )
         else:
             # This index file is only needed in case of MMPBSA
@@ -654,7 +670,8 @@ class MakeInputs:
             solvent.index_for_soluble_system(
                 configuration_file=os.path.join(system_dir, "solvated.gro"),
                 ndxout=os.path.join(system_dir, "index.ndx"),
-                lignad_name='LIG',
+                ligand_name='LIG',
+                load_dependencies=self.load_dependencies
             )
 
         # Construct ABFE system:

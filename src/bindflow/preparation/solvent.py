@@ -4,7 +4,7 @@ import os
 import shutil
 import tarfile
 import tempfile
-from typing import Iterable, Union, Tuple
+from typing import Iterable, Union, Tuple, List
 
 import parmed
 import yaml
@@ -275,7 +275,7 @@ def _tip3p_settles_to_constraints(top: tools.PathLike, molecule: str, out_top: U
 
 
 class Solvate:
-    def __init__(self, water_model_code: str, builder_dir: tools.PathLike = '.solvate') -> None:
+    def __init__(self, water_model_code: str, builder_dir: tools.PathLike = '.solvate', load_dependencies: List[str] = None) -> None:
         """Class to solvate GMX systems.
         Force fields were extracted from `GMX topologies <https://gitlab.com/gromacs/gromacs/-/tree/main/share/top?ref_type=heads>`__.
 
@@ -311,6 +311,9 @@ class Solvate:
             Water model code in the form: "{force field family}/{water model}"
         builder_dir : tools.PathLik, optional
             Where the temporal files will be written.
+        load_dependencies : List[str], optional
+            It is used in case some previous loading steps are needed for GROMACS commands;
+            e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
         Raises
         ------
         ValueError
@@ -318,6 +321,8 @@ class Solvate:
         ValueError
             Invalid water model for the selected force field
         """
+        self.load_dependencies = load_dependencies
+        
         self.builder_dir = os.path.abspath(builder_dir)
         tools.makedirs(self.builder_dir)
 
@@ -345,6 +350,11 @@ class Solvate:
         self.water_model = water_model
         self.water_itp, self.ions_itp, self.ffnonbonded_itp, self.water_gro = self._get_gmx_water_model(self.water_model_dir)
         self.cwd = os.getcwd()
+        if load_dependencies:
+            if isinstance(load_dependencies, List):
+                self.load_dependencies = tools.HARD_CODE_DEPENDENCIES + ["export GMX_MAXBACKUP=-1"] + load_dependencies
+            else:
+                raise ValueError(f"load_dependencies must be an List. Provided: {load_dependencies}")
 
     def _get_gmx_water_model(self, out_dir: tools.PathLike) -> Tuple[tools.PathLike]:
         """
@@ -478,15 +488,19 @@ class Solvate:
 
         os.chdir(self.solvated_dir)
 
-        editconf_cmd = f"gmx editconf -f {gro} -o {gro} -bt {bt}"
+        editconf_kwargs = dict(
+            f=gro,
+            o=gro,
+            bt=bt
+        )
         if box:
-            editconf_cmd += f" -box {' '.join([str(i) for i in box])}"
+            editconf_kwargs['box'] = ' '.join([str(i) for i in box])
         if angles:
-            editconf_cmd += f" -angles {' '.join([str(i) for i in angles])}"
+            editconf_kwargs['angles'] = ' '.join([str(i) for i in angles])
         if d:
-            editconf_cmd += f" -d {d}"
+            editconf_kwargs['d'] = d
         if c:
-            editconf_cmd += " -c"
+            editconf_kwargs['c'] = True
 
         # First write an mdp file.
         with open("ions.mdp", "w") as file:
@@ -502,17 +516,24 @@ class Solvate:
 
         # It is failing becasue There is not define the atom type for the water molecules
 
-        tools.run(f"""
-            export GMX_MAXBACKUP=-1
-            {editconf_cmd}
-            gmx solvate -cp {gro} -p {top} -cs {self.water_gro} -o {gro}
-        """)
+        # Define GMX functions
+        @tools.gmx_command(load_dependencies=self.load_dependencies)
+        def editconf(**kwargs): ...
 
-        tools.run(f"""
-            export GMX_MAXBACKUP=-1
-            gmx grompp -f ions.mdp -c {gro} -p {top} -o ions.tpr
-            echo "SOL" | gmx genion -s ions.tpr -p {top} -o {gro} -neutral -pname {pname} -nname {nname} -rmin {rmin} -conc {ion_conc}
-        """)
+        @tools.gmx_command(load_dependencies=self.load_dependencies)
+        def solvate(**kwargs): ...
+
+        @tools.gmx_command(load_dependencies=self.load_dependencies)
+        def grompp(**kwargs): ...
+
+        @tools.gmx_command(load_dependencies=self.load_dependencies, stdin_command="echo \"SOL\"")
+        def genion(**kwargs): ...
+
+        # Execute the GMX functions
+        editconf(**editconf_kwargs)
+        solvate(cp=gro, p=top, cs=self.water_gro, o=gro)
+        grompp(f="ions.mdp", c=gro, p=top, o="ions.tpr")
+        genion(s="ions.tpr", p=top, o=gro, neutral=True, pname=pname, nname=nname, rmin=rmin, conc=ion_conc)
 
         # Just to clean the topology. In this way only the used atom types are written.
         # And the include statements are removed
@@ -623,7 +644,8 @@ def index_for_membrane_system(
         ndxout: tools.PathLike = "index.ndx",
         lignad_name: str = 'LIG',
         cofactor_name: str = None,
-        cofactor_on_protein: bool = True):
+        cofactor_on_protein: bool = True,
+        load_dependencies: List[str] = None):
     """Make the index file for membrane systems with SOLU, MEMB and SOLV. It uses gmx make_ndx and select internally.
     One examples selection that can be created with ligand_name = LIG; cofactor_name = COF and cofactor_on_protein = True is:
         #. "RECEPTOR" group Protein;
@@ -646,6 +668,9 @@ def index_for_membrane_system(
     cofactor_on_protein : bool
         It only works if cofactor_name is provided. If True, the cofactor will be part of the protein and the lignad
         if False will be part of the solvent and ions, bt default True
+    load_dependencies : List[str], optional
+        It is used in case some previous loading steps are needed for GROMACS commands;
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
     """
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
@@ -677,11 +702,19 @@ def index_for_membrane_system(
 
     with open(tmpopt.name, "w") as opt:
         opt.write(sele_RECEPTOR + sele_LIGAND + sele_SOLU + sele_MEMB + sele_SOLV)
-    tools.run(f"""
-                export GMX_MAXBACKUP=-1
-                echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
-                gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
-                """)
+    @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"q\"")
+    def make_ndx(**kwargs): ...
+
+    @tools.gmx_command(load_dependencies=load_dependencies)
+    def select(**kwargs): ...
+
+    make_ndx(f=configuration_file, o=tmpndx.name)
+    select(s=configuration_file, sf=tmpopt.name, n=tmpndx.name, on=ndxout)
+    #tools.run(f"""
+    #            export GMX_MAXBACKUP=-1
+    #            echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
+    #            gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
+    #            """)
 
     # deleting the line _f0_t0.000 in the file
     with open(ndxout, "r") as index:
@@ -697,7 +730,8 @@ def index_for_membrane_system(
 def index_for_soluble_system(
         configuration_file: tools.PathLike,
         ndxout: tools.PathLike = "index.ndx",
-        lignad_name: str = 'LIG'):
+        ligand_name: str = 'LIG',
+        load_dependencies: List[str] = None):
     """Make the index file for soluble system. This is only needed in case MMPBSA calculation;
         #. "RECEPTOR" group Protein; {it use os.environ['abfe_debug_host_name'] (if deffined) in case os.environ['abfe_debug'] == 'True'}
         #. "LIGAND" resname {ligand_name};
@@ -708,8 +742,11 @@ def index_for_soluble_system(
         PDB or GRO file of the system.
     ndxout : PathLike
         Path to output the index file.
-    lignad_name : str
+    ligand_name : str
         The residue name for the ligand in the configuration file, bt default LIG.
+    load_dependencies : List[str], optional
+        It is used in case some previous loading steps are needed for GROMACS commands;
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
     """
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
@@ -723,7 +760,7 @@ def index_for_soluble_system(
                 host_name = os.environ['abfe_debug_host_name']
 
     sele_RECEPTOR = f"\"RECEPTOR\" group {host_name}"
-    sele_LIGAND = f"\"LIGAND\" resname {lignad_name}"
+    sele_LIGAND = f"\"LIGAND\" resname {ligand_name}"
 
     logger.info("Groups in the index.ndx file:")
     logger.info(f"\t{sele_RECEPTOR}")
@@ -734,11 +771,19 @@ def index_for_soluble_system(
 
     with open(tmpopt.name, "w") as opt:
         opt.write(sele_RECEPTOR + sele_LIGAND)
-    tools.run(f"""
-                export GMX_MAXBACKUP=-1
-                echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
-                gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
-                """)
+    @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"q\"")
+    def make_ndx(**kwargs): ...
+
+    @tools.gmx_command(load_dependencies=load_dependencies)
+    def select(**kwargs): ...
+
+    make_ndx(f=configuration_file, o=tmpndx.name)
+    select(s=configuration_file, sf=tmpopt.name, n=tmpndx.name, on=ndxout)
+    #tools.run(f"""
+    #            export GMX_MAXBACKUP=-1
+    #            echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
+    #            gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
+    #            """)
 
     # deleting the line _f0_t0.000 in the file
     with open(ndxout, "r") as index:
