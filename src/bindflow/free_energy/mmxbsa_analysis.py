@@ -4,59 +4,44 @@ import pandas as pd
 
 
 def prettify_df(full_df):
-    prettified_dict = {
-        "name": [],
+    groups = full_df.groupby(["name", "replica"])
+    pretty_dict = {"name":[], "replica": [], 
+                   "dg_c2_pb":[],"dg_c2_pb_sem":[],"dg_c2_gb":[],"dg_c2_gb_sem":[],"dg_ie_pb":[],"dg_ie_pb_sem":[],
+                   "dg_ie_gb":[],"dg_ie_gb_sem":[],"dg_en_pb":[],"dg_en_pb_sem":[],"dg_en_gb":[],"dg_en_gb_sem":[],
+                   "c2_pb":[],"c2_gb":[],"ie_pb":[],"ie_gb":[]}
 
-        "dG_pb_c2": [],
-        "dG_pb_c2_err": [],
-        "dG_pb_ie": [],
-        "dG_pb_ie_err": [],
-        "dG_pb_qh": [],
-        "dG_pb_qh_err": [],
+    for group_keys, group_df in groups:
+        group_name, group_replica = group_keys
+        pretty_dict["name"].append(group_name)
+        pretty_dict["replica"].append(group_replica)
 
-        "dG_gb_c2": [],
-        "dG_gb_c2_err": [],
-        "dG_gb_ie": [],
-        "dG_gb_ie_err": [],
-        "dG_gb_qh": [],
-        "dG_gb_qh_err": [],
-        }
-    groups = full_df.groupby("name")
-    for group_name, group_df in groups:
-        prettified_dict["name"].append(group_name)
-        prettified_dict["dG_pb_c2"].append(group_df["pb_c2_val"].mean())
-        prettified_dict["dG_pb_c2_err"].append(group_df["pb_c2_val"].std())
-        prettified_dict["dG_pb_ie"].append(group_df["pb_ie_val"].mean())
-        prettified_dict["dG_pb_ie_err"].append(group_df["pb_ie_val"].std())
-        prettified_dict["dG_pb_qh"].append(group_df["pb_qh_val"].mean())
-        prettified_dict["dG_pb_qh_err"].append(group_df["pb_qh_val"].std())
-        prettified_dict["dG_gb_c2"].append(group_df["gb_c2_val"].mean())
-        prettified_dict["dG_gb_c2_err"].append(group_df["gb_c2_val"].std())
-        prettified_dict["dG_gb_ie"].append(group_df["gb_ie_val"].mean())
-        prettified_dict["dG_gb_ie_err"].append(group_df["gb_ie_val"].std())
-        prettified_dict["dG_gb_qh"].append(group_df["gb_qh_val"].mean())
-        prettified_dict["dG_gb_qh_err"].append(group_df["gb_qh_val"].std())
+        pretty_dict["dg_c2_pb"].append(group_df["dg_c2_pb"].mean())
+        pretty_dict["dg_c2_pb_sem"].append(group_df["dg_c2_pb"].sem())
+        pretty_dict["dg_c2_gb"].append(group_df["dg_c2_gb"].mean())
+        pretty_dict["dg_c2_gb_sem"].append(group_df["dg_c2_gb"].sem())
+        pretty_dict["dg_ie_pb"].append(group_df["dg_ie_pb"].mean())
+        pretty_dict["dg_ie_pb_sem"].append(group_df["dg_ie_pb"].sem())
+        pretty_dict["dg_ie_gb"].append(group_df["dg_ie_gb"].mean())
+        pretty_dict["dg_ie_gb_sem"].append(group_df["dg_ie_gb"].sem())
+        pretty_dict["dg_en_pb"].append(group_df["dg_en_pb"].mean())
+        pretty_dict["dg_en_pb_sem"].append(group_df["dg_en_pb"].sem())
+        pretty_dict["dg_en_gb"].append(group_df["dg_en_gb"].mean())
+        pretty_dict["dg_en_gb_sem"].append(group_df["dg_en_gb"].sem())
+
+        pretty_dict["c2_pb"].append(group_df["c2_pb"].mean())
+        pretty_dict["c2_gb"].append(group_df["c2_gb"].mean())
+        pretty_dict["ie_pb"].append(group_df["ie_pb"].mean())
+        pretty_dict["ie_gb"].append(group_df["ie_gb"].mean())
     
-    return pd.DataFrame(prettified_dict)
+    return pd.DataFrame(pretty_dict)
 
 
 def convert_format_flatten(df, ligand_name, replica, sample):
-    res = { "name":[ligand_name], "replica":[replica], "sample":[sample], 
-            "pb_c2_val":[], "pb_c2_err":[], "pb_ie_val":[], "pb_ie_err":[], "pb_qh_val":[], "pb_qh_err":[], 
-            "gb_c2_val":[], "gb_c2_err":[], "gb_ie_val":[], "gb_ie_err":[], "gb_qh_val":[], "gb_qh_err":[]}
-    
-    def __set_row(name):
-        extracted_row = df[df["method"] == name]
-        res[name+"_val"].append(extracted_row.iat[0,1])
-        res[name+"_err"].append(extracted_row.iat[0,2])
-    __set_row("pb_c2")
-    __set_row("pb_ie")
-    __set_row("pb_qh")
-    __set_row("gb_c2")
-    __set_row("gb_ie")
-    __set_row("gb_qh")
-    
-    return pd.DataFrame.from_dict(res)
+    res = {"name":[ligand_name], "replica":[replica], "sample":[sample], 
+           "dg_c2_pb": df["dg_c2_pb"], "dg_c2_gb": df["dg_c2_gb"], "dg_ie_pb": df["dg_ie_pb"],
+           "dg_ie_gb": df["dg_ie_gb"], "dg_en_pb": df["dg_en_pb"], "dg_en_gb": df["dg_en_gb"], 
+           "c2_pb": df["c2_pb"], "c2_gb": df["c2_gb"], "ie_pb": df["ie_pb"], "ie_gb": df["ie_gb"]}  
+    return pd.DataFrame.from_dict(res)  
 
 
 def compute_dg(energy_value, error_energy, entropy_value, error_entropy):
@@ -80,106 +65,76 @@ class GmxMmxbsaDataRetriever:
         self.gmx_api.setting_time()
         self.gmx_api.load_file(binary_api_file)
 
-        self._entropies = self.__extract_entropies()
-        self._energies = self.__extract_energies()
-        self._delta_gs = self.__initialize_delta_g()
+        self.__extract_entropies()
+        self.__extract_energies()
 
     
     def __extract_entropies(self):
-        entropies = {"method": [], "value": [], "error": []}
-        def __append_empty_entropy(name):
-                entropies["method"].append(name)
-                entropies["value"].append(None)
-                entropies["error"].append(None)
-
         if "c2" in self.gmx_api.data["normal"].keys():
             if "pb" in self.gmx_api.data["normal"]["c2"].keys():
-                entropies["method"].append("c2_pb")
-                entropies["value"].append(self.gmx_api.data["normal"]["c2"]["pb"]["c2data"])
-                entropies["error"].append(self.gmx_api.data["normal"]["c2"]["pb"]["c2_std"])
+                self.c2_pb = self.gmx_api.data["normal"]["c2"]["pb"]["c2data"]
             else:
-                __append_empty_entropy("c2_pb")
+                self.c2_pb = None
             if "gb" in self.gmx_api.data["normal"]["c2"].keys():
-                entropies["method"].append("c2_gb")
-                entropies["value"].append(self.gmx_api.data["normal"]["c2"]["gb"]["c2data"])
-                entropies["error"].append(self.gmx_api.data["normal"]["c2"]["gb"]["c2_std"])
+                self.c2_gb = self.gmx_api.data["normal"]["c2"]["gb"]["c2data"]
             else:
-                __append_empty_entropy("c2_gb")
+                self.c2_gb = None
         else:
-            __append_empty_entropy("c2_pb")
-            __append_empty_entropy("c2_gb")
-        
+            self.c2_pb = None
+            self.c2_gb = None
+
+
         if "ie" in self.gmx_api.data["normal"].keys():
             if "pb" in self.gmx_api.data["normal"]["ie"].keys():
-                entropies["method"].append("ie_pb")
-                entropies["value"].append(float(self.gmx_api.data["normal"]["ie"]["pb"]["iedata"].mean()))
-                entropies["error"].append(float(self.gmx_api.data["normal"]["ie"]["pb"]["iedata"].std()))
+                self.ie_pb = float(self.gmx_api.data["normal"]["ie"]["pb"]["iedata"].mean())
             else:
-                __append_empty_entropy("ie_pb")
+                self.ie_pb = None
             if "gb" in self.gmx_api.data["normal"]["ie"].keys():
-                entropies["method"].append("ie_gb")
-                entropies["value"].append(float(self.gmx_api.data["normal"]["ie"]["gb"]["iedata"].mean()))
-                entropies["error"].append(float(self.gmx_api.data["normal"]["ie"]["gb"]["iedata"].std()))
+                self.ie_gb = float(self.gmx_api.data["normal"]["ie"]["gb"]["iedata"].mean())
             else:
-                __append_empty_entropy("ie_gb")
+                self.ie_gb = None
         else:
-            __append_empty_entropy("ie_pb")
-            __append_empty_entropy("ie_gb")
+            self.ie_pb = None
+            self.ie_gb = None
+
         if "qh" in self.gmx_api.data["normal"].keys():
-            entropies["method"].append("qh")
-            entropies["value"].append(self.gmx_api.data["normal"]["qh"]["delta"]["TOTAL"])
-            entropies["error"].append(None)
+            self.qh = self.gmx_api.data["normal"]["qh"]["delta"]["TOTAL"]
         else:
-            __append_empty_entropy("qh")
-        return entropies
+            self.qh = None
+        
+        return self.c2_pb, self.c2_gb, self.ie_pb, self.ie_gb, self.qh
 
 
     def __extract_energies(self):
-        energies = {"method": [], "value": [], "error": []}
-        def __append_empty_energies(name):
-            energies["method"].append(name)
-            energies["value"].append(None)
-            energies["error"].append(None)
-        
         if "pb" in self.gmx_api.data["normal"].keys():
-            energies["method"].append("pb")
-            energies["value"].append(float(self.gmx_api.data["normal"]["pb"]["delta"]["TOTAL"].mean()))
-            energies["error"].append(float(self.gmx_api.data["normal"]["pb"]["delta"]["TOTAL"].std()))
+            self.pb_en = self.gmx_api.data["normal"]["pb"]["delta"]["TOTAL"]
         else:
-            __append_empty_energies("pb")
+            self.pb_en = None
         if "gb" in self.gmx_api.data["normal"].keys():
-            energies["method"].append("gb")
-            energies["value"].append(float(self.gmx_api.data["normal"]["gb"]["delta"]["TOTAL"].mean()))
-            energies["error"].append(float(self.gmx_api.data["normal"]["gb"]["delta"]["TOTAL"].std()))
+            self.gb_en = self.gmx_api.data["normal"]["gb"]["delta"]["TOTAL"]
         else:
-            __append_empty_energies("gb")
-        return energies
-
-
-    def __initialize_delta_g(self):
-        delta_gs = {"method": [], "delta_g": [], "delta_g_error": []}
-        df_entropy = pd.DataFrame.from_dict(self._entropies)
-        df_energy = pd.DataFrame.from_dict(self._energies)
+            self.gb_en = None
         
-        def get_elements_from_energy(method):
-            return [df_energy[df_energy["method"] == method]["value"].iat[0], df_energy[df_energy["method"] == method]["error"].iat[0]]
-        def get_elements_from_entropy(method):
-            return [df_entropy[df_entropy["method"] == method]["value"].iat[0], df_entropy[df_entropy["method"] == method]["error"].iat[0]]
-        
-        def create_dg_dict(energy_name, entropy_name, out_name):
-            delta_g_val, delta_g_err = compute_dg(*get_elements_from_energy(energy_name),*get_elements_from_entropy(entropy_name))
-            delta_gs["method"].append(out_name)
-            delta_gs["delta_g"].append(delta_g_val)
-            delta_gs["delta_g_error"].append(delta_g_err)
-
-        create_dg_dict("pb", "c2_pb", "pb_c2")
-        create_dg_dict("pb", "ie_pb", "pb_ie")
-        create_dg_dict("pb", "qh", "pb_qh")
-        create_dg_dict("gb", "c2_gb", "gb_c2")
-        create_dg_dict("gb", "ie_gb", "gb_ie")
-        create_dg_dict("gb", "qh", "gb_qh")
-
-        return delta_gs
+        return self.pb_en, self.gb_en
     
-    def get_dg(self):
-        return pd.DataFrame.from_dict(self._delta_gs)
+
+    def store_dg(self, output_file, run_dir):
+        # storing pb energies of each frame 
+        pd.DataFrame(self.pb_en, columns=["delta_g_pb"]).to_csv(f"{run_dir}pb_energy_frames", index=False)
+
+        # storing gb energies of each frame 
+        pd.DataFrame(self.gb_en, columns=["delta_g_gb"]).to_csv(f"{run_dir}gb_energy_frames", index=False)
+
+        delta_g_dict = {
+            "dg_c2_pb": [self.pb_en.mean()+self.c2_pb if not self.pb_en is None and not self.c2_pb is None else None], 
+            "dg_c2_gb": [self.gb_en.mean()+self.c2_gb if not self.gb_en is None and not self.c2_gb is None else None], 
+            "dg_ie_pb": [self.pb_en.mean()+self.ie_pb if not self.pb_en is None and not self.ie_pb is None else None], 
+            "dg_ie_gb": [self.gb_en.mean()+self.ie_gb if not self.gb_en is None and not self.ie_gb is None else None],
+            "dg_en_pb": [self.pb_en.mean()            if not self.pb_en is None else None], 
+            "dg_en_gb": [self.gb_en.mean()            if not self.gb_en is None else None],
+            "c2_pb": [self.c2_pb if not self.c2_pb is None else None], 
+            "c2_gb": [self.c2_gb if not self.c2_gb is None else None],
+            "ie_pb": [self.ie_pb if not self.ie_pb is None else None], 
+            "ie_gb": [self.ie_gb if not self.ie_gb is None else None],
+        }
+        pd.DataFrame.from_dict(delta_g_dict).to_csv(output_file, index=False)
