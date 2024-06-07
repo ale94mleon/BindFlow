@@ -29,10 +29,11 @@ mdp: # optional
     mmpbsa:
       prod:
         nsteps: 1000
-#mmpbsa:
-#  general: 
-#    c2_entropy: 1
+        nstxout-compressed: 500
+mmpbsa:
+  general: 
+    c2_entropy: 1
 #    qh_entropy: 1
-#    interaction_entropy: 1
-#  pb: {}
-#  gb: {}
+    interaction_entropy: 1
+  pb: {}
+  gb: {}
