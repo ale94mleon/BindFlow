@@ -14,22 +14,28 @@ mdp: # optional
   complex:
     equi:
       00_min:
-        nsteps: 15
+        nsteps: 100000
       01_nvt:
-          nsteps: 15
+          dt: 0.002
+          nsteps: 37500
       02_nvt:
-          nsteps: 15
+          dt: 0.003
+          nsteps: 17500
       03_npt:
-        nsteps: 15
+        dt: 0.003
+        nsteps: 25000
       04_npt:
-        nsteps: 15
+        dt: 0.004
+        nsteps: 25000
       prod:
-        nsteps: 300
-        nstxout-compressed: 100
+        dt: 0.004
+        nsteps: 25000
+        nstxout-compressed: 1250
     mmpbsa:
       prod:
-        nsteps: 1000
-        nstxout-compressed: 500
+        dt: 0.004
+        nsteps: 100000
+        nstxout-compressed: 2500
 mmpbsa:
   general: 
     c2_entropy: 1
