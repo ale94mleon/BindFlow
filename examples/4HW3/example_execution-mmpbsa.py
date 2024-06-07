@@ -22,7 +22,7 @@ calculate_mmpbsa(
     threads=10,
     num_jobs=10,
     replicas=1,
-    samples=2,
+    samples=20,
     submit=False,
     global_config=global_config)
 

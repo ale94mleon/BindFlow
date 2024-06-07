@@ -17,25 +17,25 @@ mdp: # optional
         nsteps: 100000
       01_nvt:
           dt: 0.002
-          nsteps: 37500
+          nsteps: 5000
       02_nvt:
           dt: 0.003
-          nsteps: 17500
+          nsteps: 5000
       03_npt:
         dt: 0.003
-        nsteps: 25000
+        nsteps: 7500
       04_npt:
         dt: 0.004
-        nsteps: 25000
+        nsteps: 15000
+      prod:
+        dt: 0.004
+        nsteps: 237500
+        nstxout-compressed: 11875
+    mmpbsa:
       prod:
         dt: 0.004
         nsteps: 25000
         nstxout-compressed: 1250
-    mmpbsa:
-      prod:
-        dt: 0.004
-        nsteps: 100000
-        nstxout-compressed: 2500
 mmpbsa:
   general: 
     c2_entropy: 1
