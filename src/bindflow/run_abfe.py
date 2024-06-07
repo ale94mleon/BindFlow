@@ -167,6 +167,7 @@ def calculate_abfe(
     _global_config["calculation_type"] = 'fep'  # To leave room for other type of calculations
     _global_config["inputs"] = {}
     _global_config["inputs"]["protein"] = input_helper(arg_name='protein', user_input=protein, default_ff='amber99sb-ildn', optional=False)
+    # TODO check that is a list, tuple or string, iterable is nto enough because the dict is an iterable. Not clear how to check for this
     _global_config["inputs"]["ligands"] = [input_helper(arg_name='ligand', user_input=ligand,
                                                         default_ff=None, default_ff_type='openff', optional=False)
                                            for ligand in ligands]
