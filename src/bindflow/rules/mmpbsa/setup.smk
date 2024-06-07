@@ -41,7 +41,7 @@ rule mmxbsa_setup:
         sim_dir.mkdir(exist_ok=True, parents=True)
 
         # The 2 is just to be sure of having enough frames
-        skip = int(mdp.get_number_of_frames(input.mdp) / (config['samples'] + 2))
+        skip = max(1, int(mdp.get_number_of_frames(input.mdp) / (config['samples'] + 2)))
 
         with tempfile.TemporaryDirectory(prefix='split_', dir=sim_dir) as tmp_dir:
             @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"System\"")
