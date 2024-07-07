@@ -34,12 +34,13 @@ mdp: # optional
     mmpbsa:
       prod:
         dt: 0.004
-        nsteps: 25000
+        nsteps: 31250
         nstxout-compressed: 1250
 mmpbsa:
   general: 
     c2_entropy: 1
-#    qh_entropy: 1
+    #qh_entropy: 1
     interaction_entropy: 1
-  pb: {}
-  gb: {}
+    startframe: 5 # recommended burn phase to skip frames directly after the split
+  pb: {} # enable MMPBSA computation
+  gb: {} # enable MMGBSA computation
