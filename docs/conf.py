@@ -19,7 +19,7 @@ from datetime import datetime
 
 # -- Project information -----------------------------------------------------
 
-project = 'MolDrug'
+project = 'BindFlow'
 copyright = f"2022-{datetime.now().year}, Alejandro Martínez León"
 author = 'Alejandro Martínez León'
 
@@ -29,8 +29,7 @@ author = 'Alejandro Martínez León'
 
 # -- General configuration ---------------------------------------------------
 
-github_doc_root = 'https://github.com/ale94mleon/moldrug/tree/main/docs'
-needs_sphinx = '"5.3.0"'
+github_doc_root = 'https://github.com/ale94mleon/bindflow/tree/main/docs'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -43,10 +42,10 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
-    "recommonmark",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
     "myst_nb",
+    "sphinx_inline_tabs",
     "sphinx_copybutton",
 ]
 
@@ -92,7 +91,7 @@ source_suffix = {
 html_theme = "sphinx_book_theme"
 pygments_style = "sphinx"
 html_theme_options = {
-    "repository_url": "https://github.com/ale94mleon/moldrug/",
+    "repository_url": "https://github.com/ale94mleon/bindflow/",
     "path_to_docs": "docs",
     "use_source_button": True,
     "use_download_button": True,
@@ -102,7 +101,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/ale94mleon/moldrug/",
+            "url": "https://github.com/ale94mleon/bindflow/",
             "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         }

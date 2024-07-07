@@ -22,6 +22,15 @@ If you do not have ``mamba`` installed, then:
 
 If you want to modify the code and contribute, then:
 
+For MacOS users with ARM ships you might need to remove from the environment file:
+
+.. code-blok:: yaml
+  
+  - espaloma >=0.3.1
+  - dglteam::dgl
+
+``espaloma``_ requires ``dgl 1.1.2.*``, which is not for osx-arm64
+
 .. code-block:: bash
 
     git clone https://github.com/ale94mleon/BindFlow.git

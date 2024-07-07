@@ -53,7 +53,9 @@ dependencies = [
     "tabulate == 0.8.10", # TODO update to new
     "pyyaml",
     "uncertainties",
-    "gmx_MMPBSA", # MMPBSA DEPENDENCY
+    # MMPBSA DEPENDENCY
+    "gmx_MMPBSA",
+    "mpi4py<=3.1.5",
 ]
 
 [project.optional-dependencies]

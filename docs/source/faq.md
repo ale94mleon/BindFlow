@@ -108,16 +108,30 @@ Consequently, the energy contributions term `{complex, ligand}_{coul, vdw}` no l
 
 BindFlow uses the same λ-schedule for the simulations of the ligand in the water solvent and in the binding pocket of the protein (same simulation time and same λ-values). This means that the contribution of coupling/decoupling the ligand intramolecular interaction is the same but with the opposite sign for each contribution (either `coul` or `vdw`). This helps us to recover some useful information from the energetic contributions. the following sums will cancel out the ligand intramolecular contribution
 
-- $\text{complex\_vdw} + \text{ligand\_vdw} = \text{vdw\_contrib}$ -> estimation of the van der Waal contribution to the binding
-- $\text{complex\_coul} + \text{ligand\_coul} = \text{coul\_contrib}$ -> estimation of the Coulomb contribution to the binding
+- {math}`\text{complex_vdw} + \text{ligand_vdw} = \text{vdw_contrib}` -> estimation of the van der Waal contribution to the binding
+- {math}`\text{complex_coul} + \text{ligand_coul} = \text{coul_contrib}` -> estimation of the Coulomb contribution to the binding
 
 Then the equation of the cycle:
-$$
-\Delta G = \text{ligand\_coul} + \text{ligand\_vdw} - \text{boresch} + \text{complex\_vdw} + \text{complex\_coul} - \text{bonded}
-$$
+
+```{math}
+\Delta G = \text{ligand_coul} + \text{ligand_vdw} - \text{boresch} + \text{complex_vdw} + \text{complex_coul} - \text{bonded}
+```
 
 We can rewrite it as:
 
-$$
-\Delta G = \text{vdw\_contrib} + \text{coul\_contrib} - \text{boresch} - \text{bonded}
-$$
+```{math}
+\Delta G = \text{vdw_contrib} + \text{coul_contrib} - \text{boresch} - \text{bonded}
+```
+
+## Where to run the main job?
+
+If you use `submit = True` for the functions `bindflow.calculate_abfe` or `bindflow.calculate_calculate_mmpbsa`. One job will be launched to the cluster with the only aim of launching the Snakemake jobs to the cluster and waiting till the completion of the entire workflow. This is inefficient: actively allocated resources in the cluster that are not been used.
+
+A workaround in case a frontend is available is to set `submit = False` and then on the `approach` directory do:
+
+
+```bash
+conda activate BindFlow
+```
+
+## Cancelling running jobs in a Slurm HPC cluster

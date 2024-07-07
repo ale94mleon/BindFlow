@@ -18,7 +18,8 @@ data/*
 public
 
 # Interanl modules
-src/abfe/utils/my_pdb.py
+src/bindflow/utils/my_pdb.py
+src/bindflow/_version.py
 
 .pytest_cache
 .vscode

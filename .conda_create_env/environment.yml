@@ -1,4 +1,4 @@
-name: abfe
+name: bindflow
 channels:
   - conda-forge
 dependencies:
@@ -6,29 +6,26 @@ dependencies:
   - pip
   - conda-build
   - gromacs=2022.2
-  - parmed
-  - pdbfixer
+  
+  - bioconda::snakemake
+  - ambertools
   - openmm
+  - openmmforcefields
+  - pdbfixer
   - openff-toolkit
+  - parmed
   - ipykernel
   - ipython
   - ipywidgets
-  - nbsphinx==0.8.7
-  - sphinx==5.3.0
-  - bioconda::snakemake
   #- nvidia::cuda-toolkit=11.4.2
   - pip:
-    - alchemlyb==2.0.0
-    - pymbar==4.0.1
-    - MDRestraintsGenerator
-    - matplotlib
-    - numpy
-    - scipy
+    - myst-nb
+    - myst-parser
     - pandas
-    - mdanalysis
-    - TOFF
-    - tabulate==0.8.10
+    - seaborn
+    - sphinx==7.2.6
+    - sphinx_design
+    - sphinxcontrib-katex
+    - sphinx-inline-tabs
     - sphinx_copybutton
-    - myst_nb
-    - recommonmark
-    - sphinx_book_theme
+    - sphinxcontrib-mermaid
