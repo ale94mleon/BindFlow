@@ -54,7 +54,6 @@ dependencies = [
     "pyyaml",
     "uncertainties",
     "gmx_MMPBSA", # MMPBSA DEPENDENCY
-    "natsort", # MMPBSA DEPENDENCY
 ]
 
 [project.optional-dependencies]

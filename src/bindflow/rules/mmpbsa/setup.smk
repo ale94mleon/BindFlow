@@ -5,7 +5,6 @@ from bindflow.mdp.templates import TemplatePath
 from pathlib import Path
 import shutil
 import tempfile
-import natsort
 
 # Common to all sub-workflows
 approach_path = config["out_approach_path"]
@@ -58,7 +57,7 @@ rule mmxbsa_setup:
             frames = list(Path(tmp_dir).glob('*.gro'))
             if len(frames) < len(output.gro):
                 raise RuntimeError("Not enough frames in equil-mdsim/prod/prod.xtc")
-            frames = natsort.natsorted(frames)[0:len(output.gro)]
+            frames = tools.natsort(frames)[0:len(output.gro)]
 
             for frame, gro, mdp_file in zip(frames, output.gro, output.mdp):
                 Path(gro).parent.mkdir(parents=True, exist_ok=True)
