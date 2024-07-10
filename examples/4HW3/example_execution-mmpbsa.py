@@ -19,10 +19,10 @@ calculate_mmpbsa(
     cofactor=None,
     membrane=None,
     hmr_factor=2.5,
-    threads=12,
-    num_jobs=100000,
+    threads=10,
+    num_jobs=10,
     replicas=1,
-    samples=2,
+    samples=20,
     submit=False,
     global_config=global_config)
 

@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from typing import List, Tuple, Union
+import re
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -20,6 +21,10 @@ HARD_CODE_DEPENDENCIES = [
     'unset NUMEXPR_NUM_THREADS',
 ]
 
+def natsort(l): 
+    conversion = lambda inp: int(inp) if inp.isdigit() else inp.lower()
+    key = lambda k: [conversion(c) for c in re.split('([0-9]+)', str(k))]
+    return sorted(l, key=key)
 
 class DotDict:
     """A simple implementation of dot-access dict"""

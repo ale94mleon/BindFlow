@@ -59,7 +59,7 @@ rule run_gmx_mmpbsa:
                 os.chdir(tmp_dir)
                 tools.run(gmx_mmpbsa_command)
                 mmxbsa_data = mmxbsa_analysis.GmxMmxbsaDataRetriever("COMPACT_MMXSA_RESULTS.mmxsa")
-                mmxbsa_data.get_dg().to_csv(output.mmxbsa_csv, index=False)
+                mmxbsa_data.store_dg(output.mmxbsa_csv, params.run_dir)
             finally:
                 os.chdir(cwd)
                 # Clean centered trajectory

@@ -40,8 +40,7 @@ rule mmxbsa_setup:
         sim_dir = Path(params.sim_dir).resolve()
         sim_dir.mkdir(exist_ok=True, parents=True)
 
-        # The 2 is just to be sure of having enough frames
-        skip = max(1, int(mdp.get_number_of_frames(input.mdp) / (config['samples'] + 2)))
+        skip = 1
 
         with tempfile.TemporaryDirectory(prefix='split_', dir=sim_dir) as tmp_dir:
             @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"System\"")
@@ -56,14 +55,15 @@ rule mmxbsa_setup:
                 trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True)
             #tools.run(cmd)
             frames = list(Path(tmp_dir).glob('*.gro'))
-
-            if len(frames) >= len(output.gro):
-                for frame, gro, mdp_file in zip(frames, output.gro, output.mdp):
-                    Path(gro).parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy(frame, gro)
-                    mdp_template.write(mdp_file)
-            else:
+            if len(frames) < len(output.gro):
                 raise RuntimeError("Not enough frames in equil-mdsim/prod/prod.xtc")
+            frames = tools.natsort(frames)[0:len(output.gro)]
+
+            for frame, gro, mdp_file in zip(frames, output.gro, output.mdp):
+                Path(gro).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(frame, gro)
+                mdp_template.write(mdp_file)
+            print(f"GENERATED A TOTAL OF {len(output.gro)} FRAMES GENERATED. THE FIRST {len(output.gro)} FRAMES FROM THE FRAME PRODUCTION ARE SELECTED.")
 
 rule create_mmxbsa_in:
     input:

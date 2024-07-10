@@ -4,70 +4,177 @@ import pandas as pd
 
 
 def prettify_df(full_df):
-    prettified_dict = {
-        "name": [],
+    groups = full_df.groupby(["name", "replica"])
+    pretty_dict = {"name":[], "replica": [], 
+                   "dg_c2_pb":[],"dg_c2_pb_sem":[],"dg_c2_gb":[],"dg_c2_gb_sem":[],"dg_ie_pb":[],"dg_ie_pb_sem":[],
+                   "dg_ie_gb":[],"dg_ie_gb_sem":[],"dg_qh_pb":[],"dg_qh_pb_sem":[],"dg_qh_gb":[],"dg_qh_gb_sem":[], 
+                   "dg_en_pb":[],"dg_en_pb_sem":[],"dg_en_gb":[],"dg_en_gb_sem":[],
+                   "c2_pb":[],"c2_pb_sem":[],"c2_gb":[],"c2_gb_sem":[],"ie_pb":[],"ie_pb_sem":[],"ie_gb":[],"ie_gb_sem":[],"qh":[],"qh_sem":[]}
 
-        "dG_pb_c2": [],
-        "dG_pb_c2_err": [],
-        "dG_pb_ie": [],
-        "dG_pb_ie_err": [],
-        "dG_pb_qh": [],
-        "dG_pb_qh_err": [],
+    for group_keys, group_df in groups:
+        group_name, group_replica = group_keys
+        pretty_dict["name"].append(group_name)
+        pretty_dict["replica"].append(group_replica)
 
-        "dG_gb_c2": [],
-        "dG_gb_c2_err": [],
-        "dG_gb_ie": [],
-        "dG_gb_ie_err": [],
-        "dG_gb_qh": [],
-        "dG_gb_qh_err": [],
-        }
-    groups = full_df.groupby("name")
-    for group_name, group_df in groups:
-        prettified_dict["name"].append(group_name)
-        prettified_dict["dG_pb_c2"].append(group_df["pb_c2_val"].mean())
-        prettified_dict["dG_pb_c2_err"].append(group_df["pb_c2_val"].std())
-        prettified_dict["dG_pb_ie"].append(group_df["pb_ie_val"].mean())
-        prettified_dict["dG_pb_ie_err"].append(group_df["pb_ie_val"].std())
-        prettified_dict["dG_pb_qh"].append(group_df["pb_qh_val"].mean())
-        prettified_dict["dG_pb_qh_err"].append(group_df["pb_qh_val"].std())
-        prettified_dict["dG_gb_c2"].append(group_df["gb_c2_val"].mean())
-        prettified_dict["dG_gb_c2_err"].append(group_df["gb_c2_val"].std())
-        prettified_dict["dG_gb_ie"].append(group_df["gb_ie_val"].mean())
-        prettified_dict["dG_gb_ie_err"].append(group_df["gb_ie_val"].std())
-        prettified_dict["dG_gb_qh"].append(group_df["gb_qh_val"].mean())
-        prettified_dict["dG_gb_qh_err"].append(group_df["gb_qh_val"].std())
+        pretty_dict["dg_c2_pb"].append(group_df["dg_c2_pb"].mean())
+        pretty_dict["dg_c2_pb_sem"].append(group_df["dg_c2_pb"].sem())
+        pretty_dict["dg_c2_gb"].append(group_df["dg_c2_gb"].mean())
+        pretty_dict["dg_c2_gb_sem"].append(group_df["dg_c2_gb"].sem())
+        pretty_dict["dg_ie_pb"].append(group_df["dg_ie_pb"].mean())
+        pretty_dict["dg_ie_pb_sem"].append(group_df["dg_ie_pb"].sem())
+        pretty_dict["dg_ie_gb"].append(group_df["dg_ie_gb"].mean())
+        pretty_dict["dg_ie_gb_sem"].append(group_df["dg_ie_gb"].sem())
+        pretty_dict["dg_qh_pb"].append(group_df["dg_qh_pb"].mean())
+        pretty_dict["dg_qh_pb_sem"].append(group_df["dg_qh_pb"].sem())
+        pretty_dict["dg_qh_gb"].append(group_df["dg_qh_gb"].mean())
+        pretty_dict["dg_qh_gb_sem"].append(group_df["dg_qh_gb"].sem())
+        pretty_dict["dg_en_pb"].append(group_df["dg_en_pb"].mean())
+        pretty_dict["dg_en_pb_sem"].append(group_df["dg_en_pb"].sem())
+        pretty_dict["dg_en_gb"].append(group_df["dg_en_gb"].mean())
+        pretty_dict["dg_en_gb_sem"].append(group_df["dg_en_gb"].sem())
+
+        pretty_dict["c2_pb"].append(group_df["c2_pb"].mean())
+        pretty_dict["c2_pb_sem"].append(group_df["c2_pb"].sem())
+        pretty_dict["c2_gb"].append(group_df["c2_gb"].mean())
+        pretty_dict["c2_gb_sem"].append(group_df["c2_gb"].sem())
+        pretty_dict["ie_pb"].append(group_df["ie_pb"].mean())
+        pretty_dict["ie_pb_sem"].append(group_df["ie_pb"].sem())
+        pretty_dict["ie_gb"].append(group_df["ie_gb"].mean())
+        pretty_dict["ie_gb_sem"].append(group_df["ie_gb"].sem())
+        pretty_dict["qh"].append(group_df["qh"].mean())
+        pretty_dict["qh_sem"].append(group_df["qh"].sem())
     
-    return pd.DataFrame(prettified_dict)
+    return pd.DataFrame(pretty_dict)
 
 
 def convert_format_flatten(df, ligand_name, replica, sample):
-    res = { "name":[ligand_name], "replica":[replica], "sample":[sample], 
-            "pb_c2_val":[], "pb_c2_err":[], "pb_ie_val":[], "pb_ie_err":[], "pb_qh_val":[], "pb_qh_err":[], 
-            "gb_c2_val":[], "gb_c2_err":[], "gb_ie_val":[], "gb_ie_err":[], "gb_qh_val":[], "gb_qh_err":[]}
-    
-    def __set_row(name):
-        extracted_row = df[df["method"] == name]
-        res[name+"_val"].append(extracted_row.iat[0,1])
-        res[name+"_err"].append(extracted_row.iat[0,2])
-    __set_row("pb_c2")
-    __set_row("pb_ie")
-    __set_row("pb_qh")
-    __set_row("gb_c2")
-    __set_row("gb_ie")
-    __set_row("gb_qh")
-    
-    return pd.DataFrame.from_dict(res)
+    res = {"name":[ligand_name], "replica":[replica], "sample":[sample], 
+           "dg_c2_pb": df["dg_c2_pb"], "dg_c2_gb": df["dg_c2_gb"], "dg_ie_pb": df["dg_ie_pb"], 
+           "dg_ie_gb": df["dg_ie_gb"], "dg_qh_pb": df["dg_qh_pb"], "dg_qh_gb": df["dg_qh_gb"], 
+           "dg_en_pb": df["dg_en_pb"], "dg_en_gb": df["dg_en_gb"], 
+           "c2_pb": df["c2_pb"], "c2_gb": df["c2_gb"], "ie_pb": df["ie_pb"], "ie_gb": df["ie_gb"], "qh": df["qh"],
+
+           "gb_energy_complex_bond": df["gb_energy_complex_bond"],
+           "gb_energy_complex_angle": df["gb_energy_complex_angle"],
+           "gb_energy_complex_dihed": df["gb_energy_complex_dihed"],
+           "gb_energy_complex_vdwaals": df["gb_energy_complex_vdwaals"],
+           "gb_energy_complex_eel": df["gb_energy_complex_eel"],
+           "gb_energy_complex_14vdw": df["gb_energy_complex_14vdw"],
+           "gb_energy_complex_14eel": df["gb_energy_complex_14eel"],
+           "gb_energy_complex_egb": df["gb_energy_complex_egb"],
+           "gb_energy_complex_esurf": df["gb_energy_complex_esurf"],
+           "gb_energy_complex_ggas": df["gb_energy_complex_ggas"],
+           "gb_energy_complex_gsolv": df["gb_energy_complex_gsolv"],
+           "gb_energy_complex_total": df["gb_energy_complex_total"],
+           
+           "gb_energy_receptor_bond": df["gb_energy_receptor_bond"],
+           "gb_energy_receptor_angle": df["gb_energy_receptor_angle"],
+           "gb_energy_receptor_dihed": df["gb_energy_receptor_dihed"],
+           "gb_energy_receptor_vdwaals": df["gb_energy_receptor_vdwaals"],
+           "gb_energy_receptor_eel": df["gb_energy_receptor_eel"],
+           "gb_energy_receptor_14vdw": df["gb_energy_receptor_14vdw"],
+           "gb_energy_receptor_14eel": df["gb_energy_receptor_14eel"],
+           "gb_energy_receptor_egb": df["gb_energy_receptor_egb"],
+           "gb_energy_receptor_esurf": df["gb_energy_receptor_esurf"],
+           "gb_energy_receptor_ggas": df["gb_energy_receptor_ggas"],
+           "gb_energy_receptor_gsolv": df["gb_energy_receptor_gsolv"],
+           "gb_energy_receptor_total": df["gb_energy_receptor_total"],
+
+           "gb_energy_ligand_bond": df["gb_energy_ligand_bond"],
+           "gb_energy_ligand_angle": df["gb_energy_ligand_angle"],
+           "gb_energy_ligand_dihed": df["gb_energy_ligand_dihed"],
+           "gb_energy_ligand_vdwaals": df["gb_energy_ligand_vdwaals"],
+           "gb_energy_ligand_eel": df["gb_energy_ligand_eel"],
+           "gb_energy_ligand_14vdw": df["gb_energy_ligand_14vdw"],
+           "gb_energy_ligand_14eel": df["gb_energy_ligand_14eel"],
+           "gb_energy_ligand_egb": df["gb_energy_ligand_egb"],
+           "gb_energy_ligand_esurf": df["gb_energy_ligand_esurf"],
+           "gb_energy_ligand_ggas": df["gb_energy_ligand_ggas"],
+           "gb_energy_ligand_gsolv": df["gb_energy_ligand_gsolv"],
+           "gb_energy_ligand_total": df["gb_energy_ligand_total"],
+
+           "gb_energy_delta_bond": df["gb_energy_delta_bond"],
+           "gb_energy_delta_angle": df["gb_energy_delta_angle"],
+           "gb_energy_delta_dihed": df["gb_energy_delta_dihed"],
+           "gb_energy_delta_vdwaals": df["gb_energy_delta_vdwaals"],
+           "gb_energy_delta_eel": df["gb_energy_delta_eel"],
+           "gb_energy_delta_14vdw": df["gb_energy_delta_14vdw"],
+           "gb_energy_delta_14eel": df["gb_energy_delta_14eel"],
+           "gb_energy_delta_egb": df["gb_energy_delta_egb"],
+           "gb_energy_delta_esurf": df["gb_energy_delta_esurf"],
+           "gb_energy_delta_ggas": df["gb_energy_delta_ggas"],
+           "gb_energy_delta_gsolv": df["gb_energy_delta_gsolv"],
+           "gb_energy_delta_total": df["gb_energy_delta_total"],
 
 
-def compute_dg(energy_value, error_energy, entropy_value, error_entropy):
-    if energy_value is None or entropy_value is None:
-        return None, None
-    delta_g = energy_value+entropy_value
-    if not error_energy is None and not error_entropy is None:
-        delta_g_error = math.sqrt(error_energy**2 + error_entropy**2)
-    else:
-        delta_g_error = None
-    return delta_g, delta_g_error
+           "pb_energy_complex_bond": df["pb_energy_complex_bond"],
+           "pb_energy_complex_angle": df["pb_energy_complex_angle"],
+           "pb_energy_complex_dihed": df["pb_energy_complex_dihed"],
+           "pb_energy_complex_vdwaals": df["pb_energy_complex_vdwaals"],
+           "pb_energy_complex_eel": df["pb_energy_complex_eel"],
+           "pb_energy_complex_14vdw": df["pb_energy_complex_14vdw"],
+           "pb_energy_complex_14eel": df["pb_energy_complex_14eel"],
+           "pb_energy_complex_epb": df["pb_energy_complex_epb"],
+           "pb_energy_complex_enpolar": df["pb_energy_complex_enpolar"],
+           "pb_energy_complex_edisper": df["pb_energy_complex_edisper"],
+           "pb_energy_complex_ggas": df["pb_energy_complex_ggas"],
+           "pb_energy_complex_gsolv": df["pb_energy_complex_gsolv"],
+           "pb_energy_complex_total": df["pb_energy_complex_total"],
+
+           "pb_energy_receptor_bond": df["pb_energy_receptor_bond"],
+           "pb_energy_receptor_angle": df["pb_energy_receptor_angle"],
+           "pb_energy_receptor_dihed": df["pb_energy_receptor_dihed"],
+           "pb_energy_receptor_vdwaals": df["pb_energy_receptor_vdwaals"],
+           "pb_energy_receptor_eel": df["pb_energy_receptor_eel"],
+           "pb_energy_receptor_14vdw": df["pb_energy_receptor_14vdw"],
+           "pb_energy_receptor_14eel": df["pb_energy_receptor_14eel"],
+           "pb_energy_receptor_epb": df["pb_energy_receptor_epb"],
+           "pb_energy_receptor_enpolar": df["pb_energy_receptor_enpolar"],
+           "pb_energy_receptor_edisper": df["pb_energy_receptor_edisper"],
+           "pb_energy_receptor_ggas": df["pb_energy_receptor_ggas"],
+           "pb_energy_receptor_gsolv": df["pb_energy_receptor_gsolv"],
+           "pb_energy_receptor_total": df["pb_energy_receptor_total"],
+
+           "pb_energy_ligand_bond": df["pb_energy_ligand_bond"],
+           "pb_energy_ligand_angle": df["pb_energy_ligand_angle"],
+           "pb_energy_ligand_dihed": df["pb_energy_ligand_dihed"],
+           "pb_energy_ligand_vdwaals": df["pb_energy_ligand_vdwaals"],
+           "pb_energy_ligand_eel": df["pb_energy_ligand_eel"],
+           "pb_energy_ligand_14vdw": df["pb_energy_ligand_14vdw"],
+           "pb_energy_ligand_14eel": df["pb_energy_ligand_14eel"],
+           "pb_energy_ligand_epb": df["pb_energy_ligand_epb"],
+           "pb_energy_ligand_enpolar": df["pb_energy_ligand_enpolar"],
+           "pb_energy_ligand_edisper": df["pb_energy_ligand_edisper"],
+           "pb_energy_ligand_ggas": df["pb_energy_ligand_ggas"],
+           "pb_energy_ligand_gsolv": df["pb_energy_ligand_gsolv"],
+           "pb_energy_ligand_total": df["pb_energy_ligand_total"],
+
+           "pb_energy_delta_bond": df["pb_energy_delta_bond"],
+           "pb_energy_delta_angle": df["pb_energy_delta_angle"],
+           "pb_energy_delta_dihed": df["pb_energy_delta_dihed"],
+           "pb_energy_delta_vdwaals": df["pb_energy_delta_vdwaals"],
+           "pb_energy_delta_eel": df["pb_energy_delta_eel"],
+           "pb_energy_delta_14vdw": df["pb_energy_delta_14vdw"],
+           "pb_energy_delta_14eel": df["pb_energy_delta_14eel"],
+           "pb_energy_delta_epb": df["pb_energy_delta_epb"],
+           "pb_energy_delta_enpolar": df["pb_energy_delta_enpolar"],
+           "pb_energy_delta_edisper": df["pb_energy_delta_edisper"],
+           "pb_energy_delta_ggas": df["pb_energy_delta_ggas"],
+           "pb_energy_delta_gsolv": df["pb_energy_delta_gsolv"],
+           "pb_energy_delta_total": df["pb_energy_delta_total"],
+           }
+    return pd.DataFrame.from_dict(res)  
+
+
+#def compute_dg(energy_value, error_energy, entropy_value, error_entropy):
+#    if energy_value is None or entropy_value is None:
+#        return None, None
+#    delta_g = energy_value+entropy_value
+#    if not error_energy is None and not error_entropy is None:
+#        delta_g_error = math.sqrt(error_energy**2 + error_entropy**2)
+#    else:
+#        delta_g_error = None
+#    return delta_g, delta_g_error
 
 
 class GmxMmxbsaDataRetriever:
@@ -80,106 +187,410 @@ class GmxMmxbsaDataRetriever:
         self.gmx_api.setting_time()
         self.gmx_api.load_file(binary_api_file)
 
-        self._entropies = self.__extract_entropies()
-        self._energies = self.__extract_energies()
-        self._delta_gs = self.__initialize_delta_g()
+        self.__extract_entropies()
+        self.__extract_energies()
+        self.__extract_others()
 
     
     def __extract_entropies(self):
-        entropies = {"method": [], "value": [], "error": []}
-        def __append_empty_entropy(name):
-                entropies["method"].append(name)
-                entropies["value"].append(None)
-                entropies["error"].append(None)
-
         if "c2" in self.gmx_api.data["normal"].keys():
             if "pb" in self.gmx_api.data["normal"]["c2"].keys():
-                entropies["method"].append("c2_pb")
-                entropies["value"].append(self.gmx_api.data["normal"]["c2"]["pb"]["c2data"])
-                entropies["error"].append(self.gmx_api.data["normal"]["c2"]["pb"]["c2_std"])
+                self.c2_pb = self.gmx_api.data["normal"]["c2"]["pb"]["c2data"]
             else:
-                __append_empty_entropy("c2_pb")
+                self.c2_pb = None
             if "gb" in self.gmx_api.data["normal"]["c2"].keys():
-                entropies["method"].append("c2_gb")
-                entropies["value"].append(self.gmx_api.data["normal"]["c2"]["gb"]["c2data"])
-                entropies["error"].append(self.gmx_api.data["normal"]["c2"]["gb"]["c2_std"])
+                self.c2_gb = self.gmx_api.data["normal"]["c2"]["gb"]["c2data"]
             else:
-                __append_empty_entropy("c2_gb")
+                self.c2_gb = None
         else:
-            __append_empty_entropy("c2_pb")
-            __append_empty_entropy("c2_gb")
-        
+            self.c2_pb = None
+            self.c2_gb = None
+
+
         if "ie" in self.gmx_api.data["normal"].keys():
             if "pb" in self.gmx_api.data["normal"]["ie"].keys():
-                entropies["method"].append("ie_pb")
-                entropies["value"].append(float(self.gmx_api.data["normal"]["ie"]["pb"]["iedata"].mean()))
-                entropies["error"].append(float(self.gmx_api.data["normal"]["ie"]["pb"]["iedata"].std()))
+                self.ie_pb = float(self.gmx_api.data["normal"]["ie"]["pb"]["iedata"].mean())
             else:
-                __append_empty_entropy("ie_pb")
+                self.ie_pb = None
             if "gb" in self.gmx_api.data["normal"]["ie"].keys():
-                entropies["method"].append("ie_gb")
-                entropies["value"].append(float(self.gmx_api.data["normal"]["ie"]["gb"]["iedata"].mean()))
-                entropies["error"].append(float(self.gmx_api.data["normal"]["ie"]["gb"]["iedata"].std()))
+                self.ie_gb = float(self.gmx_api.data["normal"]["ie"]["gb"]["iedata"].mean())
             else:
-                __append_empty_entropy("ie_gb")
+                self.ie_gb = None
         else:
-            __append_empty_entropy("ie_pb")
-            __append_empty_entropy("ie_gb")
+            self.ie_pb = None
+            self.ie_gb = None
+
         if "qh" in self.gmx_api.data["normal"].keys():
-            entropies["method"].append("qh")
-            entropies["value"].append(self.gmx_api.data["normal"]["qh"]["delta"]["TOTAL"])
-            entropies["error"].append(None)
+            self.qh = self.gmx_api.data["normal"]["qh"]["delta"]["TOTAL"]
         else:
-            __append_empty_entropy("qh")
-        return entropies
+            self.qh = None
+        
+        return self.c2_pb, self.c2_gb, self.ie_pb, self.ie_gb, self.qh
 
 
     def __extract_energies(self):
-        energies = {"method": [], "value": [], "error": []}
-        def __append_empty_energies(name):
-            energies["method"].append(name)
-            energies["value"].append(None)
-            energies["error"].append(None)
-        
         if "pb" in self.gmx_api.data["normal"].keys():
-            energies["method"].append("pb")
-            energies["value"].append(float(self.gmx_api.data["normal"]["pb"]["delta"]["TOTAL"].mean()))
-            energies["error"].append(float(self.gmx_api.data["normal"]["pb"]["delta"]["TOTAL"].std()))
+            self.pb_en = self.gmx_api.data["normal"]["pb"]["delta"]["TOTAL"]
         else:
-            __append_empty_energies("pb")
+            self.pb_en = None
         if "gb" in self.gmx_api.data["normal"].keys():
-            energies["method"].append("gb")
-            energies["value"].append(float(self.gmx_api.data["normal"]["gb"]["delta"]["TOTAL"].mean()))
-            energies["error"].append(float(self.gmx_api.data["normal"]["gb"]["delta"]["TOTAL"].std()))
+            self.gb_en = self.gmx_api.data["normal"]["gb"]["delta"]["TOTAL"]
         else:
-            __append_empty_energies("gb")
-        return energies
-
-
-    def __initialize_delta_g(self):
-        delta_gs = {"method": [], "delta_g": [], "delta_g_error": []}
-        df_entropy = pd.DataFrame.from_dict(self._entropies)
-        df_energy = pd.DataFrame.from_dict(self._energies)
+            self.gb_en = None
         
-        def get_elements_from_energy(method):
-            return [df_energy[df_energy["method"] == method]["value"].iat[0], df_energy[df_energy["method"] == method]["error"].iat[0]]
-        def get_elements_from_entropy(method):
-            return [df_entropy[df_entropy["method"] == method]["value"].iat[0], df_entropy[df_entropy["method"] == method]["error"].iat[0]]
-        
-        def create_dg_dict(energy_name, entropy_name, out_name):
-            delta_g_val, delta_g_err = compute_dg(*get_elements_from_energy(energy_name),*get_elements_from_entropy(entropy_name))
-            delta_gs["method"].append(out_name)
-            delta_gs["delta_g"].append(delta_g_val)
-            delta_gs["delta_g_error"].append(delta_g_err)
-
-        create_dg_dict("pb", "c2_pb", "pb_c2")
-        create_dg_dict("pb", "ie_pb", "pb_ie")
-        create_dg_dict("pb", "qh", "pb_qh")
-        create_dg_dict("gb", "c2_gb", "gb_c2")
-        create_dg_dict("gb", "ie_gb", "gb_ie")
-        create_dg_dict("gb", "qh", "gb_qh")
-
-        return delta_gs
+        return self.pb_en, self.gb_en
     
-    def get_dg(self):
-        return pd.DataFrame.from_dict(self._delta_gs)
+
+    def __extract_others(self):
+        if "gb" in self.gmx_api.data["normal"].keys():
+            self.gb_energy_complex_bond = float(self.gmx_api.data["normal"]["gb"]["complex"]["BOND"].mean())
+            self.gb_energy_complex_angle = float(self.gmx_api.data["normal"]["gb"]["complex"]["ANGLE"].mean())
+            self.gb_energy_complex_dihed = float(self.gmx_api.data["normal"]["gb"]["complex"]["DIHED"].mean())
+            self.gb_energy_complex_vdwaals = float(self.gmx_api.data["normal"]["gb"]["complex"]["VDWAALS"].mean())
+            self.gb_energy_complex_eel = float(self.gmx_api.data["normal"]["gb"]["complex"]["EEL"].mean())
+            self.gb_energy_complex_14vdw = float(self.gmx_api.data["normal"]["gb"]["complex"]["1-4 VDW"].mean())
+            self.gb_energy_complex_14eel = float(self.gmx_api.data["normal"]["gb"]["complex"]["1-4 EEL"].mean())
+            self.gb_energy_complex_egb = float(self.gmx_api.data["normal"]["gb"]["complex"]["EGB"].mean())
+            self.gb_energy_complex_esurf = float(self.gmx_api.data["normal"]["gb"]["complex"]["ESURF"].mean())
+            self.gb_energy_complex_ggas = float(self.gmx_api.data["normal"]["gb"]["complex"]["GGAS"].mean())
+            self.gb_energy_complex_gsolv = float(self.gmx_api.data["normal"]["gb"]["complex"]["GSOLV"].mean())
+            self.gb_energy_complex_total = float(self.gmx_api.data["normal"]["gb"]["complex"]["TOTAL"].mean())
+
+            self.gb_energy_receptor_bond = float(self.gmx_api.data["normal"]["gb"]["receptor"]["BOND"].mean())
+            self.gb_energy_receptor_angle = float(self.gmx_api.data["normal"]["gb"]["receptor"]["ANGLE"].mean())
+            self.gb_energy_receptor_dihed = float(self.gmx_api.data["normal"]["gb"]["receptor"]["DIHED"].mean())
+            self.gb_energy_receptor_vdwaals = float(self.gmx_api.data["normal"]["gb"]["receptor"]["VDWAALS"].mean())
+            self.gb_energy_receptor_eel = float(self.gmx_api.data["normal"]["gb"]["receptor"]["EEL"].mean())
+            self.gb_energy_receptor_14vdw = float(self.gmx_api.data["normal"]["gb"]["receptor"]["1-4 VDW"].mean())
+            self.gb_energy_receptor_14eel = float(self.gmx_api.data["normal"]["gb"]["receptor"]["1-4 EEL"].mean())
+            self.gb_energy_receptor_egb = float(self.gmx_api.data["normal"]["gb"]["receptor"]["EGB"].mean())
+            self.gb_energy_receptor_esurf = float(self.gmx_api.data["normal"]["gb"]["receptor"]["ESURF"].mean())
+            self.gb_energy_receptor_ggas = float(self.gmx_api.data["normal"]["gb"]["receptor"]["GGAS"].mean())
+            self.gb_energy_receptor_gsolv = float(self.gmx_api.data["normal"]["gb"]["receptor"]["GSOLV"].mean())
+            self.gb_energy_receptor_total = float(self.gmx_api.data["normal"]["gb"]["receptor"]["TOTAL"].mean())
+
+            self.gb_energy_ligand_bond = float(self.gmx_api.data["normal"]["gb"]["ligand"]["BOND"].mean())
+            self.gb_energy_ligand_angle = float(self.gmx_api.data["normal"]["gb"]["ligand"]["ANGLE"].mean())
+            self.gb_energy_ligand_dihed = float(self.gmx_api.data["normal"]["gb"]["ligand"]["DIHED"].mean())
+            self.gb_energy_ligand_vdwaals = float(self.gmx_api.data["normal"]["gb"]["ligand"]["VDWAALS"].mean())
+            self.gb_energy_ligand_eel = float(self.gmx_api.data["normal"]["gb"]["ligand"]["EEL"].mean())
+            self.gb_energy_ligand_14vdw = float(self.gmx_api.data["normal"]["gb"]["ligand"]["1-4 VDW"].mean())
+            self.gb_energy_ligand_14eel = float(self.gmx_api.data["normal"]["gb"]["ligand"]["1-4 EEL"].mean())
+            self.gb_energy_ligand_egb = float(self.gmx_api.data["normal"]["gb"]["ligand"]["EGB"].mean())
+            self.gb_energy_ligand_esurf = float(self.gmx_api.data["normal"]["gb"]["ligand"]["ESURF"].mean())
+            self.gb_energy_ligand_ggas = float(self.gmx_api.data["normal"]["gb"]["ligand"]["GGAS"].mean())
+            self.gb_energy_ligand_gsolv = float(self.gmx_api.data["normal"]["gb"]["ligand"]["GSOLV"].mean())
+            self.gb_energy_ligand_total = float(self.gmx_api.data["normal"]["gb"]["ligand"]["TOTAL"].mean())
+
+            self.gb_energy_delta_bond = float(self.gmx_api.data["normal"]["gb"]["delta"]["BOND"].mean())
+            self.gb_energy_delta_angle = float(self.gmx_api.data["normal"]["gb"]["delta"]["ANGLE"].mean())
+            self.gb_energy_delta_dihed = float(self.gmx_api.data["normal"]["gb"]["delta"]["DIHED"].mean())
+            self.gb_energy_delta_vdwaals = float(self.gmx_api.data["normal"]["gb"]["delta"]["VDWAALS"].mean())
+            self.gb_energy_delta_eel = float(self.gmx_api.data["normal"]["gb"]["delta"]["EEL"].mean())
+            self.gb_energy_delta_14vdw = float(self.gmx_api.data["normal"]["gb"]["delta"]["1-4 VDW"].mean())
+            self.gb_energy_delta_14eel = float(self.gmx_api.data["normal"]["gb"]["delta"]["1-4 EEL"].mean())
+            self.gb_energy_delta_egb = float(self.gmx_api.data["normal"]["gb"]["delta"]["EGB"].mean())
+            self.gb_energy_delta_esurf = float(self.gmx_api.data["normal"]["gb"]["delta"]["ESURF"].mean())
+            self.gb_energy_delta_ggas = float(self.gmx_api.data["normal"]["gb"]["delta"]["GGAS"].mean())
+            self.gb_energy_delta_gsolv = float(self.gmx_api.data["normal"]["gb"]["delta"]["GSOLV"].mean())
+            self.gb_energy_delta_total = float(self.gmx_api.data["normal"]["gb"]["delta"]["TOTAL"].mean())
+        else:
+            self.gb_energy_complex_bond = None
+            self.gb_energy_complex_angle = None
+            self.gb_energy_complex_dihed = None
+            self.gb_energy_complex_vdwaals = None
+            self.gb_energy_complex_eel = None
+            self.gb_energy_complex_14vdw = None
+            self.gb_energy_complex_14eel = None
+            self.gb_energy_complex_egb = None
+            self.gb_energy_complex_esurf = None
+            self.gb_energy_complex_ggas = None
+            self.gb_energy_complex_gsolv = None
+            self.gb_energy_complex_total = None
+
+            self.gb_energy_receptor_bond = None
+            self.gb_energy_receptor_angle = None
+            self.gb_energy_receptor_dihed = None
+            self.gb_energy_receptor_vdwaals = None
+            self.gb_energy_receptor_eel = None
+            self.gb_energy_receptor_14vdw = None
+            self.gb_energy_receptor_14eel = None
+            self.gb_energy_receptor_egb = None
+            self.gb_energy_receptor_esurf = None
+            self.gb_energy_receptor_ggas = None
+            self.gb_energy_receptor_gsolv = None
+            self.gb_energy_receptor_total = None
+
+            self.gb_energy_ligand_bond = None
+            self.gb_energy_ligand_angle = None
+            self.gb_energy_ligand_dihed = None
+            self.gb_energy_ligand_vdwaals = None
+            self.gb_energy_ligand_eel = None
+            self.gb_energy_ligand_14vdw = None
+            self.gb_energy_ligand_14eel = None
+            self.gb_energy_ligand_egb = None
+            self.gb_energy_ligand_esurf = None
+            self.gb_energy_ligand_ggas = None
+            self.gb_energy_ligand_gsolv = None
+            self.gb_energy_ligand_total = None
+
+            self.gb_energy_delta_bond = None
+            self.gb_energy_delta_angle = None
+            self.gb_energy_delta_dihed = None
+            self.gb_energy_delta_vdwaals = None
+            self.gb_energy_delta_eel = None
+            self.gb_energy_delta_14vdw = None
+            self.gb_energy_delta_14eel = None
+            self.gb_energy_delta_egb = None
+            self.gb_energy_delta_esurf = None
+            self.gb_energy_delta_ggas = None
+            self.gb_energy_delta_gsolv = None
+            self.gb_energy_delta_total = None
+
+
+        if "pb" in self.gmx_api.data["normal"].keys():
+            self.pb_energy_complex_bond = float(self.gmx_api.data["normal"]["pb"]["complex"]["BOND"].mean())
+            self.pb_energy_complex_angle = float(self.gmx_api.data["normal"]["pb"]["complex"]["ANGLE"].mean())
+            self.pb_energy_complex_dihed = float(self.gmx_api.data["normal"]["pb"]["complex"]["DIHED"].mean())
+            self.pb_energy_complex_vdwaals = float(self.gmx_api.data["normal"]["pb"]["complex"]["VDWAALS"].mean())
+            self.pb_energy_complex_eel = float(self.gmx_api.data["normal"]["pb"]["complex"]["EEL"].mean())
+            self.pb_energy_complex_14vdw = float(self.gmx_api.data["normal"]["pb"]["complex"]["1-4 VDW"].mean())
+            self.pb_energy_complex_14eel = float(self.gmx_api.data["normal"]["pb"]["complex"]["1-4 EEL"].mean())
+            self.pb_energy_complex_epb = float(self.gmx_api.data["normal"]["pb"]["complex"]["EPB"].mean())
+            self.pb_energy_complex_enpolar = float(self.gmx_api.data["normal"]["pb"]["complex"]["ENPOLAR"].mean())
+            self.pb_energy_complex_edisper = float(self.gmx_api.data["normal"]["pb"]["complex"]["EDISPER"].mean())
+            self.pb_energy_complex_ggas = float(self.gmx_api.data["normal"]["pb"]["complex"]["GGAS"].mean())
+            self.pb_energy_complex_gsolv = float(self.gmx_api.data["normal"]["pb"]["complex"]["GSOLV"].mean())
+            self.pb_energy_complex_total = float(self.gmx_api.data["normal"]["pb"]["complex"]["TOTAL"].mean())
+
+            self.pb_energy_receptor_bond = float(self.gmx_api.data["normal"]["pb"]["receptor"]["BOND"].mean())
+            self.pb_energy_receptor_angle = float(self.gmx_api.data["normal"]["pb"]["receptor"]["ANGLE"].mean())
+            self.pb_energy_receptor_dihed = float(self.gmx_api.data["normal"]["pb"]["receptor"]["DIHED"].mean())
+            self.pb_energy_receptor_vdwaals = float(self.gmx_api.data["normal"]["pb"]["receptor"]["VDWAALS"].mean())
+            self.pb_energy_receptor_eel = float(self.gmx_api.data["normal"]["pb"]["receptor"]["EEL"].mean())
+            self.pb_energy_receptor_14vdw = float(self.gmx_api.data["normal"]["pb"]["receptor"]["1-4 VDW"].mean())
+            self.pb_energy_receptor_14eel = float(self.gmx_api.data["normal"]["pb"]["receptor"]["1-4 EEL"].mean())
+            self.pb_energy_receptor_epb = float(self.gmx_api.data["normal"]["pb"]["receptor"]["EPB"].mean())
+            self.pb_energy_receptor_enpolar = float(self.gmx_api.data["normal"]["pb"]["receptor"]["ENPOLAR"].mean())
+            self.pb_energy_receptor_edisper = float(self.gmx_api.data["normal"]["pb"]["receptor"]["EDISPER"].mean())
+            self.pb_energy_receptor_ggas = float(self.gmx_api.data["normal"]["pb"]["receptor"]["GGAS"].mean())
+            self.pb_energy_receptor_gsolv = float(self.gmx_api.data["normal"]["pb"]["receptor"]["GSOLV"].mean())
+            self.pb_energy_receptor_total = float(self.gmx_api.data["normal"]["pb"]["receptor"]["TOTAL"].mean())
+
+            self.pb_energy_ligand_bond = float(self.gmx_api.data["normal"]["pb"]["ligand"]["BOND"].mean())
+            self.pb_energy_ligand_angle = float(self.gmx_api.data["normal"]["pb"]["ligand"]["ANGLE"].mean())
+            self.pb_energy_ligand_dihed = float(self.gmx_api.data["normal"]["pb"]["ligand"]["DIHED"].mean())
+            self.pb_energy_ligand_vdwaals = float(self.gmx_api.data["normal"]["pb"]["ligand"]["VDWAALS"].mean())
+            self.pb_energy_ligand_eel = float(self.gmx_api.data["normal"]["pb"]["ligand"]["EEL"].mean())
+            self.pb_energy_ligand_14vdw = float(self.gmx_api.data["normal"]["pb"]["ligand"]["1-4 VDW"].mean())
+            self.pb_energy_ligand_14eel = float(self.gmx_api.data["normal"]["pb"]["ligand"]["1-4 EEL"].mean())
+            self.pb_energy_ligand_epb = float(self.gmx_api.data["normal"]["pb"]["ligand"]["EPB"].mean())
+            self.pb_energy_ligand_enpolar = float(self.gmx_api.data["normal"]["pb"]["ligand"]["ENPOLAR"].mean())
+            self.pb_energy_ligand_edisper = float(self.gmx_api.data["normal"]["pb"]["ligand"]["EDISPER"].mean())
+            self.pb_energy_ligand_ggas = float(self.gmx_api.data["normal"]["pb"]["ligand"]["GGAS"].mean())
+            self.pb_energy_ligand_gsolv = float(self.gmx_api.data["normal"]["pb"]["ligand"]["GSOLV"].mean())
+            self.pb_energy_ligand_total = float(self.gmx_api.data["normal"]["pb"]["ligand"]["TOTAL"].mean())
+
+            self.pb_energy_delta_bond = float(self.gmx_api.data["normal"]["pb"]["delta"]["BOND"].mean())
+            self.pb_energy_delta_angle = float(self.gmx_api.data["normal"]["pb"]["delta"]["ANGLE"].mean())
+            self.pb_energy_delta_dihed = float(self.gmx_api.data["normal"]["pb"]["delta"]["DIHED"].mean())
+            self.pb_energy_delta_vdwaals = float(self.gmx_api.data["normal"]["pb"]["delta"]["VDWAALS"].mean())
+            self.pb_energy_delta_eel = float(self.gmx_api.data["normal"]["pb"]["delta"]["EEL"].mean())
+            self.pb_energy_delta_14vdw = float(self.gmx_api.data["normal"]["pb"]["delta"]["1-4 VDW"].mean())
+            self.pb_energy_delta_14eel = float(self.gmx_api.data["normal"]["pb"]["delta"]["1-4 EEL"].mean())
+            self.pb_energy_delta_epb = float(self.gmx_api.data["normal"]["pb"]["delta"]["EPB"].mean())
+            self.pb_energy_delta_enpolar = float(self.gmx_api.data["normal"]["pb"]["delta"]["ENPOLAR"].mean())
+            self.pb_energy_delta_edisper = float(self.gmx_api.data["normal"]["pb"]["delta"]["EDISPER"].mean())
+            self.pb_energy_delta_ggas = float(self.gmx_api.data["normal"]["pb"]["delta"]["GGAS"].mean())
+            self.pb_energy_delta_gsolv = float(self.gmx_api.data["normal"]["pb"]["delta"]["GSOLV"].mean())
+            self.pb_energy_delta_total = float(self.gmx_api.data["normal"]["pb"]["delta"]["TOTAL"].mean())
+        else:
+            self.pb_energy_complex_bond = None
+            self.pb_energy_complex_angle = None
+            self.pb_energy_complex_dihed = None
+            self.pb_energy_complex_vdwaals = None
+            self.pb_energy_complex_eel = None
+            self.pb_energy_complex_14vdw = None
+            self.pb_energy_complex_14eel = None
+            self.pb_energy_complex_epb = None
+            self.pb_energy_complex_enpolar = None
+            self.pb_energy_complex_edisper = None
+            self.pb_energy_complex_ggas = None
+            self.pb_energy_complex_gsolv = None
+            self.pb_energy_complex_total = None
+
+            self.pb_energy_receptor_bond = None
+            self.pb_energy_receptor_angle = None
+            self.pb_energy_receptor_dihed = None
+            self.pb_energy_receptor_vdwaals = None
+            self.pb_energy_receptor_eel = None
+            self.pb_energy_receptor_14vdw = None
+            self.pb_energy_receptor_14eel = None
+            self.pb_energy_receptor_epb = None
+            self.pb_energy_receptor_enpolar = None
+            self.pb_energy_receptor_edisper = None
+            self.pb_energy_receptor_ggas = None
+            self.pb_energy_receptor_gsolv = None
+            self.pb_energy_receptor_total = None
+
+            self.pb_energy_ligand_bond = None
+            self.pb_energy_ligand_angle = None
+            self.pb_energy_ligand_dihed = None
+            self.pb_energy_ligand_vdwaals = None
+            self.pb_energy_ligand_eel = None
+            self.pb_energy_ligand_14vdw = None
+            self.pb_energy_ligand_14eel = None
+            self.pb_energy_ligand_epb = None
+            self.pb_energy_ligand_enpolar = None
+            self.pb_energy_ligand_edisper = None
+            self.pb_energy_ligand_ggas = None
+            self.pb_energy_ligand_gsolv = None
+            self.pb_energy_ligand_total = None
+
+            self.pb_energy_delta_bond = None
+            self.pb_energy_delta_angle = None
+            self.pb_energy_delta_dihed = None
+            self.pb_energy_delta_vdwaals = None
+            self.pb_energy_delta_eel = None
+            self.pb_energy_delta_14vdw = None
+            self.pb_energy_delta_14eel = None
+            self.pb_energy_delta_epb = None
+            self.pb_energy_delta_enpolar = None
+            self.pb_energy_delta_edisper = None
+            self.pb_energy_delta_ggas = None
+            self.pb_energy_delta_gsolv = None
+            self.pb_energy_delta_total = None
+    
+
+    def store_dg(self, output_file, run_dir):
+        # storing pb energies of each frame 
+        pd.DataFrame(self.pb_en, columns=["delta_g_pb"]).to_csv(f"{run_dir}pb_energy_frames", index=False)
+
+        # storing gb energies of each frame 
+        pd.DataFrame(self.gb_en, columns=["delta_g_gb"]).to_csv(f"{run_dir}gb_energy_frames", index=False)
+
+        delta_g_dict = {
+            "dg_c2_pb": [self.pb_en.mean()+self.c2_pb if not self.pb_en is None and not self.c2_pb is None else None], 
+            "dg_c2_gb": [self.gb_en.mean()+self.c2_gb if not self.gb_en is None and not self.c2_gb is None else None], 
+            "dg_ie_pb": [self.pb_en.mean()+self.ie_pb if not self.pb_en is None and not self.ie_pb is None else None], 
+            "dg_ie_gb": [self.gb_en.mean()+self.ie_gb if not self.gb_en is None and not self.ie_gb is None else None],
+            "dg_qh_pb": [self.pb_en.mean()+self.qh if not self.pb_en is None and not self.qh is None else None], 
+            "dg_qh_gb": [self.gb_en.mean()+self.qh if not self.gb_en is None and not self.qh is None else None],
+            "dg_en_pb": [self.pb_en.mean()            if not self.pb_en is None else None], 
+            "dg_en_gb": [self.gb_en.mean()            if not self.gb_en is None else None],
+            "c2_pb": [self.c2_pb if not self.c2_pb is None else None], 
+            "c2_gb": [self.c2_gb if not self.c2_gb is None else None],
+            "ie_pb": [self.ie_pb if not self.ie_pb is None else None], 
+            "ie_gb": [self.ie_gb if not self.ie_gb is None else None],
+            "qh": [self.qh if not self.qh is None else None],
+
+            "gb_energy_complex_bond": self.gb_energy_complex_bond,
+            "gb_energy_complex_angle": self.gb_energy_complex_angle,
+            "gb_energy_complex_dihed": self.gb_energy_complex_dihed,
+            "gb_energy_complex_vdwaals": self.gb_energy_complex_vdwaals,
+            "gb_energy_complex_eel": self.gb_energy_complex_eel,
+            "gb_energy_complex_14vdw": self.gb_energy_complex_14vdw,
+            "gb_energy_complex_14eel": self.gb_energy_complex_14eel,
+            "gb_energy_complex_egb": self.gb_energy_complex_egb,
+            "gb_energy_complex_esurf": self.gb_energy_complex_esurf,
+            "gb_energy_complex_ggas": self.gb_energy_complex_ggas,
+            "gb_energy_complex_gsolv": self.gb_energy_complex_gsolv,
+            "gb_energy_complex_total": self.gb_energy_complex_total,
+
+            "gb_energy_receptor_bond": self.gb_energy_receptor_bond,
+            "gb_energy_receptor_angle": self.gb_energy_receptor_angle,
+            "gb_energy_receptor_dihed": self.gb_energy_receptor_dihed,
+            "gb_energy_receptor_vdwaals": self.gb_energy_receptor_vdwaals,
+            "gb_energy_receptor_eel": self.gb_energy_receptor_eel,
+            "gb_energy_receptor_14vdw": self.gb_energy_receptor_14vdw,
+            "gb_energy_receptor_14eel": self.gb_energy_receptor_14eel,
+            "gb_energy_receptor_egb": self.gb_energy_receptor_egb,
+            "gb_energy_receptor_esurf": self.gb_energy_receptor_esurf,
+            "gb_energy_receptor_ggas": self.gb_energy_receptor_ggas,
+            "gb_energy_receptor_gsolv": self.gb_energy_receptor_gsolv,
+            "gb_energy_receptor_total": self.gb_energy_receptor_total,
+
+            "gb_energy_ligand_bond": self.gb_energy_ligand_bond,
+            "gb_energy_ligand_angle": self.gb_energy_ligand_angle,
+            "gb_energy_ligand_dihed": self.gb_energy_ligand_dihed,
+            "gb_energy_ligand_vdwaals": self.gb_energy_ligand_vdwaals,
+            "gb_energy_ligand_eel": self.gb_energy_ligand_eel,
+            "gb_energy_ligand_14vdw": self.gb_energy_ligand_14vdw,
+            "gb_energy_ligand_14eel": self.gb_energy_ligand_14eel,
+            "gb_energy_ligand_egb": self.gb_energy_ligand_egb,
+            "gb_energy_ligand_esurf": self.gb_energy_ligand_esurf,
+            "gb_energy_ligand_ggas": self.gb_energy_ligand_ggas,
+            "gb_energy_ligand_gsolv": self.gb_energy_ligand_gsolv,
+            "gb_energy_ligand_total": self.gb_energy_ligand_total,
+
+            "gb_energy_delta_bond": self.gb_energy_delta_bond,
+            "gb_energy_delta_angle": self.gb_energy_delta_angle,
+            "gb_energy_delta_dihed": self.gb_energy_delta_dihed,
+            "gb_energy_delta_vdwaals": self.gb_energy_delta_vdwaals,
+            "gb_energy_delta_eel": self.gb_energy_delta_eel,
+            "gb_energy_delta_14vdw": self.gb_energy_delta_14vdw,
+            "gb_energy_delta_14eel": self.gb_energy_delta_14eel,
+            "gb_energy_delta_egb": self.gb_energy_delta_egb,
+            "gb_energy_delta_esurf": self.gb_energy_delta_esurf,
+            "gb_energy_delta_ggas": self.gb_energy_delta_ggas,
+            "gb_energy_delta_gsolv": self.gb_energy_delta_gsolv,
+            "gb_energy_delta_total": self.gb_energy_delta_total,
+
+
+            "pb_energy_complex_bond": self.pb_energy_complex_bond,
+            "pb_energy_complex_angle": self.pb_energy_complex_angle,
+            "pb_energy_complex_dihed": self.pb_energy_complex_dihed,
+            "pb_energy_complex_vdwaals": self.pb_energy_complex_vdwaals,
+            "pb_energy_complex_eel": self.pb_energy_complex_eel,
+            "pb_energy_complex_14vdw": self.pb_energy_complex_14vdw,
+            "pb_energy_complex_14eel": self.pb_energy_complex_14eel,
+            "pb_energy_complex_epb": self.pb_energy_complex_epb,
+            "pb_energy_complex_enpolar": self.pb_energy_complex_enpolar,
+            "pb_energy_complex_edisper": self.pb_energy_complex_edisper,
+            "pb_energy_complex_ggas": self.pb_energy_complex_ggas,
+            "pb_energy_complex_gsolv": self.pb_energy_complex_gsolv,
+            "pb_energy_complex_total": self.pb_energy_complex_total,
+
+            "pb_energy_receptor_bond": self.pb_energy_receptor_bond,
+            "pb_energy_receptor_angle": self.pb_energy_receptor_angle,
+            "pb_energy_receptor_dihed": self.pb_energy_receptor_dihed,
+            "pb_energy_receptor_vdwaals": self.pb_energy_receptor_vdwaals,
+            "pb_energy_receptor_eel": self.pb_energy_receptor_eel,
+            "pb_energy_receptor_14vdw": self.pb_energy_receptor_14vdw,
+            "pb_energy_receptor_14eel": self.pb_energy_receptor_14eel,
+            "pb_energy_receptor_epb": self.pb_energy_receptor_epb,
+            "pb_energy_receptor_enpolar": self.pb_energy_receptor_enpolar,
+            "pb_energy_receptor_edisper": self.pb_energy_receptor_edisper,
+            "pb_energy_receptor_ggas": self.pb_energy_receptor_ggas,
+            "pb_energy_receptor_gsolv": self.pb_energy_receptor_gsolv,
+            "pb_energy_receptor_total": self.pb_energy_receptor_total,
+
+            "pb_energy_ligand_bond": self.pb_energy_ligand_bond,
+            "pb_energy_ligand_angle": self.pb_energy_ligand_angle,
+            "pb_energy_ligand_dihed": self.pb_energy_ligand_dihed,
+            "pb_energy_ligand_vdwaals": self.pb_energy_ligand_vdwaals,
+            "pb_energy_ligand_eel": self.pb_energy_ligand_eel,
+            "pb_energy_ligand_14vdw": self.pb_energy_ligand_14vdw,
+            "pb_energy_ligand_14eel": self.pb_energy_ligand_14eel,
+            "pb_energy_ligand_epb": self.pb_energy_ligand_epb,
+            "pb_energy_ligand_enpolar": self.pb_energy_ligand_enpolar,
+            "pb_energy_ligand_edisper": self.pb_energy_ligand_edisper,
+            "pb_energy_ligand_ggas": self.pb_energy_ligand_ggas,
+            "pb_energy_ligand_gsolv": self.pb_energy_ligand_gsolv,
+            "pb_energy_ligand_total": self.pb_energy_ligand_total,
+
+            "pb_energy_delta_bond": self.pb_energy_delta_bond,
+            "pb_energy_delta_angle": self.pb_energy_delta_angle,
+            "pb_energy_delta_dihed": self.pb_energy_delta_dihed,
+            "pb_energy_delta_vdwaals": self.pb_energy_delta_vdwaals,
+            "pb_energy_delta_eel": self.pb_energy_delta_eel,
+            "pb_energy_delta_14vdw": self.pb_energy_delta_14vdw,
+            "pb_energy_delta_14eel": self.pb_energy_delta_14eel,
+            "pb_energy_delta_epb": self.pb_energy_delta_epb,
+            "pb_energy_delta_enpolar": self.pb_energy_delta_enpolar,
+            "pb_energy_delta_edisper": self.pb_energy_delta_edisper,
+            "pb_energy_delta_ggas": self.pb_energy_delta_ggas,
+            "pb_energy_delta_gsolv": self.pb_energy_delta_gsolv,
+            "pb_energy_delta_total": self.pb_energy_delta_total,
+        }
+        pd.DataFrame.from_dict(delta_g_dict).to_csv(output_file, index=False)
