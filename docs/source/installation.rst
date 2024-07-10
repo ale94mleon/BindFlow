@@ -1,8 +1,7 @@
 Installation
 ============
 
-We will use `mamba <https://mamba.readthedocs.io/en/latest/>`__. First, you must download `environment.yml <https://github.com/ale94mleon/BindFlow/blob/main/environment.yml>`__.
-In case some problems happen, you can use `environment.yml <https://github.com/ale94mleon/BindFlow/blob/main/environment_pinned.yml>`__
+We will use `mamba <https://mamba.readthedocs.io/en/latest/>`__ and `environment.yml <https://github.com/ale94mleon/BindFlow/blob/main/environment.yml>`__ definition.
 
 If you do not have ``mamba`` installed, then:
 
@@ -12,24 +11,22 @@ If you do not have ``mamba`` installed, then:
 
 .. warning::
 
-  You could try also with `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html>`__ but it could take a while to build the environment.
-  We observed that mamba builds faster in the environment; however, it could also take some time to solve the dependencies. Please, be patient. If some error happens, then use the
-  `environment_pinned.yml <https://github.com/ale94mleon/BindFlow/blob/main/environment_pinned.yml>`__ instead.
+  You could try also with `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html>`__ but it could take a while to build the environment. We observed that mamba builds faster
 
 .. code-block:: bash
 
   mamba env create -f environment.yml
 
-If you want to modify the code and contribute, then:
-
 For MacOS users with ARM ships you might need to remove from the environment file:
 
-.. code-blok:: yaml
+.. code-block:: yaml
   
   - espaloma >=0.3.1
   - dglteam::dgl
 
 ``espaloma``_ requires ``dgl 1.1.2.*``, which is not for osx-arm64
+
+If you want to modify the code and contribute, then:
 
 .. code-block:: bash
 

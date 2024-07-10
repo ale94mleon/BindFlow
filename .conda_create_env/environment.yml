@@ -21,11 +21,9 @@ dependencies:
   - pip:
     - myst-nb
     - myst-parser
-    - pandas
-    - seaborn
+    - sphinx_book_theme
     - sphinx==7.2.6
     - sphinx_design
     - sphinxcontrib-katex
     - sphinx-inline-tabs
     - sphinx_copybutton
-    - sphinxcontrib-mermaid
