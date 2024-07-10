@@ -300,8 +300,8 @@ def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str =
     trjconv(s=tpr, f=f"{run_dir}/nojump.xtc", o=f"{run_dir}/center.xtc", pbc="mol", center=True, ur="compact")
 
     # Clean
-    (Path(run_dir) / "whole.xtc").unlink()
-    (Path(run_dir) / "nojump.xtc").unlink()
+    (Path(run_dir)/"whole.xtc").unlink()
+    (Path(run_dir)/"nojump.xtc").unlink()
 
     return f"{run_dir}/center.xtc"
 

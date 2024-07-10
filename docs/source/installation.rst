@@ -34,3 +34,6 @@ If you want to modify the code and contribute, then:
     cd BindFlow 
     conda activate BindFlow
     python -m pip install -e .
+
+
+In order to MDAnalysis-2.7.0 read the GROMACS TPR file you must install GROMACS<2023

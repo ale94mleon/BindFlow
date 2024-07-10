@@ -1,28 +1,22 @@
 from bindflow.free_energy import analysis
-from bindflow.utils import tools
-from bindflow.mdp import mdp
-import os
-
-threads = config['threads']
-
 # Ana
 rule fep_ana_get_dg_complex_contributions:
     input:
         # Make sure that the simualtion ends properly
-        finished_vdw_loc = expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.finished", state = range(len(config['lambdas']['complex']['vdw'])), allow_missing = True),
-        finished_coul_loc = expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.finished", state = range(len(config['lambdas']['complex']['coul'])), allow_missing = True),
-        finished_bonded_loc = expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.finished", state = range(len(config['lambdas']['complex']['bonded'])), allow_missing = True),
+        finished_vdw_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing=True),
+        finished_coul_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['coul'])), allow_missing=True),
+        finished_bonded_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['bonded'])), allow_missing=True),
         # Boresch correction
-        boresch_dat = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/dG_off.dat",
+        boresch_dat=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/dG_off.dat",
         # To get the simulaiton temperature
-        mdp_vdw_0_prod = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.0/prod/prod.mdp",
+        mdp_vdw_0_prod=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.0/prod/prod.mdp",
     params:
-        xvg_vdw_loc = expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state = range(len(config['lambdas']['complex']['vdw'])), allow_missing = True),
-        xvg_coul_loc = expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.xvg", state = range(len(config['lambdas']['complex']['coul'])), allow_missing = True),
-        xvg_bonded_loc = expand(approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state = range(len(config['lambdas']['complex']['bonded'])), allow_missing = True),
-        ana_loc = approach_path + "/{ligand_name}/{replica}/complex/fep/ana",
+        xvg_vdw_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing=True),
+        xvg_coul_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul'])), allow_missing=True),
+        xvg_bonded_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['bonded'])), allow_missing=True),
+        ana_loc=out_approach_path+"/{ligand_name}/{replica}/complex/fep/ana",
     output:
-        complex_json = approach_path + "/{ligand_name}/{replica}/complex/fep/ana/dg_complex_contributions.json"
+        complex_json=out_approach_path+"/{ligand_name}/{replica}/complex/fep/ana/dg_complex_contributions.json"
     threads: threads # TODO: Sometimes the rule hang for a long time
     run:
         # Make directory
@@ -34,18 +28,18 @@ rule fep_ana_get_dg_complex_contributions:
         elif 'ref_t' in mdp_params:
             temperature = float(mdp_params['ref_t'].split()[0])
         analysis.get_dG_contributions(
-            boresch_data = input.boresch_dat,
-            out_json_path = output.complex_json,
+            boresch_data=input.boresch_dat,
+            out_json_path=output.complex_json,
             # Check if it is necessary to remove some initial burning simulation time
-            lower = None,
-            upper = None,
-            min_samples = 500,
-            temperature = temperature,
+            lower=None,
+            upper=None,
+            min_samples=500,
+            temperature=temperature,
             # convergency_plots_prefix = params.ana_loc + "/complex_",
-            convergency_plots_prefix = None,
+            convergency_plots_prefix=None,
             # Sort the paths
-            vdw = sorted(params.xvg_vdw_loc, key = lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            coul = sorted(params.xvg_coul_loc, key = lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            bonded = sorted(params.xvg_bonded_loc, key = lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            vdw=sorted(params.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            coul=sorted(params.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            bonded=sorted(params.xvg_bonded_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
         )
 

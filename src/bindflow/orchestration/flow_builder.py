@@ -76,16 +76,16 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str, calcul
         raise ValueError(f"{calculation_type} is an invalid calculation_type, choose from {valid_calculation_type}")
     file_str = "# Load Config:\n"\
         f"configfile: \'{conf_file_path}\'\n"\
-        "approach_path = config['out_approach_path']\n\n"\
+        "from pathlib import Path\n\n"\
         "# Start Flow\n"\
         f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
         "# Specify targets and dependencies\n"\
         "rule RuleThemAll:\n"
 
     if calculation_type == 'fep':
-        file_str += "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
+        file_str += "    input: Path(config[\"out_approach_path\"]) / \"abfe_results.csv\""
     elif calculation_type == 'mmpbsa':
-        file_str += "    input: config[\"out_approach_path\"] + \"/mmxbsa_results.csv\""
+        file_str += "    input: Path(config[\"out_approach_path\"]) / \"mmxbsa_results.csv\""
 
     with open(out_file_path, 'w') as out:
         out.write(file_str)

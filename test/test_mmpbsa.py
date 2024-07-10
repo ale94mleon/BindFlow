@@ -31,8 +31,9 @@ def test_abfe():
             ligands.append({
                 'conf': ligand_file,
                 'ff': {
-                    'type': 'espaloma',
-                    'code': 'espaloma-0.3.1'
+                    'type': 'openff'
+                    # 'type': 'espaloma',
+                    # 'code': 'espaloma-0.3.1'
                 }
             })
 

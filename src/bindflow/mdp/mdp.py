@@ -1,7 +1,7 @@
 import json
 import os
-
-from bindflow.utils.tools import List, PathLike, list_if_file, makedirs
+from pathlib import Path
+from bindflow.utils.tools import List, PathLike, list_if_file
 
 _MDP_PARAM_DEFAULT = {
     "integrator": "steep",
@@ -84,16 +84,11 @@ class StepMDP(MDP):
 
         ::
             .
-            ├── emin
-            │   └── emin.mdp
-            ├── npt
-            │   └── npt.mdp
-            ├── npt-norest
-            │   └── npt-norest.mdp
-            ├── nvt
-            │   └── nvt.mdp
-            └── prod
-                └── prod.mdp
+            ├── emin.mdp
+            ├── npt.mdp
+            ├── npt-norest.mpd
+            ├── nvt.mdp
+            └── prod.mdp
 
         Parameters
         ----------
@@ -107,8 +102,8 @@ class StepMDP(MDP):
 
             from abfe.mdp import mdp
             from abfe.mdp.templates import TemplatePath
-            import os
-            my_mdp = mdp.StepMDP(step = '00_min', step_path = os.path.join(TemplatePath.ligand.fep, 'coul'))
+            from pathlib import Path
+            my_mdp = mdp.StepMDP(step='00_min', step_path=Path(TemplatePath.ligand.fep)/'coul'))
             my_mdp.set_parameters(**{"init-lambda-state": "0", "coul-lambdas": "0 0.5 1",})
             print(my_mdp)
             my_mdp.set_new_step(step='02_npt')
@@ -116,7 +111,7 @@ class StepMDP(MDP):
         """
         super().__init__(**kwargs)
         self.step = step
-        self.step_path = step_path
+        self.step_path = Path(step_path)
         if self.step:
             self.__from_archive()
 
@@ -127,10 +122,10 @@ class StepMDP(MDP):
     def __from_archive(self, explicit_step: str = None):
         if explicit_step:
             self.step = explicit_step
-        valid_steps = [os.path.splitext(step)[0] for step in list_if_file(self.step_path, ext='mdp')]
+        valid_steps = [Path(step).stem for step in list_if_file(self.step_path, ext='mdp')]
         if self.step not in valid_steps:
             raise ValueError(f"name = {self.step} is not a valid step mdp, must be one of: {valid_steps}")
-        self.from_file(os.path.join(self.step_path, f"{self.step}.mdp"))
+        self.from_file(self.step_path/f"{self.step}.mdp")
 
 
 def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_values: List[float], lambda_type: str, sys_type: str,
@@ -180,6 +175,7 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
     ValueError
         In case of an invalid sys_type
     """
+    sim_dir = Path(sim_dir)
     valid_lambda_types = ["vdw", "coul", "bonded"]
     valid_sys_types = ['ligand', 'complex']
     if lambda_type not in valid_lambda_types:
@@ -188,14 +184,14 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
         raise ValueError(f"Non valid sys_type = {sys_type}. Must be one of {valid_sys_types}")
 
     # Take from the source of the package what are the input MDP files
-    input_mdp = [os.path.splitext(step)[0] for step in list_if_file(template_dir+f"/{lambda_type}", ext='mdp')]
+    input_mdp = [Path(step).name for step in list_if_file(template_dir+f"/{lambda_type}", ext='mdp')]
 
     # Create the lambda string
     lambda_range_str = " ".join(map(str, lambda_values))
     # Create MDP template for fep calculations
-    mdp_template = StepMDP(step_path=os.path.join(template_dir, lambda_type))
+    mdp_template = StepMDP(step_path=Path(template_dir)/lambda_type)
     for mdp_file in input_mdp:
-        step = os.path.splitext(os.path.basename(mdp_file))[0]
+        step = Path(mdp_file).stem
 
         # Update MDP step
         mdp_template.set_new_step(step)
@@ -222,12 +218,11 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
 
         for i in range(len(lambda_values)):
             # Create simulation/state/step directory
-            makedirs(sim_dir + f"/simulation/{lambda_type}.{i}/{step}")
+            (sim_dir/f"simulation/{lambda_type}.{i}/{step}").mkdir(exist_ok=True)
             # Update init-lambda-state
             mdp_template.set_parameters(**{"init-lambda-state": i})
             # Write MDP to the proper location
-            mdp_template.write(sim_dir + f"/simulation/{lambda_type}.{i}/{step}/{step}.mdp")
-
+            mdp_template.write(sim_dir/f"simulation/{lambda_type}.{i}/{step}/{step}.mdp")
 
 
 def get_number_of_frames(input_mdp):

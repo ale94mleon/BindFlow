@@ -1,165 +1,154 @@
-from bindflow.utils import tools
-
-
-# Common to all the sub-workflows ligand/replica
-approach_path = config["out_approach_path"]
-threads = config['threads']
-retries = config['retries']
-load_dependencies = config['extra_directives']['dependencies']
-mdrun_extra = config['extra_directives']['mdrun']
-
-
 rule fep_complex_00_min:
     resources:
-        FRONTEND_RUNNER_GPU_LOCK = 1
+        FRONTEND_RUNNER_GPU_LOCK=1
     input:
-        top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
-        ndx = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
-        gro = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
-        mdp = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.mdp", 
+        top=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        gro=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/ClosestRestraintFrame.gro",
+        mdp=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.mdp",
     params:
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/",
+        run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/",
     output:
-        gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.gro",
+        gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.gro",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
-            mdp = input.mdp,
-            topology = input.top,
-            structure = input.gro,
-            index = input.ndx,
-            nthreads = threads,
-            load_dependencies = load_dependencies,
-            run_dir = params.run_dir,
+            mdp=input.mdp,
+            topology=input.top,
+            structure=input.gro,
+            index=input.ndx,
+            nthreads=threads,
+            load_dependencies=load_dependencies,
+            run_dir=params.run_dir,
             **mdrun_extra['complex']
         )
 
 rule fep_complex_01_nvt:
     resources:
-        FRONTEND_RUNNER_GPU_LOCK = 1
+        FRONTEND_RUNNER_GPU_LOCK=1
     input:
-        top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
-        ndx = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
-        gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.gro",
-        mdp = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.mdp",
+        top=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/00_min/00_min.gro",
+        mdp=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.mdp",
     params:
-        out_gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
-        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt",
+        out_gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        out_cpt=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
+        run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt",
     output:
-        finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
-            mdp = input.mdp,
-            topology = input.top,
-            structure = input.gro,
-            index = input.ndx,
-            nthreads = threads,
-            load_dependencies = load_dependencies,
-            run_dir = params.run_dir,
+            mdp=input.mdp,
+            topology=input.top,
+            structure=input.gro,
+            index=input.ndx,
+            nthreads=threads,
+            load_dependencies=load_dependencies,
+            run_dir=params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
+        tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule fep_complex_02_npt:
     resources:
-        FRONTEND_RUNNER_GPU_LOCK = 1
+        FRONTEND_RUNNER_GPU_LOCK=1
     input:
-        top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
-        ndx = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
-        finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
-        mdp = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.mdp",
+        top=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.finished",
+        mdp=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.mdp",
     params:
-        in_gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
-        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
-        out_gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.gro",
-        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt",
+        in_gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.gro",
+        in_cpt=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/01_nvt/01_nvt.cpt",
+        out_gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        out_cpt=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
+        run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt",
     output:
-        finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.finished",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
-            mdp = input.mdp,
-            topology = input.top,
-            structure = params.in_gro,
-            index = input.ndx,
-            checkpoint = params.in_cpt,
-            nthreads = threads,
-            load_dependencies = load_dependencies,
-            run_dir = params.run_dir,
+            mdp=input.mdp,
+            topology=input.top,
+            structure=params.in_gro,
+            index=input.ndx,
+            checkpoint=params.in_cpt,
+            nthreads=threads,
+            load_dependencies=load_dependencies,
+            run_dir=params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
+        tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule fep_complex_03_npt_norest:
     resources:
         FRONTEND_RUNNER_GPU_LOCK = 1
     input:
-        top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
-        ndx = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
-        finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.finished",
-        mdp = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.mdp",
+        top=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.finished",
+        mdp=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.mdp",
     params:
-        in_gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.gro",
-        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
-        out_gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
-        out_cpt = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest",
+        in_gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.gro",
+        in_cpt=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/02_npt/02_npt.cpt",
+        out_gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        out_cpt=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
+        run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest",
     output:
-        finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
-            mdp = input.mdp,
-            topology = input.top,
-            structure = params.in_gro,
-            index = input.ndx,
-            checkpoint = params.in_cpt,
-            nthreads = threads,
-            load_dependencies = load_dependencies,
-            run_dir = params.run_dir,
+            mdp=input.mdp,
+            topology=input.top,
+            structure=params.in_gro,
+            index=input.ndx,
+            checkpoint=params.in_cpt,
+            nthreads=threads,
+            load_dependencies=load_dependencies,
+            run_dir=params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = [params.out_gro, params.out_cpt], raise_error = True, out = output.finished)
+        tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule fep_complex_prod:
     resources:
-        FRONTEND_RUNNER_GPU_LOCK = 1
+        FRONTEND_RUNNER_GPU_LOCK=1
     input:
-        top = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
-        ndx = approach_path + "/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
-        finished = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
-        mdp = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.mdp",  
+        top=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
+        ndx=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
+        mdp=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.mdp",
     params:
-        in_gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
-        in_cpt = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
-        out_gro = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.gro",
-        out_xvg = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.xvg",
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod",
+        in_gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.gro",
+        in_cpt=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/03_npt_norest/03_npt_norest.cpt",
+        out_gro=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.gro",
+        out_xvg=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.xvg",
+        run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod",
     output:
-        finished=approach_path + "/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.finished",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{state}/prod/prod.finished",
     threads: threads
     retries: retries
     run:
         tools.gmx_runner(
-            mdp = input.mdp,
-            topology = input.top,
-            structure = params.in_gro,
-            index = input.ndx,
-            checkpoint = params.in_cpt,
-            nthreads = threads,
-            load_dependencies = load_dependencies,
-            run_dir = params.run_dir,
+            mdp=input.mdp,
+            topology=input.top,
+            structure=params.in_gro,
+            index=input.ndx,
+            checkpoint=params.in_cpt,
+            nthreads=threads,
+            load_dependencies=load_dependencies,
+            run_dir=params.run_dir,
             **mdrun_extra['complex']
         )
         # Allow proper GROMACS continuation
-        tools.paths_exist(paths = [params.out_gro, params.out_xvg], raise_error = True, out = output.finished)
+        tools.paths_exist(paths=[params.out_gro, params.out_xvg], raise_error=True, out=output.finished)

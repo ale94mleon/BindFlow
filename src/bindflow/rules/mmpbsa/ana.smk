@@ -1,30 +1,23 @@
-from bindflow.utils import tools
 from bindflow.free_energy import mmxbsa_analysis
-from bindflow.mdp import mdp
-from pathlib import Path
 import tempfile
-import os
-import shutil
 
-
-approach_path = config["out_approach_path"]
 samples = list(map(str, range(1,1 + config["samples"])))
 threads = config['threads']
         
 
 rule run_gmx_mmpbsa:
     input:
-        finished = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.finished",
-        top = approach_path + "/{ligand_name}/input/complex/complex.top",
-        mmpbsa_in = approach_path + "/{ligand_name}/input/mmpbsa.in",
-        ndx = approach_path + "/{ligand_name}/input/complex/index.ndx",
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.finished",
+        top=out_approach_path+"/{ligand_name}/input/complex/complex.top",
+        mmpbsa_in=out_approach_path+"/{ligand_name}/input/mmpbsa.in",
+        ndx=out_approach_path+"/{ligand_name}/input/complex/index.ndx",
     output:
-        mmxbsa_csv = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/mmxbsa.csv",
+        mmxbsa_csv=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/mmxbsa.csv",
     params:
-        in_tpr = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.tpr",
-        in_xtc = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.xtc",
-        in_mdp = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",
-        run_dir = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/"
+        in_tpr=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.tpr",
+        in_xtc=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.xtc",
+        in_mdp=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",
+        run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/"
     threads: threads
     run:
         # Set default host name (reachable as gmx index)
