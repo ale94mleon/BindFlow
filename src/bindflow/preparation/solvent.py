@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
 import os
+from pathlib import Path
 import shutil
 import tarfile
 import tempfile
@@ -31,8 +32,8 @@ def readParmEDMolecule(top_file: tools.PathLike, gro_file: tools.PathLike) -> pa
     Structure
         Structure with topologies, coordinates and box information
     """
-    gmx_top = parmed.gromacs.GromacsTopologyFile(top_file)
-    gmx_gro = parmed.gromacs.GromacsGroFile.parse(gro_file)
+    gmx_top = parmed.gromacs.GromacsTopologyFile(str(top_file))
+    gmx_gro = parmed.gromacs.GromacsGroFile.parse(str(gro_file))
 
     # Add positions
     gmx_top.positions = gmx_gro.positions
@@ -322,20 +323,20 @@ class Solvate:
             Invalid water model for the selected force field
         """
         self.load_dependencies = load_dependencies
-        
-        self.builder_dir = os.path.abspath(builder_dir)
-        tools.makedirs(self.builder_dir)
+
+        self.builder_dir = Path(builder_dir).resolve()
+        self.builder_dir.mkdir(exist_ok=True, parents=True)
 
         # Make directory to save water model files (those could be used during several calls)
-        self.water_model_dir = os.path.join(self.builder_dir, 'water_model')
-        tools.makedirs(self.water_model_dir)
+        self.water_model_dir = self.builder_dir/'water_model'
+        self.water_model_dir.mkdir(exist_ok=True, parents=True)
 
         # Make directory to save topologies after solvation.
         # This will be cleaned out and created every time the class is called (at the beginning)
         # to avoid mismatch.ch between files generated on different calls
-        self.solvated_dir = os.path.join(self.builder_dir, 'solvated_sys')
+        self.solvated_dir = self.builder_dir/'solvated_sys'
 
-        with open(os.path.join(home(dataDir='gmx_water_models'), 'water_models.yml'), 'r') as f:
+        with open(Path(home(dataDir='gmx_water_models'))/'water_models.yml', 'r') as f:
             self.water_models_data = yaml.safe_load(f)
 
         # Check validity of input code
@@ -362,7 +363,7 @@ class Solvate:
 
         Parameters
         ----------
-        water_model_code : tools.PathLik
+        water_model_code : tools.PathLike
             Water model code in the form: "{force field family}/{water model}"
 
         Returns
@@ -374,21 +375,22 @@ class Solvate:
                 * water (configuration) gro file
                 * atom type itp definition
         """
+        out_dir = Path(out_dir)
         # Extract water and ions topologies
-        fname_wm = os.path.join(home(dataDir='gmx_water_models'), f'{self.force_field_family}.tar.gz')
+        fname_wm = Path(home(dataDir='gmx_water_models'))/f'{self.force_field_family}.tar.gz'
         with tarfile.open(fname_wm, "r:gz") as tf:
             tf.extract(member=f"{self.force_field_family}/{self.water_model}.itp", path=out_dir)
             tf.extract(member=f"{self.force_field_family}/ions.itp", path=out_dir)
             tf.extract(member=f"{self.force_field_family}/ffnonbonded.itp", path=out_dir)
 
         # Extract water configuration
-        fname_wc = os.path.join(home(dataDir='gmx_water_models'), 'configurations.tar.gz')
+        fname_wc = Path(home(dataDir='gmx_water_models'))/'configurations.tar.gz'
         with tarfile.open(fname_wc, "r:gz") as tf:
             tf.extract(member=f"configurations/{self.water_models_data[self.force_field_family][self.water_model]}", path=out_dir)
-        water_itp = os.path.abspath(os.path.join(out_dir, f"{self.force_field_family}", f"{self.water_model}.itp"))
-        ions_itp = os.path.abspath(os.path.join(out_dir, f"{self.force_field_family}", "ions.itp"))
-        ffnonbonded_itp = os.path.abspath(os.path.join(out_dir, f"{self.force_field_family}", "ffnonbonded.itp"))
-        water_gro = os.path.abspath(os.path.join(out_dir, "configurations", self.water_models_data[self.force_field_family][self.water_model]))
+        water_itp = (out_dir/str(self.force_field_family)/f"{self.water_model}.itp").resolve()
+        ions_itp = (out_dir/str(self.force_field_family)/"ions.itp").resolve()
+        ffnonbonded_itp = (out_dir/str(self.force_field_family)/"ffnonbonded.itp").resolve()
+        water_gro = (out_dir/"configurations"/self.water_models_data[self.force_field_family][self.water_model]).resolve()
         return water_itp, ions_itp, ffnonbonded_itp, water_gro
 
     def _include_all_atom_types(self, top: tools.PathLike) -> None:
@@ -539,8 +541,8 @@ class Solvate:
         # And the include statements are removed
         # It builds a monolithic topology
         struc = readParmEDMolecule(top_file=top, gro_file=gro)
-        struc.save(top, overwrite=True)
-        struc.save(gro, overwrite=True)
+        struc.save(str(top), overwrite=True)
+        struc.save(str(gro), overwrite=True)
 
         # Change back to cwd
         os.chdir(self.cwd)
@@ -593,17 +595,18 @@ class Solvate:
             settles_to_constraints_on: Union[tools.PathLike, str] = None) -> None:
 
         # Clean any possible generated files during previous calls
+        out_dir = Path(out_dir)
         self.clean(self.solvated_dir)
-        tools.makedirs(self.solvated_dir)
-        tools.makedirs(out_dir)
+        self.solvated_dir.mkdir(exist_ok=True, parents=True)
+        out_dir.mkdir(exist_ok=True, parents=True)
 
         # Set out files
-        init_top = os.path.join(self.solvated_dir, 'init.top')
-        init_gro = os.path.join(self.solvated_dir, 'init.gro')
+        init_top = self.solvated_dir/'init.top'
+        init_gro = self.solvated_dir/'init.gro'
 
         # Write the top and gro file of the structure
-        structure.save(init_top, overwrite=True)
-        structure.save(init_gro, overwrite=True)
+        structure.save(str(init_top), overwrite=True)
+        structure.save(str(init_gro), overwrite=True)
 
         # Add ion and water section to the topology
         self._include_water_ions_params(init_top)
@@ -635,8 +638,8 @@ class Solvate:
         if settles_to_constraints_on:
             _tip3p_settles_to_constraints(top=init_top, molecule=settles_to_constraints_on, out_top=None)
 
-        shutil.copy(init_top, os.path.join(out_dir, f'{out_name}.top'))
-        shutil.copy(init_gro, os.path.join(out_dir, f'{out_name}.gro'))
+        shutil.copy(init_top, out_dir/f'{out_name}.top')
+        shutil.copy(init_gro, out_dir/f'{out_name}.gro')
 
 
 def index_for_membrane_system(
@@ -702,6 +705,7 @@ def index_for_membrane_system(
 
     with open(tmpopt.name, "w") as opt:
         opt.write(sele_RECEPTOR + sele_LIGAND + sele_SOLU + sele_MEMB + sele_SOLV)
+
     @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"q\"")
     def make_ndx(**kwargs): ...
 
@@ -710,7 +714,7 @@ def index_for_membrane_system(
 
     make_ndx(f=configuration_file, o=tmpndx.name)
     select(s=configuration_file, sf=tmpopt.name, n=tmpndx.name, on=ndxout)
-    #tools.run(f"""
+    # tools.run(f"""
     #            export GMX_MAXBACKUP=-1
     #            echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
     #            gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}
@@ -779,7 +783,7 @@ def index_for_soluble_system(
 
     make_ndx(f=configuration_file, o=tmpndx.name)
     select(s=configuration_file, sf=tmpopt.name, n=tmpndx.name, on=ndxout)
-    #tools.run(f"""
+    # tools.run(f"""
     #            export GMX_MAXBACKUP=-1
     #            echo "q" | gmx make_ndx -f {configuration_file} -o {tmpndx.name}
     #            gmx select -s {configuration_file} -sf {tmpopt.name} -n {tmpndx.name} -on {ndxout}

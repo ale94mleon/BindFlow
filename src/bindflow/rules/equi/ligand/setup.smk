@@ -20,7 +20,7 @@ rule equil_setup_ligand:
  
                 # Not sure if the sorted is needed, just for safety
                 for step, input_mdp in zip(sorted(params.steps), sorted(input.mdp)):
-                    (sim_dir/step).mkdir(exist_ok=True)
+                    (sim_dir/step).mkdir(exist_ok=True, parents=True)
                     output_mdp = sim_dir/step/f"{step}.mdp"
 
                     # Update MDP step

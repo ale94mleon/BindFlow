@@ -2,6 +2,7 @@ import json
 import os
 import stat
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from bindflow.utils import tools
 from bindflow.utils.cluster import _SBATCH_KEYWORDS
@@ -17,7 +18,7 @@ class Scheduler(ABC):
 
     def __init__(self, cluster_config: dict, out_dir: PathLike = '.', prefix_name: str = '', snake_executor_file: str = None) -> None:
         self.cluster_config = cluster_config
-        self.out_dir = os.path.abspath(out_dir)
+        self.out_dir = Path(out_dir).resolve()
         self.prefix_name = prefix_name
         if self.prefix_name:
             self.prefix_name += '.'
@@ -84,9 +85,8 @@ class SlurmScheduler(Scheduler):
         for better interaction with snakemake rules.
         """
         # Make log directory on demand
-        cluster_log_path = os.path.join(self.out_dir, 'slurm_logs')
-        cluster_log_path = os.path.abspath(cluster_log_path)
-        tools.makedirs(cluster_log_path)
+        cluster_log_path = (self.out_dir/'slurm_logs').resolve()
+        cluster_log_path.mkdir(exist_ok=True, parents=True)
         # Make a copy of the user defined cluster configuration
         self._user_cluster_config = self.cluster_config.copy()
         # Update with internal values
@@ -207,14 +207,13 @@ class SlurmScheduler(Scheduler):
 
         # Update some configurations:
         # Make log directory on demand
-        cluster_log_path = os.path.join(self.out_dir, 'slurm_logs')
-        cluster_log_path = os.path.abspath(cluster_log_path)
-        tools.makedirs(cluster_log_path)
+        cluster_log_path = (self.out_dir/'slurm_logs').resolve()
+        cluster_log_path.mkdir(exist_ok=True, parents=True)
         cluster_to_work.update({
             # Clear naming
             "job-name": f"{job_prefix}.RuleThemAll",
-            "output": os.path.join(cluster_log_path, f"{job_prefix}.RuleThemAll.out"),
-            "error": os.path.join(cluster_log_path, f"{job_prefix}.RuleThemAll.err"),
+            "output": cluster_log_path/f"{job_prefix}.RuleThemAll.out",
+            "error": cluster_log_path/f"{job_prefix}.RuleThemAll.err",
         })
 
         # Create the sbatch section of the script

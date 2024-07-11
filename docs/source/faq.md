@@ -74,7 +74,7 @@ forcefield = app.ForceField(f'{protein_force_field}.xml', 'tip3p.xml')
 dirname = pdb_prot_file.parent
 filename = pdb_prot_file.stem
 out_dir = dirname / f"protein-{protein_force_field}"
-os.makedirs(out_dir, exist_ok=True)
+Path(out_dir).mkdir(exist_ok=True)
 print(out_dir)
 
 pdb_obj = app.PDBFile(str(pdb_prot_file))

@@ -28,7 +28,7 @@ rule fep_setup_complex:
         sim_dir = Path(out_approach_path)/f"{wildcards.ligand_name}/{wildcards.replica}/complex/fep"
         
         # Make topology directory
-        (sim_dir+"/topology").mkdir(exist_ok=True)
+        (sim_dir+"/topology").mkdir(exist_ok=True, parents=True)
         
         # Copy complex topology (only itp),
         # I can not set them as output of the rule becasue the name might change

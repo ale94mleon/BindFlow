@@ -1,6 +1,7 @@
 import copy
 import glob
 import os
+from pathlib import Path
 from typing import List, Union
 from warnings import warn
 
@@ -90,23 +91,23 @@ def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], d
 
             # Convert to absolute paths
             if internal_dict['conf']:
-                if not os.path.exists(internal_dict['conf']):
+                if not Path(internal_dict['conf']).exists():
                     raise FileNotFoundError(f"{internal_dict['conf'] = } is not accessible.")
-                internal_dict['conf'] = os.path.abspath(internal_dict['conf'])
+                internal_dict['conf'] = Path(internal_dict['conf']).resolve()
             else:
                 if not optional:
                     raise ValueError(f'conf must be provided on the `{arg_name}` entry when a dictionary is used')
 
             if internal_dict['top']:
-                if not os.path.exists(internal_dict['top']):
+                if not Path(internal_dict['top']).exists():
                     raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
-                internal_dict['top'] = os.path.abspath(internal_dict['top'])
+                internal_dict['top'] = Path(internal_dict['top']).resolve()
 
         # This is the case that only a path was provided
         else:
-            if not os.path.exists(user_input):
+            if not Path(user_input).exists():
                 raise FileNotFoundError(f"On {arg_name} entry; {user_input = } is not accessible")
-            internal_dict['conf'] = os.path.abspath(user_input)
+            internal_dict['conf'] = Path(user_input).resolve()
         return copy.deepcopy(internal_dict)
 
 
@@ -182,7 +183,7 @@ def calculate_abfe(
     _global_config["water_model"] = water_model
     _global_config["dt_max"] = dt_max
 
-    out_root_folder_path = os.path.abspath(out_root_folder_path)
+    out_root_folder_path = Path(out_root_folder_path).resolve()
     _global_config["out_approach_path"] = out_root_folder_path
 
     if job_prefix:
@@ -194,8 +195,8 @@ def calculate_abfe(
     os.environ['abfe_debug'] = str(debug)
 
     # Generate output folders
-    if not os.path.isdir(_global_config["out_approach_path"]):
-        tools.makedirs(_global_config["out_approach_path"])
+    if not Path(_global_config["out_approach_path"]).is_dir():
+        Path(_global_config["out_approach_path"]).mkdir(exist_ok=True, parents=True)
 
     # Prepare Input / Parametrize
     os.chdir(_global_config["out_approach_path"])

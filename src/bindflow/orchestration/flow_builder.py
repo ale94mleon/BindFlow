@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 import tarfile
 from typing import Union
 
@@ -177,32 +178,30 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         approach_config["job_prefix"] = global_config["job_prefix"]
 
     for ligand_definition in global_config["inputs"]["ligands"]:
-        input_ligand_path = ligand_definition['conf']
-        ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
-        out_ligand_path = os.path.join(global_config["out_approach_path"],  str(ligand_name))
+        input_ligand_path = Path(ligand_definition['conf'])
+        ligand_name = input_ligand_path.stem
+        out_ligand_path = Path(global_config["out_approach_path"])/ligand_name
 
         # Make directories on demand
-        tools.makedirs(out_ligand_path)
-        out_ligand_input_path = os.path.join(out_ligand_path, "input")
-        tools.makedirs(out_ligand_input_path)
-        tools.makedirs(os.path.join(out_ligand_input_path, "complex"))
-        tools.makedirs(os.path.join(out_ligand_input_path, "ligand"))
+        out_ligand_path.mkdir(exist_ok=True, parents=True)
+        out_ligand_input_path = out_ligand_path/"input"
+        out_ligand_input_path.mkdir(exist_ok=True, parents=True)
+        (out_ligand_input_path/"complex").mkdir(exist_ok=True, parents=True)
+        (out_ligand_input_path/"ligand").mkdir(exist_ok=True, parents=True)
 
         # Archive original files
-        with tarfile.open(os.path.join(out_ligand_input_path, 'orig_in.tar.gz'), "w:gz") as tar:
-            tar.add(input_ligand_path, arcname=os.path.basename(input_ligand_path))
-            tar.add(global_config["inputs"]["protein"]["conf"], arcname=os.path.basename(global_config["inputs"]["protein"]["conf"]))
+        with tarfile.open(out_ligand_input_path/'orig_in.tar.gz', "w:gz") as tar:
+            tar.add(input_ligand_path, arcname=input_ligand_path.name)
+            tar.add(global_config["inputs"]["protein"]["conf"], arcname=Path(global_config["inputs"]["protein"]["conf"]).name)
             if global_config["inputs"]["cofactor"]:
-                tar.add(global_config["inputs"]["cofactor"]["conf"], arcname=os.path.basename(global_config["inputs"]["cofactor"]["conf"]))
+                tar.add(global_config["inputs"]["cofactor"]["conf"], arcname=Path(global_config["inputs"]["cofactor"]["conf"]).name)
             if global_config["inputs"]["membrane"]:
-                tar.add(global_config["inputs"]["membrane"]["conf"], arcname=os.path.basename(global_config["inputs"]["membrane"]["conf"]))
+                tar.add(global_config["inputs"]["membrane"]["conf"], arcname=Path(global_config["inputs"]["membrane"]["conf"]).name)
 
         # Build the replicas
         for num_replica in range(1, global_config["replicas"] + 1):
-            out_replica_path = os.path.join(out_ligand_path, str(num_replica))
-
-            if not os.path.isdir(out_replica_path):
-                os.mkdir(out_replica_path)
+            out_replica_path = out_ligand_path/str(num_replica)
+            out_replica_path.mkdir(exist_ok=True, parents=True)
 
     with open(approach_conf_path, "w") as out_IO:
         json.dump(approach_config, out_IO, indent=4)

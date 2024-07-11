@@ -218,7 +218,7 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
 
         for i in range(len(lambda_values)):
             # Create simulation/state/step directory
-            (sim_dir/f"simulation/{lambda_type}.{i}/{step}").mkdir(exist_ok=True)
+            (sim_dir/f"simulation/{lambda_type}.{i}/{step}").mkdir(exist_ok=True, parents=True)
             # Update init-lambda-state
             mdp_template.set_parameters(**{"init-lambda-state": i})
             # Write MDP to the proper location

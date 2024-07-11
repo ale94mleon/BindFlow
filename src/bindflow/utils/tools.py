@@ -221,7 +221,8 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
         Any valid keyword for mdrun. flags are passing as boolean. E.g: cpi = True
     """
     # Create run directory on demand
-    makedirs(run_dir)
+    run_dir = Path(run_dir)
+    run_dir.mkdir(exist_ok=True, parents=True)
 
     name = os.path.splitext(os.path.basename(mdp))[0]
 
@@ -282,26 +283,26 @@ def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str =
     """
     dependencies = HARD_CODE_DEPENDENCIES + ["export GMX_MAXBACKUP=-1"]
     if load_dependencies:
-        dependencies += load_dependencies
         if isinstance(load_dependencies, List):
             dependencies += load_dependencies
         else:
-            raise ValueError(f"load_dependencies must be an List. Provided: {load_dependencies}")
+            raise ValueError(f"load_dependencies must be a List. Provided: {load_dependencies}")
 
-    makedirs(run_dir)
+    run_dir = Path(run_dir)
+    run_dir.mkdir(exist_ok=True, parents=True)
 
     @gmx_command(load_dependencies=dependencies, stdin_command="echo 'System'")
     def trjconv(**kwargs): ...
-    trjconv(s=tpr, f=xtc, o=f"{run_dir}/whole.xtc", pbc="whole")
-    trjconv(s=tpr, f=f"{run_dir}/whole.xtc", o=f"{run_dir}/nojump.xtc", pbc="nojump")
+    trjconv(s=tpr, f=xtc, o=run_dir/"whole.xtc", pbc="whole")
+    trjconv(s=tpr, f=run_dir/"whole.xtc", o=run_dir/"nojump.xtc", pbc="nojump")
 
     @gmx_command(load_dependencies=dependencies, stdin_command=f"echo '{host_name} System'")
     def trjconv(**kwargs): ...
-    trjconv(s=tpr, f=f"{run_dir}/nojump.xtc", o=f"{run_dir}/center.xtc", pbc="mol", center=True, ur="compact")
+    trjconv(s=tpr, f=run_dir/"nojump.xtc", o=run_dir/"center.xtc", pbc="mol", center=True, ur="compact")
 
     # Clean
-    (Path(run_dir)/"whole.xtc").unlink()
-    (Path(run_dir)/"nojump.xtc").unlink()
+    (run_dir/"whole.xtc").unlink()
+    (run_dir/"nojump.xtc").unlink()
 
     return f"{run_dir}/center.xtc"
 
@@ -549,8 +550,8 @@ def unarchive(archive_file: PathLike, target_path: PathLike,
     import tarfile
 
     # Ensure the target directory exists
-    target_path = os.path.abspath(target_path)
-    os.makedirs(target_path, exist_ok=True)
+    target_path = Path(target_path).resolve()
+    target_path.mkdir(exist_ok=True, parents=True)
 
     # Convert to list
     if only_with_suffix:
@@ -584,11 +585,6 @@ def unarchive(archive_file: PathLike, target_path: PathLike,
                                     main_archive.extract(main_member, target_path)
                     else:
                         archive.extract(member, target_path)
-
-
-def makedirs(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 
 def recursive_update_dict(original_dict: dict, update_dict: dict) -> None:

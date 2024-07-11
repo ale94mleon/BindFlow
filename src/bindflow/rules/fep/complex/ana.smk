@@ -20,7 +20,7 @@ rule fep_ana_get_dg_complex_contributions:
     threads: threads # TODO: Sometimes the rule hang for a long time
     run:
         # Make directory
-        tools.makedirs(params.ana_loc)
+        Path(params.ana_loc).mkdir(exist_ok=True, parents=True)
         # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
         mdp_params = mdp.MDP().from_file(input.mdp_vdw_0_prod).parameters
         if 'ref-t' in mdp_params:

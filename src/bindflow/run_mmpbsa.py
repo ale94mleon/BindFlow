@@ -1,6 +1,7 @@
 import copy
 import glob
 import os
+from pathlib import Path
 from typing import List, Union
 from warnings import warn
 
@@ -194,8 +195,8 @@ def calculate_mmpbsa(
     os.environ['abfe_debug'] = str(debug)
 
     # Generate output folders
-    if not os.path.isdir(_global_config["out_approach_path"]):
-        tools.makedirs(_global_config["out_approach_path"])
+    if not Path(_global_config["out_approach_path"]).is_dir():
+        Path(_global_config["out_approach_path"]).mkdir(exist_ok=True, parents=True)
 
     # Prepare Input / Parametrize
     os.chdir(_global_config["out_approach_path"])
