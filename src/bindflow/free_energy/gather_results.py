@@ -166,7 +166,7 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
     return df
 
 
-def get_mmpbsa_partial_results(root_folder_path: PathLike, out_csv_raw: PathLike = None, out_csv_pretty: PathLike = None):
+def get_mmpbsa_partial_results(root_folder_path: PathLike, out_csv_raw: PathLike = None, out_csv_pretty: PathLike = None) -> pd.DataFrame:
     collected_dfs = []
     collected_files = glob.glob(root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
     if len(collected_files) == 0:
