@@ -32,4 +32,4 @@ dist
 
 ideas
 
-test/.test*
+*.test*

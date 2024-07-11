@@ -41,8 +41,8 @@ mdp: # optional
 mmpbsa:
   general: 
     c2_entropy: 1
-    #qh_entropy: 1
+    qh_entropy: 1
     interaction_entropy: 1
     startframe: 5 # recommended burn phase to skip frames directly after the split
   pb: {} # enable MMPBSA computation
-  # gb: {} # enable MMGBSA computation #  TODO WARNING THIS GIVES AN ERROR
+  gb: {} # enable MMGBSA computation #  TODO WARNING THIS GIVES AN ERROR

@@ -228,6 +228,6 @@ def calculate_abfe(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        gather_results.get_all_dgs(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results.csv'))
-        gather_results.get_raw_data(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results_raw.csv'))
+        gather_results.get_all_abfe_dgs(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results.csv'))
+        gather_results.get_raw_abfe_data(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results_raw.csv'))
     os.chdir(orig_dir)

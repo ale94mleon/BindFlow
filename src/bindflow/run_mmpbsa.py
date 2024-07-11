@@ -225,7 +225,7 @@ def calculate_mmpbsa(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        gather_results.get_mmpbsa_partial_results(root_folder_path=out_root_folder_path,
+        gather_results.get_mmpbsa_data(root_folder_path=out_root_folder_path,
                                                   out_csv_pretty=os.path.join(out_root_folder_path, 'mmxbsa_partial_results.csv'),
                                                   out_csv_raw=os.path.join(out_root_folder_path, 'mmxbsa_partial_results_raw.csv'))
     os.chdir(orig_dir)

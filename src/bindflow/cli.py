@@ -112,13 +112,13 @@ def abfe_check_results():
         type=str)
     args = parser.parse_args()
 
-    df_summary = gather_results.get_all_dgs(root_folder_path=args.root_folder_path)
+    df_summary = gather_results.get_all_abfe_dgs(root_folder_path=args.root_folder_path)
     if len(df_summary):
         df_summary = df_summary.sort_values(by='MBAR').reset_index()
         if args.out_csv_summary:
             df_summary.to_csv(args.out_csv_summary)
         print(df_summary)
-    df_raw = gather_results.get_raw_data(root_folder_path=args.root_folder_path)
+    df_raw = gather_results.get_raw_abfe_data(root_folder_path=args.root_folder_path)
     if len(df_raw):
         if args.out_csv_raw:
             df_raw.to_csv(args.out_csv_raw)

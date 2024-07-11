@@ -1,5 +1,6 @@
 import GMXMMPBSA.API
 import pandas as pd
+from pathlib import Path
 
 
 def prettify_df(full_df: pd.DataFrame) -> pd.DataFrame:
@@ -493,25 +494,25 @@ class GmxMmxbsaDataRetriever:
 
     def store_dg(self, output_file, run_dir):
         # storing pb energies of each frame
-        pd.DataFrame(self.pb_en, columns=["delta_g_pb"]).to_csv(f"{run_dir}pb_energy_frames", index=False)
+        pd.DataFrame(self.pb_en, columns=["delta_g_pb"]).to_csv(Path(run_dir)/"pb_energy_frames", index=False)
 
         # storing gb energies of each frame
-        pd.DataFrame(self.gb_en, columns=["delta_g_gb"]).to_csv(f"{run_dir}gb_energy_frames", index=False)
+        pd.DataFrame(self.gb_en, columns=["delta_g_gb"]).to_csv(Path(run_dir)/"gb_energy_frames", index=False)
 
         delta_g_dict = {
-            "dg_c2_pb": [self.pb_en.mean() + self.c2_pb if not self.pb_en is None and not self.c2_pb is None else None],
-            "dg_c2_gb": [self.gb_en.mean() + self.c2_gb if not self.gb_en is None and not self.c2_gb is None else None],
-            "dg_ie_pb": [self.pb_en.mean() + self.ie_pb if not self.pb_en is None and not self.ie_pb is None else None],
-            "dg_ie_gb": [self.gb_en.mean() + self.ie_gb if not self.gb_en is None and not self.ie_gb is None else None],
-            "dg_qh_pb": [self.pb_en.mean() + self.qh if not self.pb_en is None and not self.qh is None else None],
-            "dg_qh_gb": [self.gb_en.mean() + self.qh if not self.gb_en is None and not self.qh is None else None],
-            "dg_en_pb": [self.pb_en.mean() if not self.pb_en is None else None],
-            "dg_en_gb": [self.gb_en.mean() if not self.gb_en is None else None],
-            "c2_pb": [self.c2_pb if not self.c2_pb is None else None],
-            "c2_gb": [self.c2_gb if not self.c2_gb is None else None],
-            "ie_pb": [self.ie_pb if not self.ie_pb is None else None],
-            "ie_gb": [self.ie_gb if not self.ie_gb is None else None],
-            "qh": [self.qh if not self.qh is None else None],
+            "dg_c2_pb": [self.pb_en.mean() + self.c2_pb if (self.pb_en is not None and self.c2_pb is not None) else None],
+            "dg_c2_gb": [self.gb_en.mean() + self.c2_gb if (self.gb_en is not None and self.c2_gb is not None) else None],
+            "dg_ie_pb": [self.pb_en.mean() + self.ie_pb if (self.pb_en is not None and self.ie_pb is not None) else None],
+            "dg_ie_gb": [self.gb_en.mean() + self.ie_gb if (self.gb_en is not None and self.ie_gb is not None) else None],
+            "dg_qh_pb": [self.pb_en.mean() + self.qh if (self.pb_en is not None and self.qh is not None) else None],
+            "dg_qh_gb": [self.gb_en.mean() + self.qh if (self.gb_en is not None and self.qh is not None) else None],
+            "dg_en_pb": [self.pb_en.mean() if self.pb_en is not None else None],
+            "dg_en_gb": [self.gb_en.mean() if self.gb_en is not None else None],
+            "c2_pb": [self.c2_pb if self.c2_pb is not None else None],
+            "c2_gb": [self.c2_gb if self.c2_gb is not None else None],
+            "ie_pb": [self.ie_pb if self.ie_pb is not None else None],
+            "ie_gb": [self.ie_gb if self.ie_gb is not None else None],
+            "qh": [self.qh if self.qh is not None else None],
 
             "gb_energy_complex_bond": self.gb_energy_complex_bond,
             "gb_energy_complex_angle": self.gb_energy_complex_angle,

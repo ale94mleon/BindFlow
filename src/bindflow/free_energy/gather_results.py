@@ -1,19 +1,19 @@
 import glob
+import json
 import os
+from pathlib import Path
 from typing import List
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 from uncertainties import ufloat
-from pathlib import Path
-import json
 
 from bindflow.free_energy import mmxbsa_analysis
 from bindflow.utils.tools import PathLike
 
 
-def get_stats(replica_paths: List[PathLike]) -> dict:
+def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
     """Takes all the replica path and extract free energy statistics
 
     Parameters
@@ -56,21 +56,21 @@ def get_stats(replica_paths: List[PathLike]) -> dict:
     return final_result
 
 
-def get_all_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
+def get_all_abfe_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
     """Get the independent free energy results and gather them
 
     Parameters
     ----------
     root_folder_path : PathLike
-        Where the simulation run. Inside of it should be the files: root_folder_path + "/*/*/dG_results.csv".
-        THis directory is the same specified on :meth:`abfe.calculate_abfe.calculate_abfe` through the keyword `out_root_folder_path`
+        Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/dG_results.csv".
+        This directory is the same specified on :meth:`bindflow.run_abfe.calculate_abfe` through the keyword `out_root_folder_path`
     out_csv : PathLike, optional
         If given a pandas.DataFrame will be written as csv file, by default None
 
     Returns
     -------
     pd.DataFrame
-        All gather results. In case there are not any dG_results.csv. It will return None
+        All gather results. In case there are not dG_results.csv. It will return an empty DataFrame
     """
     # Get all dG_results.csv files
     dg_files_dir = dict()
@@ -85,7 +85,7 @@ def get_all_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.Data
     gathered_results = []
     if dg_files_dir:
         for ligand in dg_files_dir:
-            statistics = get_stats(dg_files_dir[ligand])
+            statistics = get_abfe_stats(dg_files_dir[ligand])
             statistics['ligand'] = ligand
             gathered_results.append(statistics)
 
@@ -102,7 +102,22 @@ def get_all_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.Data
         return pd.DataFrame()
 
 
-def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
+def get_raw_abfe_data(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
+    """Genereate raw dat for an ABFE calculation using BindFlow
+
+    Parameters
+    ----------
+    root_folder_path : PathLike
+        Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/complex/fep/ana/dg_complex_contributions.json".
+        This directory is the same specified on :meth:`bindflow.run_abfe.calculate_abfe` through the keyword `out_root_folder_path`
+    out_csv : PathLike, optional
+        If given a pandas.DataFrame will be written as csv file, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     sample_data = []
     root_folder_path = Path(root_folder_path).resolve()
     for item1 in root_folder_path.iterdir():
@@ -111,8 +126,8 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
             for item2 in item1.iterdir():
                 if item2.is_dir():
                     replica = item2.stem
-                    complex_json = item2 / "complex/fep/ana/dg_complex_contributions.json"
-                    ligand_json = item2 / "ligand/fep/ana/dg_ligand_contributions.json"
+                    complex_json = item2/"complex/fep/ana/dg_complex_contributions.json"
+                    ligand_json = item2/"ligand/fep/ana/dg_ligand_contributions.json"
                     if complex_json.is_file() and ligand_json.is_file():
                         with open(complex_json, 'r') as cj:
                             complex_data = json.load(cj)
@@ -166,22 +181,41 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
     return df
 
 
-def get_mmpbsa_partial_results(root_folder_path: PathLike, out_csv_raw: PathLike = None, out_csv_pretty: PathLike = None) -> pd.DataFrame:
+def get_mmpbsa_data(root_folder_path: PathLike, out_csv_raw: PathLike = None, out_csv_pretty: PathLike = None) -> pd.DataFrame:
+    """Main function to retrieve MM(P/G)BSA simulation data
+    generated through BindFlow
+
+    Parameters
+    ----------
+    root_folder_path : PathLike
+        Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv".
+        This directory is the same specified on :meth:`bindflow.run_mmpbsa.calculate_mmpbsa` through the keyword `out_root_folder_path`
+    out_csv_raw : PathLike, optional
+        If given, a pandas.DataFrame will be written as csv file with the raw data, by default None
+    out_csv_pretty : PathLike, optional
+       If given, a pandas.DataFrame will be written as csv file with the summary data. The function
+       :meth:`bindflow.free_energy.mmxbsa_analysis.prettify_df`, by default None
+
+    Returns
+    -------
+    pd.DataFrame
+        Raw MM(P/G)BSA data
+    """
     collected_dfs = []
     collected_files = glob.glob(root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
     if len(collected_files) == 0:
         return None
-    for inp_file in collected_files: # collecting all of the mmxbsa.csv files
+    for inp_file in collected_files:  # collecting all of the mmxbsa.csv files
         string_data = inp_file.removeprefix(root_folder_path).split("/")
         ligand_name, replica, sample = string_data[1], string_data[2], string_data[6].removeprefix("rep.")
         collected_dfs.append(mmxbsa_analysis.convert_format_flatten(pd.read_csv(inp_file), ligand_name, replica, sample))
     full_df = pd.concat(collected_dfs, ignore_index=True)
     if out_csv_raw:
         full_df.to_csv(out_csv_raw, index=False)
-    
+
     if out_csv_pretty:
         mmxbsa_analysis.prettify_df(full_df).to_csv(out_csv_pretty, index=False)
-    
+
     return full_df
 
 
