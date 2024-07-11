@@ -12,7 +12,7 @@ def test_abfe():
     from pathlib import Path
     # import pytest
     from multiprocessing import cpu_count
-    from bindflow import calculate_abfe
+    from bindflow.run_abfe import calculate_abfe
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
