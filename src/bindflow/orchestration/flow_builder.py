@@ -103,7 +103,8 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     ----------
     global_config : dict
         The global configuration. It must contain:
-        out_approach_path[PathLike], inputs[dict[dict]], water_model[str], cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
+        out_approach_path[PathLike], inputs[dict[dict]], water_model[str], host_name[str], host_selection[str]
+        cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
         ligand_names[list[str]], replicas[float], threads[int],
         hmr_factor[float, None], custom_ff_path[str, None], cluster/type[str], cluster/options/calculation[dict]
         num_max_thread: int, The maximum number of threads to be used on each simulation.
@@ -133,6 +134,8 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "out_approach_path": global_config["out_approach_path"],
         "inputs": global_config["inputs"],
         "water_model": global_config["water_model"],
+        "host_name": global_config["host_name"],
+        "host_selection": global_config["host_selection"],
         "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],

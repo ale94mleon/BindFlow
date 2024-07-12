@@ -44,6 +44,7 @@ rule build_ligand_system:
         # Initialize the files builder
         with sb.MakeInputs(
             protein=config["inputs"]["protein"],
+            host_name=config["host_name"],
             membrane=config["inputs"]["membrane"],
             cofactor=config["inputs"]["cofactor"],
             cofactor_on_protein=config["cofactor_on_protein"],

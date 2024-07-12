@@ -50,10 +50,6 @@ def test_abfe():
             # This is not needed in the cluster becasue CUDA is different.
             global_config['extra_directives']['mdrun']['all']['ntmpi'] = 1
 
-        # This are for the boresch restraint
-        os.environ['abfe_debug_host_name'] = 'WP6'
-        os.environ['abfe_debug_host_selection'] = 'resname WP6'
-
         num_jobs = cpu_count()
         threads = min(4, num_jobs)
         calculate_mmpbsa(
@@ -61,6 +57,8 @@ def test_abfe():
             ligands=ligands,
             out_root_folder_path=str(tmp_path / "mmpbsa-frontend"),
             cofactor=None,
+            host_name='WP6',
+            host_selection='resname WP6',
             cofactor_on_protein=True,
             membrane=None,
             water_model='amber/tip3p',

@@ -204,7 +204,7 @@ class MakeInputs:
     It will create the necessary topology and configuration files, as well the
     correct directory trees.
     """
-    def __init__(self, protein: dict = None, membrane: dict = None, cofactor: dict = None,
+    def __init__(self, protein: dict = None, host_name: str = "Protein", membrane: dict = None, cofactor: dict = None,
                  cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
                  custom_ff_path: Union[None, PathLike] = None, hmr_factor: Union[float, None] = None,
                  builder_dir: PathLike = 'builder', load_dependencies: List[str] = None):
@@ -235,6 +235,8 @@ class MakeInputs:
                 * ff
                     * code -> GMX force field code [optional], by default amber99sb-ildn
                     You can use your custom force field, but custom_ff_path must be provided
+        host_name : str
+            The group name for the host in the configuration file, by default "Protein".
 
         membrane : PathLike, optional
             This is a dictionary with the following information for the membrane:
@@ -298,6 +300,7 @@ class MakeInputs:
             e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
         """
         self.protein = protein
+        self.host_name = host_name
         self.membrane = membrane
         self.cofactor = cofactor
         self.cofactor_on_protein = cofactor_on_protein
@@ -657,7 +660,8 @@ class MakeInputs:
             solvent.index_for_membrane_system(
                 configuration_file=system_dir/"solvated.gro",
                 ndxout=system_dir/"index.ndx",
-                lignad_name='LIG',
+                ligand_name="LIG",
+                host_name=self.host_name,
                 cofactor_name='COF' if self.cofactor else None,
                 cofactor_on_protein=self.cofactor_on_protein,
                 load_dependencies=self.load_dependencies
@@ -668,7 +672,8 @@ class MakeInputs:
             solvent.index_for_soluble_system(
                 configuration_file=system_dir/"solvated.gro",
                 ndxout=system_dir/"index.ndx",
-                ligand_name='LIG',
+                ligand_name="LIG",
+                host_name=self.host_name,
                 load_dependencies=self.load_dependencies
             )
 

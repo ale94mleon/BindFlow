@@ -20,20 +20,12 @@ rule run_gmx_mmpbsa:
         run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/"
     threads: threads
     run:
-        # Set default host name (reachable as gmx index)
-        host_name = 'Protein'
-        # Only if debug is activated, update name and selection based on environment variable
-        if 'abfe_debug' in os.environ:
-            if os.environ['abfe_debug'] == 'True': # environ save the variables as strings 
-                if 'abfe_debug_host_name' in os.environ:
-                    host_name = os.environ['abfe_debug_host_name']
-
         # Fix trajectory.
         centered_xtc = tools.center_xtc(
             tpr=params.in_tpr,
             xtc=params.in_xtc,
             run_dir=params.run_dir,
-            host_name=host_name
+            host_name=config["host_name"]
         )
 
         # Run gmx_mmpbsa

@@ -645,16 +645,17 @@ class Solvate:
 def index_for_membrane_system(
         configuration_file: tools.PathLike,
         ndxout: tools.PathLike = "index.ndx",
-        lignad_name: str = 'LIG',
+        ligand_name: str = "LIG",
+        host_name: str = "Protein",
         cofactor_name: str = None,
         cofactor_on_protein: bool = True,
         load_dependencies: List[str] = None):
     """Make the index file for membrane systems with SOLU, MEMB and SOLV. It uses gmx make_ndx and select internally.
     One examples selection that can be created with ligand_name = LIG; cofactor_name = COF and cofactor_on_protein = True is:
-        #. "RECEPTOR" group Protein;
+        #. "RECEPTOR" group {host_name};
         #. "LIGAND" resname {ligand_name};
-        #. "SOLU" group Protein or resname {ligand_name} or resname COF;
-        #. "MEMB" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname {ligand_name}) and ! (resname COF);
+        #. "SOLU" group {host_name} or resname {ligand_name} or resname COF;
+        #. "MEMB" ((group System and ! group Water_and_ions) and ! group {host_name}) and ! (resname {ligand_name}) and ! (resname COF);
         #. "SOLV" group Water_and_ions;
 
 
@@ -664,8 +665,10 @@ def index_for_membrane_system(
         PDB or GRO file of the system.
     ndxout : PathLike
         Path to output the index file.
-    lignad_name : str
-        The residue name for the ligand in the configuration file, bt default LIG.
+    ligand_name : str
+        The residue name for the ligand in the configuration file, by default "LIG".
+    host_name : str
+        The group name for the host in the configuration file, by default "Protein".
     cofactor_name : str
         The residue name for the cofactor in the configuration file, bt default None
     cofactor_on_protein : bool
@@ -678,10 +681,10 @@ def index_for_membrane_system(
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
     # Nice use of gmx select, see the use of the parenthesis
-    sele_RECEPTOR = "\"RECEPTOR\" group Protein"
-    sele_LIGAND = f"\"LIGAND\" resname {lignad_name}"
-    sele_MEMB = f"\"MEMB\" ((group System and ! group Water_and_ions) and ! group Protein) and ! (resname {lignad_name})"
-    sele_SOLU = f"\"SOLU\" group Protein or resname {lignad_name}"
+    sele_RECEPTOR = f"\"RECEPTOR\" group {host_name}"
+    sele_LIGAND = f"\"LIGAND\" resname {ligand_name}"
+    sele_MEMB = f"\"MEMB\" ((group System and ! group Water_and_ions) and ! group {host_name}) and ! (resname {ligand_name})"
+    sele_SOLU = f"\"SOLU\" group {host_name} or resname {ligand_name}"
     sele_SOLV = "\"SOLV\" group Water_and_ions"
     if cofactor_name:
         sele_MEMB += f" and ! (resname {cofactor_name})"
@@ -734,10 +737,11 @@ def index_for_membrane_system(
 def index_for_soluble_system(
         configuration_file: tools.PathLike,
         ndxout: tools.PathLike = "index.ndx",
-        ligand_name: str = 'LIG',
+        ligand_name: str = "LIG",
+        host_name: str = "Protein",
         load_dependencies: List[str] = None):
     """Make the index file for soluble system. This is only needed in case MMPBSA calculation;
-        #. "RECEPTOR" group Protein; {it use os.environ['abfe_debug_host_name'] (if deffined) in case os.environ['abfe_debug'] == 'True'}
+        #. "RECEPTOR" group {host_name};
         #. "LIGAND" resname {ligand_name};
 
     Parameters
@@ -747,21 +751,15 @@ def index_for_soluble_system(
     ndxout : PathLike
         Path to output the index file.
     ligand_name : str
-        The residue name for the ligand in the configuration file, bt default LIG.
+        The residue name for the ligand in the configuration file, by default "LIG".
+    host_name : str
+        The group name for the host in the configuration file, by default "Protein".
     load_dependencies : List[str], optional
         It is used in case some previous loading steps are needed for GROMACS commands;
         e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
     """
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
-
-    # TODO extend to more general name for receptor
-    host_name = 'Protein'
-    # Only if debug is activated, update name and selection based on environment variable
-    if 'abfe_debug' in os.environ:
-        if os.environ['abfe_debug'] == 'True':  # environ save the variables as strings
-            if 'abfe_debug_host_name' in os.environ:
-                host_name = os.environ['abfe_debug_host_name']
 
     sele_RECEPTOR = f"\"RECEPTOR\" group {host_name}"
     sele_LIGAND = f"\"LIGAND\" resname {ligand_name}"

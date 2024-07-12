@@ -118,6 +118,8 @@ def calculate_mmpbsa(
         # You can also specify the keyword is_water in case that the cofactor is a water system,
         # that will change the settles section to triangular constraints. That is needed for compatibility with GROMACS
         cofactor: Union[tools.PathLike, dict, None] = None,
+        host_name: str = 'Protein',  # For making index, solvate the system and working with trajectories
+        host_selection: str = 'protein and name CA',  # For boresch restraint detection
         # this is to the correct group on the thermostat
         cofactor_on_protein: bool = True,
         membrane: Union[tools.PathLike, dict, None] = None,
@@ -176,6 +178,8 @@ def calculate_mmpbsa(
                                                         default_ff_type='openff', optional=True)
     _global_config["inputs"]["membrane"] = input_helper(arg_name='membrane', user_input=membrane, default_ff='Slipids_2020', optional=True)
 
+    _global_config["host_name"] = host_name
+    _global_config["host_selection"] = host_selection
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     _global_config["custom_ff_path"] = custom_ff_path
