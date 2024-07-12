@@ -20,11 +20,9 @@ def test_abfe():
         tar = tarfile.open(fname, "r:gz")
         tar.extractall(tmp)
         tar.close()
-        print(os.listdir(Path(tmp) / "WP6_G1"))
 
-        tmp_path = Path(tmp) / "WP6_G1"
-
-        ligand_files = glob.glob(str(tmp_path / "guest/*sdf"))[:1]
+        tmp_path = Path(tmp)/"WP6_G1"
+        ligand_files = list((tmp_path/"guest").rglob("*sdf"))[:1]
 
         ligands = []
         for ligand_file in ligand_files:

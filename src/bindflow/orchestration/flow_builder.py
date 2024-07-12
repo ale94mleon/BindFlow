@@ -121,9 +121,9 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         Some identification of the submitted job. It will depend in how
         the submit method of the corresponded Schedular (:meth:`abfe.orchestration.generate_scheduler.Scheduler`) was implemented
     """
-    out_path = global_config["out_approach_path"]
-    snake_path = out_path + "/Snakefile"
-    approach_conf_path = out_path + "/snake_conf.json"
+    out_path = Path(global_config["out_approach_path"])
+    snake_path = out_path/"Snakefile"
+    approach_conf_path = out_path/"snake_conf.json"
 
     # Update (or set) nwindows on global_config.
     global_config = update_nwindows_config(global_config)

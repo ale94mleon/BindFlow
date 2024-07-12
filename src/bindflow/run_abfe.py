@@ -93,7 +93,7 @@ def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], d
             if internal_dict['conf']:
                 if not Path(internal_dict['conf']).exists():
                     raise FileNotFoundError(f"{internal_dict['conf'] = } is not accessible.")
-                internal_dict['conf'] = Path(internal_dict['conf']).resolve()
+                internal_dict['conf'] = os.path.abspath(internal_dict['conf'])
             else:
                 if not optional:
                     raise ValueError(f'conf must be provided on the `{arg_name}` entry when a dictionary is used')
@@ -101,13 +101,13 @@ def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], d
             if internal_dict['top']:
                 if not Path(internal_dict['top']).exists():
                     raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
-                internal_dict['top'] = Path(internal_dict['top']).resolve()
+                internal_dict['top'] = os.path.abspath(internal_dict['top'])
 
         # This is the case that only a path was provided
         else:
             if not Path(user_input).exists():
                 raise FileNotFoundError(f"On {arg_name} entry; {user_input = } is not accessible")
-            internal_dict['conf'] = Path(user_input).resolve()
+            internal_dict['conf'] = os.path.abspath(user_input)
         return copy.deepcopy(internal_dict)
 
 
@@ -182,9 +182,7 @@ def calculate_abfe(
     # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology
     _global_config["water_model"] = water_model
     _global_config["dt_max"] = dt_max
-
-    out_root_folder_path = Path(out_root_folder_path).resolve()
-    _global_config["out_approach_path"] = out_root_folder_path
+    _global_config["out_approach_path"] = os.path.abspath(out_root_folder_path)
 
     if job_prefix:
         _global_config["job_prefix"] = f"{job_prefix}"
@@ -209,7 +207,7 @@ def calculate_abfe(
     print("Prepare")
     print("\tstarting preparing ABFE-ligand file structure")
 
-    print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
+    print("\tStarting preparing ABFE-Approach file structure: ", _global_config["out_approach_path"])
     if not _global_config["ligand_names"]:
         raise ValueError("No ligands found")
 
@@ -229,6 +227,6 @@ def calculate_abfe(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        gather_results.get_all_abfe_dgs(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results.csv'))
-        gather_results.get_raw_abfe_data(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results_raw.csv'))
+        gather_results.get_all_abfe_dgs(root_folder_path=out_root_folder_path, out_csv=out_root_folder_path/'abfe_partial_results.csv')
+        gather_results.get_raw_abfe_data(root_folder_path=out_root_folder_path, out_csv=out_root_folder_path/'abfe_partial_results_raw.csv')
     os.chdir(orig_dir)
