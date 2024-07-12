@@ -1,6 +1,4 @@
 rule equil_complex_00_min:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",
@@ -25,8 +23,6 @@ rule equil_complex_00_min:
         )
 
 rule equil_complex_01_nvt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",
@@ -55,8 +51,6 @@ rule equil_complex_01_nvt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule equil_complex_02_npt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",
@@ -88,8 +82,6 @@ rule equil_complex_02_npt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule equil_complex_03_npt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",
@@ -121,8 +113,6 @@ rule equil_complex_03_npt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule equil_complex_04_npt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",
@@ -154,8 +144,6 @@ rule equil_complex_04_npt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule equil_complex_05_npt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",
@@ -187,8 +175,6 @@ rule equil_complex_05_npt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule equil_complex_06_npt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",
@@ -220,8 +206,6 @@ rule equil_complex_06_npt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule equil_complex_prod:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=approach_path/"{ligand_name}/input/complex/complex.top",
         ndx=approach_path/"{ligand_name}/input/complex/index.ndx",

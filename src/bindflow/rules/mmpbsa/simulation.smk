@@ -1,6 +1,4 @@
 rule mmxbsa_sample_prod:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK = 1
     input:
         top=out_approach_path+"/{ligand_name}/input/complex/complex.top",
         mdp=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",

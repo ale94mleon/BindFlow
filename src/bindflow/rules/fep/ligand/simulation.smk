@@ -1,6 +1,4 @@
 rule fep_ligand_00_min:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
         finished=out_approach_path+"/{ligand_name}/{replica}/ligand/equil-mdsim/prod/prod.finished",
@@ -24,8 +22,6 @@ rule fep_ligand_00_min:
         )
 
 rule fep_ligand_01_nvt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
         gro=out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/{state}/00_min/00_min.gro",
@@ -52,8 +48,6 @@ rule fep_ligand_01_nvt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule fep_ligand_02_npt:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
         finished=out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/{state}/01_nvt/01_nvt.finished",
@@ -83,8 +77,6 @@ rule fep_ligand_02_npt:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule fep_ligand_03_npt_norest:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
         finished=out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/{state}/02_npt/02_npt.finished",
@@ -114,8 +106,6 @@ rule fep_ligand_03_npt_norest:
         tools.paths_exist(paths=[params.out_gro, params.out_cpt], raise_error=True, out=output.finished)
 
 rule fep_ligand_prod:
-    resources:
-        FRONTEND_RUNNER_GPU_LOCK=1
     input:
         top=out_approach_path+"/{ligand_name}/input/ligand/ligand.top",
         finished=out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/{state}/03_npt_norest/03_npt_norest.finished",
