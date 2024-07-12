@@ -98,8 +98,4 @@ bindflow = [
 ]
 
 [project.scripts]
-abfe-run = "bindflow.cli:abfe_run"
-abfe-dag = "bindflow.cli:abfe_dag"
-abfe-check_results = "bindflow.cli:abfe_check_results"
-abfe-archive = 'bindflow.cli:abfe_archive'
-abfe-unarchive = 'bindflow.cli:abfe_unarchive'
+bindflow = "bindflow.cli:main"
