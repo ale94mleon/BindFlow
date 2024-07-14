@@ -37,3 +37,10 @@ If you want to modify the code and contribute, then:
 
 
 In order to MDAnalysis-2.7.0 read the GROMACS TPR file you must install GROMACS<2023
+
+To get gmx_MMPBSA (the current PyPi version is not yet updated):
+
+.. code-block:: bash
+  
+  python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git --no-deps 
+  
