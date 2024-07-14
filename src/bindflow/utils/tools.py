@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+import copy
 import os
+import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import List, Tuple, Union
-import re
+from typing import List, Tuple, Union, Iterable
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -21,10 +22,6 @@ HARD_CODE_DEPENDENCIES = [
     'unset NUMEXPR_NUM_THREADS',
 ]
 
-def natsort(l): 
-    conversion = lambda inp: int(inp) if inp.isdigit() else inp.lower()
-    key = lambda k: [conversion(c) for c in re.split('([0-9]+)', str(k))]
-    return sorted(l, key=key)
 
 class DotDict:
     """A simple implementation of dot-access dict"""
@@ -671,6 +668,116 @@ def config_validator(global_config: dict) -> List:
     del global_config["extra_directives"]["mdrun"]['all']
 
     return True, "Cluster configuration is valid"
+
+
+def input_helper(arg_name: str, user_input: Union[PathLike, dict, None], default_ff: Union[PathLike, str],
+                 default_ff_type: Union[str, None] = None, optional: bool = False) -> dict:
+    """This helper function is called inside bindflow.run_abfe.calculate_abfe and bindflow.run_mmpbsa.calculate_mmpbsa
+    to check for the inputs: protein, ligands, membrane and cofactor
+
+    Parameters
+    ----------
+    arg_name : str
+        The name of the part of the system. It is just used for to print information in case of error
+    user_input : Union[PathLike, dict, None]
+        The user input provided
+    default_ff : Union[PathLike, str]
+        A code of the force field. Internally it will be check if [default_ff].ff exist as a directory. This allow a much bigger flexibility
+        on the use of different force fields that do not come with the GROMACS distribution by default
+    default_ff_type : Union[PathLike, str]
+        This is used for the small molecules. It must be openff, gaff or espaloma (case insensitive).
+        If it is provided, default_ff will NOT be used and set to None.
+        During the building of the system, it will be converted internally as:
+            * openff -> openff_unconstrained-2.0.0.offxml
+            * gaff -> gaff-2.11
+            * espaloma -> espaloma-0.3.1
+    optional : bool, optional
+        if the arguments under analysis is optional or not, by default False
+
+    Returns
+    -------
+    dict
+        A dictionary with keywords: conf[configuration file], top[GROMACS topology file],
+        ff:code[force field code], path[absolute path in case the directory exists]
+
+    Raises
+    ------
+    ValueError
+        if user_input is None but optional is False
+    FileNotFoundError
+        The configuration file is not found even when some path was provided
+    ValueError
+        In case conf is not provided when user_input is a dict and optional is False
+    FileNotFoundError
+        The configuration file is not found when user_input is suppose to be a path
+    """
+    valid_ff_types = ['openff', 'gaff', 'espaloma']
+
+    if default_ff_type:
+        default_ff_type = str(default_ff_type).lower()
+        if default_ff_type not in valid_ff_types:
+            raise ValueError(f"{default_ff_type =} is not valid. Choose from {valid_ff_types}")
+
+    if not user_input:
+        if optional:
+            return None
+        else:
+            raise ValueError(f"{arg_name =} was set with {user_input =} but {optional =}")
+    else:
+        internal_dict = {
+            'conf': None,
+            # This must be a single file topology with all the force field information
+            # without positional restraint definition for the heavy atoms, thi will be generated internally.
+            'top': None,
+            'ff': {
+                'code': default_ff,
+            }
+        }
+        if default_ff_type:
+            internal_dict['ff']['type'] = default_ff_type
+            internal_dict['ff']['code'] = None
+
+        if isinstance(user_input, dict):
+            recursive_update_dict(internal_dict, user_input)
+
+            # Convert to absolute paths
+            if internal_dict['conf']:
+                if not Path(internal_dict['conf']).exists():
+                    raise FileNotFoundError(f"{internal_dict['conf'] = } is not accessible.")
+                internal_dict['conf'] = os.path.abspath(internal_dict['conf'])
+            else:
+                if not optional:
+                    raise ValueError(f'conf must be provided on the `{arg_name}` entry when a dictionary is used')
+
+            if internal_dict['top']:
+                if not Path(internal_dict['top']).exists():
+                    raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
+                internal_dict['top'] = os.path.abspath(internal_dict['top'])
+
+        # This is the case that only a path was provided
+        else:
+            if not Path(user_input).exists():
+                raise FileNotFoundError(f"On {arg_name} entry; {user_input = } is not accessible")
+            internal_dict['conf'] = os.path.abspath(user_input)
+        return copy.deepcopy(internal_dict)
+
+
+def natsort(iterable: List) -> Iterable:
+    """natural sort of an iterable
+
+    Parameters
+    ----------
+    iterable : List
+        Some iterable
+
+    Returns
+    -------
+    Iterable
+        The natural sorted iterable
+    """
+    def conversion(element):
+        return int(element) if element.isdigit() else element.lower()
+    return sorted(iterable, key=lambda k: [conversion(c) for c in re.split('([0-9]+)', str(k))])
 
 
 if __name__ == "__main__":

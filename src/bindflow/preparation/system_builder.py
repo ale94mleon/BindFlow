@@ -212,7 +212,7 @@ class MakeInputs:
 
         Parameters
         ----------
-        protein : PathLike, optional
+        protein : dict, optional
             This is a dictionary with the following information for the protein:
 
                 * conf -> The path of the protein PDB/GRO file [mandatory]
@@ -236,13 +236,15 @@ class MakeInputs:
                     * code -> GMX force field code [optional], by default amber99sb-ildn
                     You can use your custom force field, but custom_ff_path must be provided
         host_name : str
-            The group name for the host in the configuration file, by default "Protein".
+            The group name for the host in the configuration file, by default "Protein"
 
-        membrane : PathLike, optional
+        membrane : dict, optional
             This is a dictionary with the following information for the membrane:
 
                 * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
-                correct definition of the CRYST1. This information will be used for the solvation step
+                correct definition of the CRYST1. This information will be used for the solvation step.
+                The membrane must be already correctly placed around the protein. Servers like CHARM-GUI
+                can be used on this step.
 
                 * top -> GROMACS topology [optional], by default None.
                 Should be a single file topology with all the force field
@@ -273,16 +275,36 @@ class MakeInputs:
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the
                 force field information and without the position restraint included, by default None
 
-                * ff
+                * ff:
 
-                    * code -> OpenFF code [optional], by default openff_unconstrained-2.0.0.offxml
+                    * type -> openff, gaff or espaloma
+
+                    * code -> force field code [optional], by default depending on type
+
+                        * openff -> openff_unconstrained-2.0.0.offxml
+
+                        * gaff -> gaff-2.11
+
+                        * espaloma -> espaloma-0.3.1
+
+                    With this parameter you can access different small molecule force fields
+
+                * is_water -> If presents and set to True; it is assumed that this is a water system
+                and that will change the settles section to tip3p-like triangular constraints.
+                This is needed for compatibility with GROMACS. Check here:
+                https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
 
         cofactor_on_protein : bool
             It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
             If True, the cofactor will be part of the protein and the ligand
-            if False will be part of the solvent and ions, by default True
+            if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
         hmr_factor : float, optional
             The Hydrogen Mass Factor to use, by default None
+            WARNING:
+                For provided topologies if hmr_factor is set, it will pass any way.
+                So for topology files with already HMR, this should be None.
+                And all the topologies should be provided
+                protein, cofactors, membrane, ligands with the HMR already done
         water_model : str, optional
             The water force field to use, by default amber/tip3p.
             if you would likle to use the flexible definition of the CHARMM TIP3P
@@ -601,9 +623,11 @@ class MakeInputs:
 
                         * espaloma -> espaloma-0.3.1
 
+                    With this parameter you can access different small molecule force fields
+
                 In case of PathLike:
 
-                * The path of the small MOL/SDF molecule file
+                    * The path of the small MOL/SDF molecule file
 
         out_dir : str, optional
             Where you would like to export the generated files, by default 'abfe'

@@ -26,7 +26,7 @@ def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
     dict
         A dictionary with keywords:
 
-            #. <estimator>: the value of the estimator
+            #. <estimator>: the average value of the estimator
             #. <estimator>_sem: Standard error of the mean
             #. <estimator>_uncertainty_propagation: Propagate the uncertainties after the average.
             This use the estimated uncertainties from alchemy (Check :meth:`abfe.free_energy.analysis.run_alchemlyb`)
@@ -57,7 +57,8 @@ def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
 
 
 def get_all_abfe_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
-    """Get the independent ABFE free energy results and gather them
+    """Get the independent ABFE free energy results and gather them.
+    Average and standard error of the mean are reported.
 
     Parameters
     ----------
@@ -182,7 +183,8 @@ def get_raw_abfe_data(root_folder_path: PathLike, out_csv: PathLike = None) -> p
 
 
 def get_all_mmxbsa_dgs(full_df: pd.DataFrame, columns_to_process: Union[None, List[str]] = None, out_csv: PathLike = None) -> pd.DataFrame:
-    """Get the independent MM(P/G)BSA free energy results and gather them
+    """Get the independent MM(P/G)BSA free energy results and gather them.
+    Average and standard error of the mean are across all replicas and samples for each ligand are reported
 
     Parameters
     ----------

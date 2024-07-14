@@ -58,7 +58,7 @@ def main():
     parser.add_argument(
         '--version',
         action='version',
-        version=f"BindFlow: {__version__}")
+        version=f"BindFlow: {__version__}✨")
 
     subparsers = parser.add_subparsers(required=False, dest="command")
 
