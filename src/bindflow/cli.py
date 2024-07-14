@@ -27,10 +27,30 @@ def abfe_check_results(out_root_folder_path, out_csv_summary, out_csv_raw):
         if out_csv_summary:
             df_summary.to_csv(out_csv_summary)
         print(df_summary)
-    if out_csv_raw:
-        df_raw = gather_results.get_raw_abfe_data(root_folder_path=out_root_folder_path)
-        if len(df_raw):
-            df_raw.to_csv(out_csv_raw)
+        if out_csv_raw:
+            df_raw = gather_results.get_raw_abfe_data(root_folder_path=out_root_folder_path)
+            if len(df_raw):
+                df_raw.to_csv(out_csv_raw)
+    else:
+        print("🫣")
+
+
+def mmxbsa_check_results(out_root_folder_path, out_csv_summary, out_csv_raw):
+    from bindflow.free_energy import gather_results
+
+    full_df = gather_results.get_raw_mmxbsa_dgs(
+        root_folder_path=out_root_folder_path,
+        out_csv=out_csv_raw
+    )
+    df_summary = gather_results.get_all_mmxbsa_dgs(
+        full_df=full_df,
+        columns_to_process=None,
+        out_csv=out_csv_summary
+    )
+    if len(df_summary):
+        print(df_summary)
+    else:
+        print("🫣")
 
 
 def main():
@@ -76,6 +96,28 @@ def main():
         default=None,
         type=str)
 
+    mmxbsa_check = subparsers.add_parser(
+        'check_mmxbsa',
+        help="Check for completion of an MM(P/B)BSA workflow")
+    mmxbsa_check.add_argument(
+        dest='out_root_folder_path',
+        help='MM(P/B)BSA directory (`out_root_folder_path` kwarg of :meth:`bindflow.run_mmpbsa.calculate_mmpbsa`)',
+        type=str)
+    mmxbsa_check.add_argument(
+        '-os', '--out_csv_summary',
+        help="The path to output the summary csv file, by default None",
+        dest='out_csv_summary',
+        nargs=argparse.OPTIONAL,
+        default=None,
+        type=str)
+    mmxbsa_check.add_argument(
+        '-or', '--out_csv_raw',
+        help="The path to output the raw csv file, by default None",
+        dest='out_csv_raw',
+        nargs=argparse.OPTIONAL,
+        default=None,
+        type=str)
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -85,6 +127,11 @@ def main():
         dag_maker(input_path=args.input_path, out_name=args.out_name)
     elif args.command == "check_abfe":
         abfe_check_results(
+            out_root_folder_path=args.out_root_folder_path,
+            out_csv_summary=args.out_csv_summary,
+            out_csv_raw=args.out_csv_raw)
+    elif args.command == "check_mmxbsa":
+        mmxbsa_check_results(
             out_root_folder_path=args.out_root_folder_path,
             out_csv_summary=args.out_csv_summary,
             out_csv_raw=args.out_csv_raw)

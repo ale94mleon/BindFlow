@@ -20,7 +20,7 @@ def test_abfe():
         tar.close()
 
         tmp_path = Path(tmp)/"WP6"
-        ligand_files = list((tmp_path/"guest").rglob("*sdf"))[:1]
+        ligand_files = list((tmp_path/"guest").rglob("*sdf"))[:2]
 
         ligands = []
         for ligand_file in ligand_files:

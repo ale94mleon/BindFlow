@@ -1,92 +1,14 @@
-import GMXMMPBSA.API
-import pandas as pd
 from pathlib import Path
 
-
-def prettify_df(full_df: pd.DataFrame) -> pd.DataFrame:
-    """Helper function for summerizing
-
-    Parameters
-    ----------
-    full_df : pd.DataFrame
-        _description_
-
-    Returns
-    -------
-    pd.DataFrame
-        _description_
-    """
-    groups = full_df.groupby(["name", "replica"])
-    pretty_dict = {"name": [],
-                   "replica": [],
-                   "dg_c2_pb": [],
-                   "dg_c2_pb_sem": [],
-                   "dg_c2_gb": [],
-                   "dg_c2_gb_sem": [],
-                   "dg_ie_pb": [],
-                   "dg_ie_pb_sem": [],
-                   "dg_ie_gb": [],
-                   "dg_ie_gb_sem": [],
-                   "dg_qh_pb": [],
-                   "dg_qh_pb_sem": [],
-                   "dg_qh_gb": [],
-                   "dg_qh_gb_sem": [],
-                   "dg_en_pb": [],
-                   "dg_en_pb_sem": [],
-                   "dg_en_gb": [],
-                   "dg_en_gb_sem": [],
-                   "c2_pb": [],
-                   "c2_pb_sem": [],
-                   "c2_gb": [],
-                   "c2_gb_sem": [],
-                   "ie_pb": [],
-                   "ie_pb_sem": [],
-                   "ie_gb": [],
-                   "ie_gb_sem": [],
-                   "qh": [],
-                   "qh_sem": []}
-
-    for group_keys, group_df in groups:
-        group_name, group_replica = group_keys
-        pretty_dict["name"].append(group_name)
-        pretty_dict["replica"].append(group_replica)
-
-        pretty_dict["dg_c2_pb"].append(group_df["dg_c2_pb"].mean())
-        pretty_dict["dg_c2_pb_sem"].append(group_df["dg_c2_pb"].sem())
-        pretty_dict["dg_c2_gb"].append(group_df["dg_c2_gb"].mean())
-        pretty_dict["dg_c2_gb_sem"].append(group_df["dg_c2_gb"].sem())
-        pretty_dict["dg_ie_pb"].append(group_df["dg_ie_pb"].mean())
-        pretty_dict["dg_ie_pb_sem"].append(group_df["dg_ie_pb"].sem())
-        pretty_dict["dg_ie_gb"].append(group_df["dg_ie_gb"].mean())
-        pretty_dict["dg_ie_gb_sem"].append(group_df["dg_ie_gb"].sem())
-        pretty_dict["dg_qh_pb"].append(group_df["dg_qh_pb"].mean())
-        pretty_dict["dg_qh_pb_sem"].append(group_df["dg_qh_pb"].sem())
-        pretty_dict["dg_qh_gb"].append(group_df["dg_qh_gb"].mean())
-        pretty_dict["dg_qh_gb_sem"].append(group_df["dg_qh_gb"].sem())
-        pretty_dict["dg_en_pb"].append(group_df["dg_en_pb"].mean())
-        pretty_dict["dg_en_pb_sem"].append(group_df["dg_en_pb"].sem())
-        pretty_dict["dg_en_gb"].append(group_df["dg_en_gb"].mean())
-        pretty_dict["dg_en_gb_sem"].append(group_df["dg_en_gb"].sem())
-
-        pretty_dict["c2_pb"].append(group_df["c2_pb"].mean())
-        pretty_dict["c2_pb_sem"].append(group_df["c2_pb"].sem())
-        pretty_dict["c2_gb"].append(group_df["c2_gb"].mean())
-        pretty_dict["c2_gb_sem"].append(group_df["c2_gb"].sem())
-        pretty_dict["ie_pb"].append(group_df["ie_pb"].mean())
-        pretty_dict["ie_pb_sem"].append(group_df["ie_pb"].sem())
-        pretty_dict["ie_gb"].append(group_df["ie_gb"].mean())
-        pretty_dict["ie_gb_sem"].append(group_df["ie_gb"].sem())
-        pretty_dict["qh"].append(group_df["qh"].mean())
-        pretty_dict["qh_sem"].append(group_df["qh"].sem())
-
-    return pd.DataFrame(pretty_dict)
+import GMXMMPBSA.API
+import pandas as pd
 
 
 def convert_format_flatten(df, ligand_name, replica, sample):
     res = {
         "name": [ligand_name],
-        "replica": [replica],
-        "sample": [sample],
+        "replica": [int(replica)],
+        "sample": [int(sample)],
         "dg_c2_pb": df["dg_c2_pb"],
         "dg_c2_gb": df["dg_c2_gb"],
         "dg_ie_pb": df["dg_ie_pb"],
@@ -494,10 +416,10 @@ class GmxMmxbsaDataRetriever:
 
     def store_dg(self, output_file, run_dir):
         # storing pb energies of each frame
-        pd.DataFrame(self.pb_en, columns=["delta_g_pb"]).to_csv(Path(run_dir)/"pb_energy_frames", index=False)
+        pd.DataFrame(self.pb_en, columns=["delta_g_pb"]).to_csv(Path(run_dir)/"pb_energy_frames.csv", index=False)
 
         # storing gb energies of each frame
-        pd.DataFrame(self.gb_en, columns=["delta_g_gb"]).to_csv(Path(run_dir)/"gb_energy_frames", index=False)
+        pd.DataFrame(self.gb_en, columns=["delta_g_gb"]).to_csv(Path(run_dir)/"gb_energy_frames.csv", index=False)
 
         delta_g_dict = {
             "dg_c2_pb": [self.pb_en.mean() + self.c2_pb if (self.pb_en is not None and self.c2_pb is not None) else None],

@@ -148,6 +148,7 @@ def calculate_abfe(
         ):
     print(f"You are using BindFlow: {__version__}.")
     orig_dir = os.getcwd()
+    out_root_folder_path = Path(out_root_folder_path)
 
     # Make internal copy of configuration
     _global_config = copy.deepcopy(global_config)

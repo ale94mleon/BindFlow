@@ -149,6 +149,7 @@ def calculate_mmpbsa(
         ):
     print(f"You are using BindFlow: {__version__}.")
     orig_dir = os.getcwd()
+    out_root_folder_path = Path(out_root_folder_path)
 
     # Make internal copy of configuration
     _global_config = copy.deepcopy(global_config)
@@ -230,7 +231,13 @@ def calculate_mmpbsa(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        gather_results.get_mmpbsa_data(root_folder_path=out_root_folder_path,
-                                                  out_csv_pretty=os.path.join(out_root_folder_path, 'mmxbsa_partial_results.csv'),
-                                                  out_csv_raw=os.path.join(out_root_folder_path, 'mmxbsa_partial_results_raw.csv'))
+        full_df = gather_results.get_raw_mmxbsa_dgs(
+            root_folder_path=out_root_folder_path,
+            out_csv=out_root_folder_path/'mmxbsa_partial_results_raw.csv'
+        )
+        gather_results.get_all_mmxbsa_dgs(
+            full_df=full_df,
+            columns_to_process=None,
+            out_csv=out_root_folder_path/'mmxbsa_partial_results.csv'
+        )
     os.chdir(orig_dir)
