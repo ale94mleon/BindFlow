@@ -5,9 +5,7 @@
 def test_abfe():
     from bindflow.home import home
     import tempfile
-    import os
     import tarfile
-    import glob
     import yaml
     from pathlib import Path
     # import pytest
@@ -16,12 +14,12 @@ def test_abfe():
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
-        fname = Path(home(dataDir='ci_systems')) / 'WP6_G1.tar.gz'
+        fname = Path(home(dataDir='ci_systems')) / 'WP6.tgz'
         tar = tarfile.open(fname, "r:gz")
         tar.extractall(tmp)
         tar.close()
 
-        tmp_path = Path(tmp)/"WP6_G1"
+        tmp_path = Path(tmp)/"WP6"
         ligand_files = list((tmp_path/"guest").rglob("*sdf"))[:1]
 
         ligands = []
