@@ -5,15 +5,15 @@ dependencies:
   - python >=3.8,<3.11
   - pip
   - bioconda::snakemake
-  - ambertools
+  - ambertools =22.5
   - mpi4py <=3.1.5
-  - openmm
-  - openmmforcefields
+  - openmm =8.1.1
+  - openmmforcefields =0.11.2
   - pdbfixer
-  - openff-toolkit
+  - openff-toolkit =0.14.5
   - parmed
-  # - espaloma >=0.3.1
-  # - dglteam::dgl
+  - espaloma =0.3.1
+  - dglteam::dgl
   - scipy
   - graphviz
   # - nvidia::cuda-toolkit=11.4.2

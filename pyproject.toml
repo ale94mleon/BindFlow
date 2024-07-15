@@ -43,12 +43,12 @@ requires-python = ">= 3.8 , < 3.11"
 dependencies = [
     "alchemlyb == 2.0.0", # TODO update to new
     "pymbar == 4.0.1", #TODO  update to new
-    "MDRestraintsGenerator",
+    "MDRestraintsGenerator == 0.2.1",
     "matplotlib",
     "numpy",
-    "scipy",
+    "scipy>=1.7.3", # using just scipy without version requirement results in the installation of an old scipy version, which fails to install
     "pandas",
-    "mdanalysis",
+    "mdanalysis == 2.7.0",
     "TOFF >= 0.1.0",
     "tabulate == 0.8.10", # TODO update to new
     "pyyaml",
