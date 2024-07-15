@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-
-"""
-This script is an example execution running for membrane systems.
-"""
 import yaml
 import glob
 from bindflow.run_mmpbsa import calculate_mmpbsa
@@ -19,11 +15,11 @@ calculate_mmpbsa(
     cofactor=None,
     membrane=None,
     hmr_factor=2.5,
-    threads=10,
-    num_jobs=10,
+    threads=4,
+    num_jobs=12,
     replicas=1,
     samples=20,
-    submit=False,
+    submit=True,
     global_config=global_config)
 
 

@@ -3,8 +3,6 @@ from bindflow.run_abfe import calculate_abfe
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 
-out_folder = "abfe"
-
 calculate_abfe(
     protein_pdb_path='inputs/protein.pdb',
     ligand_mol_paths=ligand_mols,
