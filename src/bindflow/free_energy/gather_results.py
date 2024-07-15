@@ -242,7 +242,7 @@ def get_all_mmxbsa_dgs(full_df: pd.DataFrame, columns_to_process: Union[None, Li
         final_df = final_df.merge(total_samples, on='name')
 
         if out_csv:
-            final_df.to_csv(out_csv)
+            final_df.to_csv(out_csv, index=False)
         return final_df
     else:
         return pd.DataFrame()
