@@ -54,8 +54,8 @@ dependencies = [
     "pyyaml",
     "uncertainties",
     # MMPBSA DEPENDENCY
-    "gmx_MMPBSA",
-    "mpi4py<=3.1.5",
+    #"gmx_MMPBSA",
+    #"mpi4py<=3.1.5",
 ]
 
 [project.optional-dependencies]
