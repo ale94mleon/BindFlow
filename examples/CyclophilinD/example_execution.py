@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-
-"""
-This script is an example execution running for membrane systems.
-"""
 import yaml
 import glob
 from bindflow.run_abfe import calculate_abfe

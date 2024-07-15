@@ -7,6 +7,12 @@ extra_directives: # Optional
     # - 'source /data/shared/spack-0.19.1/shared.bash'
     # - 'module load gromacs/2022.4'
     - 'export GMX_MAXBACKUP=-1'
+    # Needed mainly for MacOS with Metal chips and for testing
+    # if the GPU wants to be used. Highly discouraged for production!
+    # See:
+    # https://manual.gromacs.org/current/user-guide/environment-variables.html
+    # https://gromacs.bioexcel.eu/t/does-gromacs-supports-gpu-acceleration-on-m1-mac/3466
+    - 'export GMX_GPU_DISABLE_COMPATIBILITY_CHECK=1'
   mdrun:
     all:
       cpi: False
