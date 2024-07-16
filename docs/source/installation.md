@@ -116,10 +116,12 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
   source gromacs-${VERSION}/bin/GMXRC.bash
   ```
   
-  ```{note}
-    In this case, users with Metal chips might need to install `espaloma =0.3.1` separately after installing [DGL](https://www.dgl.ai/pages/start.html) (probably from source). This is only necessary if the small molecule force field [Espaloma](https://github.com/choderalab/espaloma) is required. Its absence does not affect BindFlow's functionalities. GAFF will is not accessible either at the moment; see: [# 327](https://github.com/openmm/openmmforcefields/issues/327). In other words, at the moment (2024.07.12) only [OpenFF force fields](https://openforcefield.org/force-fields/force-fields/) for small molecules are accessible for MacOS users with Metal chips.
-    
-    This limitation is only for the automatic generation of small molecules topologies through [toff](https://toff.readthedocs.io/en/latest/index.html). User defined topologies of any kind can always be used as input for BindFlow.
+  ```{important}
+    To use the GPU, it is needed to set the following environmental variable:
+    ```bash
+    export GMX_GPU_DISABLE_COMPATIBILITY_CHECK=1
+    ```
+    Highly discouraged for production!
   ```
 ````
 
@@ -179,7 +181,7 @@ This project has an [Spinx](https://www.sphinx-doc.org/en/master/) documentation
 ````{admonition} requirements.txt
 :class: tip
 
-  ```txt
+  ```
 myst-nb
 myst-parser
 sphinx_book_theme
