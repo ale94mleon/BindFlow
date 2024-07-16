@@ -3,6 +3,7 @@ import tempfile
 
 samples = list(map(str, range(1,1 + config["samples"])))
 threads = config['threads']
+retries = config['retries']
         
 
 rule run_gmx_mmpbsa:
@@ -19,6 +20,7 @@ rule run_gmx_mmpbsa:
         in_mdp=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",
         run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/"
     threads: threads
+    retries: retries
     run:
         # Fix trajectory.
         centered_xtc = tools.center_xtc(
