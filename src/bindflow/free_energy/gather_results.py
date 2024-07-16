@@ -6,7 +6,6 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 from uncertainties import ufloat
 
 from bindflow.free_energy import mmxbsa_analysis
@@ -49,7 +48,7 @@ def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
         mean = np.mean(estimator_result[estimator])
         # Save results
         final_result[estimator] = mean.nominal_value
-        final_result[f"{estimator}_sem"] = stats.sem([value.nominal_value for value in estimator_result[estimator]], ddof=1)
+        final_result[f"{estimator}_sem"] = pd.Series([value.nominal_value for value in estimator_result[estimator]]).sem(ddof=1)
         final_result[f"{estimator}_uncertainty_propagation"] = mean.std_dev
         final_result[f"{estimator}_num_replicas"] = len(estimator_result[estimator])
 

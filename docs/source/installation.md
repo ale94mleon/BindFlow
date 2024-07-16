@@ -26,7 +26,7 @@ dependencies:
     - parmed
     - espaloma =0.3.1
     - dglteam::dgl
-    - scipy
+    - scipy >=1.7.3
     - graphviz
   ```
 ````
@@ -47,7 +47,7 @@ dependencies:
     - pdbfixer
     - openff-toolkit
     - parmed
-    - scipy
+    - scipy >=1.7.3
     - graphviz
   ```
   

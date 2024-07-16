@@ -46,7 +46,6 @@ dependencies = [
     "MDRestraintsGenerator == 0.2.1",
     "matplotlib",
     "numpy",
-    "scipy>=1.7.3", # using just scipy without version requirement results in the installation of an old scipy version, which fails to install
     "pandas",
     "mdanalysis == 2.7.0",
     "TOFF >= 0.1.0",
