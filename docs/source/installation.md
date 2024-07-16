@@ -18,16 +18,12 @@ dependencies:
     - pip
     - bioconda::snakemake
     - ambertools =22.5
-    - mpi4py <=3.1.5
     - openmm =8.1.1
     - openmmforcefields =0.11.2
     - pdbfixer
     - openff-toolkit =0.14.5
-    - parmed
     - espaloma =0.3.1
     - dglteam::dgl
-    - scipy >=1.7.3
-    - graphviz
   ```
 ````
 
@@ -35,20 +31,16 @@ dependencies:
   ```yaml
 name: BindFlow
 channels:
-    - conda-forge
+  - conda-forge
 dependencies:
   - python >=3.8,<3.11
   - pip
     - bioconda::snakemake
     - ambertools
-    - mpi4py <=3.1.5
     - openmm
     - openmmforcefields
     - pdbfixer
     - openff-toolkit
-    - parmed
-    - scipy >=1.7.3
-    - graphviz
   ```
   
   ```{note}
@@ -64,6 +56,16 @@ dependencies:
   mamba env create -f environment.yml
   conda activate BindFlow
 ```
+
+### Extra dependencies
+
+```bash
+conda install BindFlow
+mamba install -c conda-forge "mpi4py <=3.1.5" graphviz
+```
+
+* `mpi4py <=3.1.5"`: is a dependency of [gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/). used for MM(P/G)BSA calculations.
+* `graphviz`: is used to create the image of the directed acyclic graph (DAG) of the workflow.
 
 ## GROMACS
 
@@ -195,11 +197,11 @@ sphinx-autobuild
 ````
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements_docs.txt
 ```
 
 ```bash
-sphinx-autobuild . public -a
+sphinx-autobuild docs public -a
 ```
 
 Open [http://localhost:8000](http://localhost:8000). The HTML documentation is in the `public` directory.
