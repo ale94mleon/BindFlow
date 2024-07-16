@@ -38,7 +38,7 @@ builder(ligand_definition=ligands[0], out_dir='test_test')
 
 The error is going to be:
 
-```
+```txt
 -------------------------------------------------------
 Program:     gmx pdb2gmx, version 2023.3-dev-20231019-5e5ea27-local
 Source file: src/gromacs/gmxpreprocess/pdb2gmx.cpp (line 870)
