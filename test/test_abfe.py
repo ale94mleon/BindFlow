@@ -14,7 +14,7 @@ def test_abfe():
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
-        fname = Path(home(dataDir='ci_systems')) / 'WP6.tgz'
+        fname = Path(home(dataDir='ci_systems')) / 'WP6.tar.gz'
         tar = tarfile.open(fname, "r:gz")
         tar.extractall(tmp)
         tar.close()
@@ -45,7 +45,7 @@ def test_abfe():
             global_config = yaml.safe_load(c)
             # TODO
             # This is needed for MacOS when GROMACS is build wth -DGMX_GPU=OpenCL
-            # This is not needed in the cluster becasue CUDA is different.
+            # This is not needed in the cluster because CUDA is different.
             global_config['extra_directives']['mdrun']['all']['ntmpi'] = 1
 
         num_jobs = cpu_count()
