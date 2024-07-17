@@ -44,7 +44,7 @@ dependencies = [
     "alchemlyb == 2.0.0", # TODO update to new
     "pymbar == 4.0.1", #TODO  update to new
     "MDRestraintsGenerator >= 0.2.1",
-    "numpy",  # This is only needed to help pip during installation, very strange!!!
+    "numpy",
     "pandas",
     "mdanalysis",
     "TOFF >= 0.1.0",
