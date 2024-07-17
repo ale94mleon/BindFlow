@@ -2,7 +2,7 @@ name: BindFlow
 channels:
   - conda-forge
 dependencies:
-  - python=3.9.16
+  - python=3.10.14
   - pip
   - bioconda::snakemake=7.32.2
   - ambertools=22.5

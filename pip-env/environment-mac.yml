@@ -2,7 +2,7 @@ name: BindFlow
 channels:
   - conda-forge
 dependencies:
-  - python
+  - python=3.10.14
   - pip
   - ambertools
   - openmmforcefields
