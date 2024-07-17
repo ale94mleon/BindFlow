@@ -9,6 +9,7 @@ from bindflow._version import __version__
 from bindflow.free_energy import gather_results
 from bindflow.orchestration.flow_builder import approach_flow
 from bindflow.utils import tools
+from bindflow._gmx_check import check_gromacs_installation
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -226,6 +227,7 @@ def calculate_abfe(
     """
 
     print(f"You are using BindFlow: {__version__}✨")
+    check_gromacs_installation()
     orig_dir = os.getcwd()
     out_root_folder_path = Path(out_root_folder_path)
 
