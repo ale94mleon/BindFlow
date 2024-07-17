@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import pytest
 
-
+@pytest.mark.filterwarnings("ignore")
 def test_mmpbsa():
     from bindflow.home import home
     import tempfile
@@ -12,7 +13,7 @@ def test_mmpbsa():
     from multiprocessing import cpu_count
     from bindflow.run_mmpbsa import calculate_mmpbsa
 
-    with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
+    with tempfile.TemporaryDirectory(dir='.', prefix='.test_mmpbsa_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
         fname = Path(home(dataDir='ci_systems')) / 'WP6.tar.gz'
         tar = tarfile.open(fname, "r:gz")
@@ -73,4 +74,4 @@ def test_mmpbsa():
 
 
 if __name__ == '__main__':
-    test_mmpbsa()
+    pass

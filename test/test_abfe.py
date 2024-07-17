@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import pytest
 
-
+@pytest.mark.filterwarnings("ignore")
 def test_abfe():
     from bindflow.home import home
     import tempfile
@@ -72,4 +73,4 @@ def test_abfe():
 
 
 if __name__ == '__main__':
-    test_abfe()
+    pass
