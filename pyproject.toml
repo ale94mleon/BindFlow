@@ -41,17 +41,16 @@ keywords = [
 
 requires-python = ">= 3.8 , < 3.11"
 dependencies = [
-    "alchemlyb",
-    "pymbar",
+    "alchemlyb == 2.0.0", # TODO update to new
+    "pymbar == 4.0.1", #TODO  update to new
     "MDRestraintsGenerator >= 0.2.1",
-    "numpy <2.0.0, >=1.22",  # This is only needed to help pip during installation, very strange!!!
+    "numpy",  # This is only needed to help pip during installation, very strange!!!
     "pandas",
-    "mdanalysis == 2.7.0",
+    "mdanalysis",
     "TOFF >= 0.1.0",
     "pyyaml",
     "uncertainties",
     "parmed",
-    "scipy==1.7.3" # This is only needed to help pip during installation, very strange!!!
 ]
 
 [project.optional-dependencies]
