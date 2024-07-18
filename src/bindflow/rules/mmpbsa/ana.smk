@@ -20,8 +20,11 @@ rule run_gmx_mmpbsa:
         in_mdp=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp",
         run_dir=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/"
     threads: threads
-    retries: retries
     run:
+        import logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        logger = logging.getLogger(__name__)
+        
         # Fix trajectory.
         centered_xtc = tools.center_xtc(
             tpr=params.in_tpr,
@@ -37,17 +40,25 @@ rule run_gmx_mmpbsa:
         # therefore, we can pass to the flag -cg <Receptor group> <Ligand group>" = -cg 0 1
         
         max_parallel = min(threads, mdp.get_number_of_frames(params.in_mdp))
-        print(f"Estimated number of frames {mdp.get_number_of_frames(params.in_mdp)} are run with {max_parallel} threads.")
-        gmx_mmpbsa_command = f"mpirun -np {max_parallel} gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {centered_xtc} -cp {input.top} -o res.dat -nogui"
-    
+        logger.info(f"📊 Estimated number of frames {mdp.get_number_of_frames(params.in_mdp)}. Running with {max_parallel} threads.")
+        gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {centered_xtc} -cp {input.top} -o res.dat -nogui"
+
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory(prefix='build_', dir=params.run_dir) as tmp_dir:
+            os.chdir(tmp_dir)
             try:
-                os.chdir(tmp_dir)
+                tools.run(f"mpirun -np {max_parallel} {gmx_mmpbsa_command}")
+            except:
+                logger.info(f"⚠️ gmx_MMPBSA parallel execution failed; switching to sequential execution...")
                 tools.run(gmx_mmpbsa_command)
-                mmxbsa_data = mmxbsa_analysis.GmxMmxbsaDataRetriever("COMPACT_MMXSA_RESULTS.mmxsa")
-                mmxbsa_data.store_dg(output.mmxbsa_csv, params.run_dir)
             finally:
+                if Path("COMPACT_MMXSA_RESULTS.mmxsa").is_file():
+                    logger.info(f"✅ gmx_MMPBSA completed successfully!")
+                    mmxbsa_data = mmxbsa_analysis.GmxMmxbsaDataRetriever("COMPACT_MMXSA_RESULTS.mmxsa")
+                    mmxbsa_data.store_dg(output.mmxbsa_csv, params.run_dir)
+                else:
+                    logger.info(f"❌ gmx_MMPBSA execution failed!")
+
                 os.chdir(cwd)
                 # Clean centered trajectory
                 Path(centered_xtc).resolve().unlink()
