@@ -45,7 +45,6 @@ rule run_gmx_mmpbsa:
             if "general" in mmpbsa_config:
                 if "startframe" in mmpbsa_config["general"]:
                     if mmpbsa_config["general"]["startframe"] != 0:
-                        logger.info("🔄 Updating frames")
                         frames_for_gmx_mmpbsa_analysis = frames_for_gmx_mmpbsa_analysis - mmpbsa_config["general"]["startframe"]
         max_parallel = min(threads, frames_for_gmx_mmpbsa_analysis)
         logger.info(f"📊 Estimated number of frames {frames_for_gmx_mmpbsa_analysis}. Running with {max_parallel} threads.")
