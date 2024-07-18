@@ -49,8 +49,13 @@ rule run_gmx_mmpbsa:
             try:
                 tools.run(f"mpirun -np {max_parallel} {gmx_mmpbsa_command}")
             except:
-                logger.info(f"⚠️ gmx_MMPBSA parallel execution failed; switching to sequential execution...")
-                tools.run(gmx_mmpbsa_command)
+                try:
+                    # Try a second time. We saw that sometimes helps.
+                    logger.info(f"🔂 gmx_MMPBSA parallel execution failed; trying a second time...")
+                    tools.run(f"mpirun -np {max_parallel} {gmx_mmpbsa_command}")
+                except:
+                    logger.info(f"⚠️ gmx_MMPBSA parallel execution failed; switching to sequential execution...")
+                    tools.run(gmx_mmpbsa_command)
             finally:
                 if Path("COMPACT_MMXSA_RESULTS.mmxsa").is_file():
                     logger.info(f"✅ gmx_MMPBSA completed successfully!")
