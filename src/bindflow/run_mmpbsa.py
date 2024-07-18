@@ -20,7 +20,6 @@ def calculate_mmpbsa(
         out_root_folder_path: tools.PathLike,
         cofactor: Union[tools.PathLike, dict, None] = None,
         host_name: str = 'Protein',
-        host_selection: str = 'protein and name CA',
         cofactor_on_protein: bool = True,
         membrane: Union[tools.PathLike, dict, None] = None,
         hmr_factor: Union[float, None] = 3.0,
@@ -135,10 +134,6 @@ def calculate_mmpbsa(
     host_name : str, optional
         The group name for the host in the configuration file, by default "Protein".
          This is used for making index, solvate the system and working with trajectories
-
-    host_selection : str, optional
-        MDAnalysis selection to define the host (receptor or protein), by default 'protein and name CA'.
-        This is used for boresch restraint detection.
 
     cofactor_on_protein : bool, optional
         It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
@@ -266,7 +261,6 @@ def calculate_mmpbsa(
     _global_config["inputs"]["membrane"] = tools.input_helper(arg_name='membrane', user_input=membrane, default_ff='Slipids_2020', optional=True)
 
     _global_config["host_name"] = host_name
-    _global_config["host_selection"] = host_selection
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     _global_config["custom_ff_path"] = custom_ff_path

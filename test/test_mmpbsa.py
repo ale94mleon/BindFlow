@@ -57,7 +57,6 @@ def test_mmpbsa():
             out_root_folder_path=str(tmp_path / "mmpbsa-frontend"),
             cofactor=None,
             host_name='WP6',
-            host_selection='resname WP6',
             cofactor_on_protein=True,
             membrane=None,
             water_model='amber/tip3p',

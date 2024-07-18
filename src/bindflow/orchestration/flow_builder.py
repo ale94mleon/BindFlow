@@ -102,10 +102,11 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     Parameters
     ----------
     global_config : dict
-        The global configuration. It must contain:
-        out_approach_path[PathLike], inputs[dict[dict]], water_model[str], host_name[str], host_selection[str]
+        The global configuration. It should contain:
+        out_approach_path[PathLike], inputs[dict[dict]], water_model[str],
+        host_name[str], host_selection[str] (no needed for mmpbsa),
         cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
-        ligand_names[list[str]], replicas[float], threads[int],
+        ligand_names[list[str]], replicas[float], threads[int], samples[int] (no needed for abfe)
         hmr_factor[float, None], custom_ff_path[str, None], cluster/type[str], cluster/options/calculation[dict]
         num_max_thread: int, The maximum number of threads to be used on each simulation.
         mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True}
@@ -119,8 +120,8 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     Returns
     -------
     str
-        Some identification of the submitted job. It will depend in how
-        the submit method of the corresponded Schedular (:meth:`abfe.orchestration.generate_scheduler.Scheduler`) was implemented
+        Some identification of the submitted job. It will depend on how
+        the submit method of the corresponded Schedular (:meth:`bindflow.orchestration.generate_scheduler.Scheduler`) was implemented
     """
     out_path = Path(global_config["out_approach_path"])
     snake_path = out_path/"Snakefile"
@@ -135,7 +136,6 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "inputs": global_config["inputs"],
         "water_model": global_config["water_model"],
         "host_name": global_config["host_name"],
-        "host_selection": global_config["host_selection"],
         "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],
@@ -159,6 +159,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
                 'bonded': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['bonded']), 2)),
             },
         }
+        approach_config["host_selection"] = global_config["host_selection"]
     elif global_config["calculation_type"] == 'mmpbsa':
         approach_config["samples"] = global_config["samples"]
         if "mmpbsa" in global_config.keys():
