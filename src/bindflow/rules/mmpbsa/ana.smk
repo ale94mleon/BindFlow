@@ -39,8 +39,15 @@ rule run_gmx_mmpbsa:
         # will always have as first group receptor and as second group ligand
         # therefore, we can pass to the flag -cg <Receptor group> <Ligand group>" = -cg 0 1
         
-        max_parallel = min(threads, mdp.get_number_of_frames(params.in_mdp))
-        logger.info(f"📊 Estimated number of frames {mdp.get_number_of_frames(params.in_mdp)}. Running with {max_parallel} threads.")
+        frames_for_gmx_mmpbsa_analysis = mdp.get_number_of_frames(params.in_mdp)
+        if "mmpbsa" in config.keys():
+            mmpbsa_config = config["mmpbsa"]
+            if "general" in mmpbsa_config:
+                if "startframe" in mmpbsa_config["general"]:
+                    logger.info("UPDATING FRAMES")
+                    frames_for_gmx_mmpbsa_analysis = frames_for_gmx_mmpbsa_analysis-mmpbsa_config["general"]["startframe"]
+        max_parallel = min(threads, frames_for_gmx_mmpbsa_analysis)
+        logger.info(f"📊 Estimated number of frames {frames_for_gmx_mmpbsa_analysis}. Running with {max_parallel} threads.")
         gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {centered_xtc} -cp {input.top} -o res.dat -nogui"
 
         cwd = os.getcwd()
