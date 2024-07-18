@@ -48,6 +48,7 @@ rule mmxbsa_setup:
                 trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True)
             #tools.run(cmd)
             frames = list(Path(tmp_dir).glob('*.gro'))
+            total_generated_frames = len(frames) 
             if len(frames) < len(output.gro):
                 raise RuntimeError("Not enough frames in equil-mdsim/prod/prod.xtc")
             frames = tools.natsort(frames)[0:len(output.gro)]
@@ -56,7 +57,7 @@ rule mmxbsa_setup:
                 Path(gro).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(frame, gro)
                 mdp_template.write(mdp_file)
-            print(f"Generated a total of {len(frames)} frames. Using the first {len(output.gro)} frames for MM(P/G)BSA production simulations.")
+            print(f"Generated a total of {total_generated_frames} frames. Using the first {len(output.gro)} frames for MM(P/G)BSA production simulations.")
 
 
 rule create_mmxbsa_in:
