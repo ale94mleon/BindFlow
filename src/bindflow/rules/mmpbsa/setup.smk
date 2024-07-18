@@ -56,7 +56,8 @@ rule mmxbsa_setup:
                 Path(gro).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(frame, gro)
                 mdp_template.write(mdp_file)
-            print(f"GENERATED A TOTAL OF {len(output.gro)} FRAMES. THE FIRST {len(output.gro)} FRAMES FROM THE FRAME PRODUCTION ARE SELECTED.")
+            print(f"Generated a total of {len(frames)} frames. Using the first {len(output.gro)} frames for MM(P/G)BSA production simulations.")
+
 
 rule create_mmxbsa_in:
     input:
