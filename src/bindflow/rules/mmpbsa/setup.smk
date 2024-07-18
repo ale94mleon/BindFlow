@@ -39,25 +39,21 @@ rule mmxbsa_setup:
             @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"System\"")
             def trjconv(**kwargs): ...
 
-            # Get initial configuration from equil/prod
-            #cmd = f"export GMX_MAXBACKUP=-1; echo \"System\" | gmx trjconv -f {params.in_xtc} -s {params.in_tpr} -o {tmp_dir}/.gro -sep"
             if skip > 0:
                 trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True, skip=skip)
-                #cmd += f" -skip {skip}"
             else:
                 trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True)
-            #tools.run(cmd)
+
             frames = list(Path(tmp_dir).glob('*.gro'))
-            total_generated_frames = len(frames) 
             if len(frames) < len(output.gro):
                 raise RuntimeError("Not enough frames in equil-mdsim/prod/prod.xtc")
-            frames = tools.natsort(frames)[0:len(output.gro)]
+            frames = tools.natsort(frames)
 
             for frame, gro, mdp_file in zip(frames, output.gro, output.mdp):
                 Path(gro).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(frame, gro)
                 mdp_template.write(mdp_file)
-            print(f"Generated a total of {total_generated_frames} frames. Using the first {len(output.gro)} frames for MM(P/G)BSA production simulations.")
+            print(f"Generated a total of {frames} frames. Using the first {len(output.gro)} frames for MM(P/G)BSA production simulations.")
 
 
 rule create_mmxbsa_in:
