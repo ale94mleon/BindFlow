@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 import tarfile
 from typing import Union
 
@@ -76,16 +77,16 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str, calcul
         raise ValueError(f"{calculation_type} is an invalid calculation_type, choose from {valid_calculation_type}")
     file_str = "# Load Config:\n"\
         f"configfile: \'{conf_file_path}\'\n"\
-        "approach_path = config['out_approach_path']\n\n"\
+        "from pathlib import Path\n\n"\
         "# Start Flow\n"\
         f"include: \'{rules.super_flow}/Snakefile\'\n\n"\
         "# Specify targets and dependencies\n"\
         "rule RuleThemAll:\n"
 
     if calculation_type == 'fep':
-        file_str += "    input: config[\"out_approach_path\"] + \"/abfe_results.csv\""
+        file_str += "    input: Path(config[\"out_approach_path\"]) / \"abfe_results.csv\""
     elif calculation_type == 'mmpbsa':
-        file_str += "    input: config[\"out_approach_path\"] + \"/mmxbsa_results.csv\""
+        file_str += "    input: Path(config[\"out_approach_path\"]) / \"mmxbsa_results.csv\""
 
     with open(out_file_path, 'w') as out:
         out.write(file_str)
@@ -101,9 +102,11 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     Parameters
     ----------
     global_config : dict
-        The global configuration. It must contain:
-        out_approach_path[PathLike], inputs[dict[dict]], water_model[str], cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
-        ligand_names[list[str]], replicas[float], threads[int],
+        The global configuration. It should contain:
+        out_approach_path[PathLike], inputs[dict[dict]], water_model[str],
+        host_name[str], host_selection[str] (no needed for mmpbsa),
+        cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
+        ligand_names[list[str]], replicas[float], threads[int], samples[int] (no needed for abfe)
         hmr_factor[float, None], custom_ff_path[str, None], cluster/type[str], cluster/options/calculation[dict]
         num_max_thread: int, The maximum number of threads to be used on each simulation.
         mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True}
@@ -117,12 +120,12 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     Returns
     -------
     str
-        Some identification of the submitted job. It will depend in how
-        the submit method of the corresponded Schedular (:meth:`abfe.orchestration.generate_scheduler.Scheduler`) was implemented
+        Some identification of the submitted job. It will depend on how
+        the submit method of the corresponded Schedular (:meth:`bindflow.orchestration.generate_scheduler.Scheduler`) was implemented
     """
-    out_path = global_config["out_approach_path"]
-    snake_path = out_path + "/Snakefile"
-    approach_conf_path = out_path + "/snake_conf.json"
+    out_path = Path(global_config["out_approach_path"])
+    snake_path = out_path/"Snakefile"
+    approach_conf_path = out_path/"snake_conf.json"
 
     # Update (or set) nwindows on global_config.
     global_config = update_nwindows_config(global_config)
@@ -132,6 +135,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "out_approach_path": global_config["out_approach_path"],
         "inputs": global_config["inputs"],
         "water_model": global_config["water_model"],
+        "host_name": global_config["host_name"],
         "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],
@@ -155,6 +159,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
                 'bonded': list(np.round(np.linspace(0, 1, global_config['nwindows']['complex']['bonded']), 2)),
             },
         }
+        approach_config["host_selection"] = global_config["host_selection"]
     elif global_config["calculation_type"] == 'mmpbsa':
         approach_config["samples"] = global_config["samples"]
         if "mmpbsa" in global_config.keys():
@@ -177,32 +182,30 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         approach_config["job_prefix"] = global_config["job_prefix"]
 
     for ligand_definition in global_config["inputs"]["ligands"]:
-        input_ligand_path = ligand_definition['conf']
-        ligand_name = os.path.splitext(os.path.basename(input_ligand_path))[0]
-        out_ligand_path = os.path.join(global_config["out_approach_path"],  str(ligand_name))
+        input_ligand_path = Path(ligand_definition['conf'])
+        ligand_name = input_ligand_path.stem
+        out_ligand_path = Path(global_config["out_approach_path"])/ligand_name
 
         # Make directories on demand
-        tools.makedirs(out_ligand_path)
-        out_ligand_input_path = os.path.join(out_ligand_path, "input")
-        tools.makedirs(out_ligand_input_path)
-        tools.makedirs(os.path.join(out_ligand_input_path, "complex"))
-        tools.makedirs(os.path.join(out_ligand_input_path, "ligand"))
+        out_ligand_path.mkdir(exist_ok=True, parents=True)
+        out_ligand_input_path = out_ligand_path/"input"
+        out_ligand_input_path.mkdir(exist_ok=True, parents=True)
+        (out_ligand_input_path/"complex").mkdir(exist_ok=True, parents=True)
+        (out_ligand_input_path/"ligand").mkdir(exist_ok=True, parents=True)
 
         # Archive original files
-        with tarfile.open(os.path.join(out_ligand_input_path, 'orig_in.tar.gz'), "w:gz") as tar:
-            tar.add(input_ligand_path, arcname=os.path.basename(input_ligand_path))
-            tar.add(global_config["inputs"]["protein"]["conf"], arcname=os.path.basename(global_config["inputs"]["protein"]["conf"]))
+        with tarfile.open(out_ligand_input_path/'orig_in.tar.gz', "w:gz") as tar:
+            tar.add(input_ligand_path, arcname=input_ligand_path.name)
+            tar.add(global_config["inputs"]["protein"]["conf"], arcname=Path(global_config["inputs"]["protein"]["conf"]).name)
             if global_config["inputs"]["cofactor"]:
-                tar.add(global_config["inputs"]["cofactor"]["conf"], arcname=os.path.basename(global_config["inputs"]["cofactor"]["conf"]))
+                tar.add(global_config["inputs"]["cofactor"]["conf"], arcname=Path(global_config["inputs"]["cofactor"]["conf"]).name)
             if global_config["inputs"]["membrane"]:
-                tar.add(global_config["inputs"]["membrane"]["conf"], arcname=os.path.basename(global_config["inputs"]["membrane"]["conf"]))
+                tar.add(global_config["inputs"]["membrane"]["conf"], arcname=Path(global_config["inputs"]["membrane"]["conf"]).name)
 
         # Build the replicas
         for num_replica in range(1, global_config["replicas"] + 1):
-            out_replica_path = os.path.join(out_ligand_path, str(num_replica))
-
-            if not os.path.isdir(out_replica_path):
-                os.mkdir(out_replica_path)
+            out_replica_path = out_ligand_path/str(num_replica)
+            out_replica_path.mkdir(exist_ok=True, parents=True)
 
     with open(approach_conf_path, "w") as out_IO:
         json.dump(approach_config, out_IO, indent=4)

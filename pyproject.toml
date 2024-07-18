@@ -43,19 +43,14 @@ requires-python = ">= 3.8 , < 3.11"
 dependencies = [
     "alchemlyb == 2.0.0", # TODO update to new
     "pymbar == 4.0.1", #TODO  update to new
-    "MDRestraintsGenerator",
-    "matplotlib",
+    "MDRestraintsGenerator >= 0.2.1",
     "numpy",
-    "scipy",
     "pandas",
     "mdanalysis",
     "TOFF >= 0.1.0",
-    "tabulate == 0.8.10", # TODO update to new
     "pyyaml",
     "uncertainties",
-    # MMPBSA DEPENDENCY
-    #"gmx_MMPBSA",
-    #"mpi4py<=3.1.5",
+    "parmed",
 ]
 
 [project.optional-dependencies]
@@ -98,8 +93,4 @@ bindflow = [
 ]
 
 [project.scripts]
-abfe-run = "bindflow.cli:abfe_run"
-abfe-dag = "bindflow.cli:abfe_dag"
-abfe-check_results = "bindflow.cli:abfe_check_results"
-abfe-archive = 'bindflow.cli:abfe_archive'
-abfe-unarchive = 'bindflow.cli:abfe_unarchive'
+bindflow = "bindflow.cli:main"

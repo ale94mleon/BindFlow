@@ -1,38 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import pytest
 
-
-def test_abfe():
+@pytest.mark.filterwarnings("ignore")
+def test_mmpbsa():
     from bindflow.home import home
     import tempfile
-    import os
     import tarfile
-    import glob
     import yaml
     from pathlib import Path
     # import pytest
     from multiprocessing import cpu_count
-    from bindflow import calculate_mmpbsa
+    from bindflow.run_mmpbsa import calculate_mmpbsa
 
-    with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
+    with tempfile.TemporaryDirectory(dir='.', prefix='.test_mmpbsa_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
-        fname = Path(home(dataDir='ci_systems')) / 'WP6_G1.tar.gz'
+        fname = Path(home(dataDir='ci_systems')) / 'WP6.tar.gz'
         tar = tarfile.open(fname, "r:gz")
         tar.extractall(tmp)
         tar.close()
-        print(os.listdir(Path(tmp) / "WP6_G1"))
 
-        tmp_path = Path(tmp) / "WP6_G1"
-
-        ligand_files = glob.glob(str(tmp_path / "guest/*sdf"))[:1]
+        tmp_path = Path(tmp)/"WP6"
+        ligand_files = list((tmp_path/"guest").rglob("*sdf"))[:2]
 
         ligands = []
         for ligand_file in ligand_files:
             ligands.append({
                 'conf': ligand_file,
                 'ff': {
-                    'type': 'espaloma',
-                    'code': 'espaloma-0.3.1'
+                    'type': 'openff'
+                    # 'type': 'espaloma',
+                    # 'code': 'espaloma-0.3.1'
                 }
             })
 
@@ -48,12 +46,8 @@ def test_abfe():
             global_config = yaml.safe_load(c)
             # TODO
             # This is needed for MacOS when GROMACS is build wth -DGMX_GPU=OpenCL
-            # This is not needed in the cluster becasue CUDA is different.
+            # This is not needed in the cluster because CUDA is different.
             global_config['extra_directives']['mdrun']['all']['ntmpi'] = 1
-
-        # This are for the boresch restraint
-        os.environ['abfe_debug_host_name'] = 'WP6'
-        os.environ['abfe_debug_host_selection'] = 'resname WP6'
 
         num_jobs = cpu_count()
         threads = min(4, num_jobs)
@@ -62,6 +56,7 @@ def test_abfe():
             ligands=ligands,
             out_root_folder_path=str(tmp_path / "mmpbsa-frontend"),
             cofactor=None,
+            host_name='WP6',
             cofactor_on_protein=True,
             membrane=None,
             water_model='amber/tip3p',
@@ -69,8 +64,8 @@ def test_abfe():
             dt_max=0.004,
             threads=threads,
             num_jobs=num_jobs,
-            replicas=1,
-            samples=2,
+            replicas=2,
+            samples=3,
             submit=True,
             debug=True,
             job_prefix='host_guest.test',
@@ -78,4 +73,4 @@ def test_abfe():
 
 
 if __name__ == '__main__':
-    test_abfe()
+    pass

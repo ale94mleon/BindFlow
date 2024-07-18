@@ -1,28 +1,21 @@
 from bindflow.mmpbsa_in.input_loader import GMXMMPBSAInputMaker
-from bindflow.utils import tools
-from bindflow.mdp import mdp
-from bindflow.mdp.templates import TemplatePath
-from pathlib import Path
-import shutil
 import tempfile
 
 # Common to all sub-workflows
-approach_path = config["out_approach_path"]
 ligand_names = config["ligand_names"]
 samples = list(map(str, range(1,1 + config["samples"])))
-load_dependencies = config['extra_directives']['dependencies']
 
 rule mmxbsa_setup:
     input:
-        finished = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
-        mdp = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp"
+        finished=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.finished",
+        mdp=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.mdp"
     output:
-        mdp = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp", sample=samples, allow_missing=True),
-        gro = expand(approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/init.gro", sample=samples, allow_missing=True)
+        mdp=expand(out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/prod.mdp", sample=samples, allow_missing=True),
+        gro=expand(out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation/rep.{sample}/init.gro", sample=samples, allow_missing=True)
     params:
-        in_tpr = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
-        in_xtc = approach_path + "/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
-        sim_dir = approach_path + "/{ligand_name}/{replica}/complex/mmpbsa/simulation",
+        in_tpr=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.tpr",
+        in_xtc=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/prod/prod.xtc",
+        sim_dir=out_approach_path+"/{ligand_name}/{replica}/complex/mmpbsa/simulation",
     run:
         # Update MDP with user provided options
         if config["complex_type"] == 'soluble':
@@ -46,31 +39,29 @@ rule mmxbsa_setup:
             @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"System\"")
             def trjconv(**kwargs): ...
 
-            # Get initial configuration from equil/prod
-            #cmd = f"export GMX_MAXBACKUP=-1; echo \"System\" | gmx trjconv -f {params.in_xtc} -s {params.in_tpr} -o {tmp_dir}/.gro -sep"
             if skip > 0:
                 trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True, skip=skip)
-                #cmd += f" -skip {skip}"
             else:
                 trjconv(f=params.in_xtc, s=params.in_tpr, o=f"{tmp_dir}/.gro", sep=True)
-            #tools.run(cmd)
+
             frames = list(Path(tmp_dir).glob('*.gro'))
             if len(frames) < len(output.gro):
                 raise RuntimeError("Not enough frames in equil-mdsim/prod/prod.xtc")
-            frames = tools.natsort(frames)[0:len(output.gro)]
+            frames = tools.natsort(frames)
 
             for frame, gro, mdp_file in zip(frames, output.gro, output.mdp):
                 Path(gro).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(frame, gro)
                 mdp_template.write(mdp_file)
-            print(f"GENERATED A TOTAL OF {len(output.gro)} FRAMES GENERATED. THE FIRST {len(output.gro)} FRAMES FROM THE FRAME PRODUCTION ARE SELECTED.")
+            print(f"Generated a total of {frames} frames. Using the first {len(output.gro)} frames for MM(P/G)BSA production simulations.")
+
 
 rule create_mmxbsa_in:
     input:
         # All ligand simulations use the same temperature
-        mdp = approach_path + f"/{ligand_names[0]}/1/complex/mmpbsa/simulation/rep.1/prod.mdp"
+        mdp=out_approach_path+f"/{ligand_names[0]}/1/complex/mmpbsa/simulation/rep.1/prod.mdp"
     output:
-        mmpbsa_in = expand(approach_path + "/{ligand_name}/input/mmpbsa.in", ligand_name = ligand_names)
+        mmpbsa_in=expand(out_approach_path+"/{ligand_name}/input/mmpbsa.in", ligand_name=ligand_names)
     run:
         if "mmpbsa" in config.keys():
             mmpbsa_config = config["mmpbsa"]

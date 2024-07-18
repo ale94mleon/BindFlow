@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-
-"""
-This script is an example execution running for membrane systems.
-"""
 import yaml
 import glob
-from bindflow import calculate_mmpbsa
+from bindflow.run_mmpbsa import calculate_mmpbsa
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 

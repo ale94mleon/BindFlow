@@ -1,19 +1,18 @@
 import glob
+import json
 import os
-from typing import List
+from pathlib import Path
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 from uncertainties import ufloat
-from pathlib import Path
-import json
 
 from bindflow.free_energy import mmxbsa_analysis
 from bindflow.utils.tools import PathLike
 
 
-def get_stats(replica_paths: List[PathLike]) -> dict:
+def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
     """Takes all the replica path and extract free energy statistics
 
     Parameters
@@ -26,7 +25,7 @@ def get_stats(replica_paths: List[PathLike]) -> dict:
     dict
         A dictionary with keywords:
 
-            #. <estimator>: the value of the estimator
+            #. <estimator>: the average value of the estimator
             #. <estimator>_sem: Standard error of the mean
             #. <estimator>_uncertainty_propagation: Propagate the uncertainties after the average.
             This use the estimated uncertainties from alchemy (Check :meth:`abfe.free_energy.analysis.run_alchemlyb`)
@@ -49,28 +48,29 @@ def get_stats(replica_paths: List[PathLike]) -> dict:
         mean = np.mean(estimator_result[estimator])
         # Save results
         final_result[estimator] = mean.nominal_value
-        final_result[f"{estimator}_sem"] = stats.sem([value.nominal_value for value in estimator_result[estimator]], ddof=1)
+        final_result[f"{estimator}_sem"] = pd.Series([value.nominal_value for value in estimator_result[estimator]]).sem(ddof=1)
         final_result[f"{estimator}_uncertainty_propagation"] = mean.std_dev
         final_result[f"{estimator}_num_replicas"] = len(estimator_result[estimator])
 
     return final_result
 
 
-def get_all_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
-    """Get the independent free energy results and gather them
+def get_all_abfe_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
+    """Get the independent ABFE free energy results and gather them.
+    Average and standard error of the mean are reported.
 
     Parameters
     ----------
     root_folder_path : PathLike
-        Where the simulation run. Inside of it should be the files: root_folder_path + "/*/*/dG_results.csv".
-        THis directory is the same specified on :meth:`abfe.calculate_abfe.calculate_abfe` through the keyword `out_root_folder_path`
+        Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/dG_results.csv".
+        This directory is the same specified on :meth:`bindflow.run_abfe.calculate_abfe` through the keyword `out_root_folder_path`
     out_csv : PathLike, optional
         If given a pandas.DataFrame will be written as csv file, by default None
 
     Returns
     -------
     pd.DataFrame
-        All gather results. In case there are not any dG_results.csv. It will return None
+        All gather results. In case there are not dG_results.csv. It will return an empty DataFrame
     """
     # Get all dG_results.csv files
     dg_files_dir = dict()
@@ -85,7 +85,7 @@ def get_all_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.Data
     gathered_results = []
     if dg_files_dir:
         for ligand in dg_files_dir:
-            statistics = get_stats(dg_files_dir[ligand])
+            statistics = get_abfe_stats(dg_files_dir[ligand])
             statistics['ligand'] = ligand
             gathered_results.append(statistics)
 
@@ -102,7 +102,22 @@ def get_all_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.Data
         return pd.DataFrame()
 
 
-def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
+def get_raw_abfe_data(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
+    """Genereate raw dat for an ABFE calculation using BindFlow
+
+    Parameters
+    ----------
+    root_folder_path : PathLike
+        Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/complex/fep/ana/dg_complex_contributions.json".
+        This directory is the same specified on :meth:`bindflow.run_abfe.calculate_abfe` through the keyword `out_root_folder_path`
+    out_csv : PathLike, optional
+        If given a pandas.DataFrame will be written as csv file, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     sample_data = []
     root_folder_path = Path(root_folder_path).resolve()
     for item1 in root_folder_path.iterdir():
@@ -111,8 +126,8 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
             for item2 in item1.iterdir():
                 if item2.is_dir():
                     replica = item2.stem
-                    complex_json = item2 / "complex/fep/ana/dg_complex_contributions.json"
-                    ligand_json = item2 / "ligand/fep/ana/dg_ligand_contributions.json"
+                    complex_json = item2/"complex/fep/ana/dg_complex_contributions.json"
+                    ligand_json = item2/"ligand/fep/ana/dg_ligand_contributions.json"
                     if complex_json.is_file() and ligand_json.is_file():
                         with open(complex_json, 'r') as cj:
                             complex_data = json.load(cj)
@@ -166,22 +181,102 @@ def get_raw_data(root_folder_path: PathLike, out_csv: PathLike = None):
     return df
 
 
-def get_mmpbsa_partial_results(root_folder_path: PathLike, out_csv_raw: PathLike = None, out_csv_pretty: PathLike = None):
+def get_all_mmxbsa_dgs(full_df: pd.DataFrame, columns_to_process: Union[None, List[str]] = None, out_csv: PathLike = None) -> pd.DataFrame:
+    """Get the independent MM(P/G)BSA free energy results and gather them.
+    Average and standard error of the mean are across all replicas and samples for each ligand are reported
+
+    Parameters
+    ----------
+    full_df : pd.DataFrame,
+        DataFrame generated by :meth:`bindflow.free_energy.gather_results.get_raw_mmxbsa_dgs`
+    columns_to_process :  Union[None, List[str]], optional
+        The columns of full_df to process, by default None which means that the following will be used:
+            "dg_c2_pb", "dg_c2_gb", "dg_ie_pb", "dg_ie_gb",
+            "dg_qh_pb", "dg_qh_gb", "dg_en_pb", "dg_en_gb",
+            "c2_pb", "c2_gb", "ie_pb", "ie_gb", "qh"
+    out_csv : PathLike, optional
+        If given a pandas.DataFrame will be written as csv file, by default None
+
+    Returns
+    -------
+    pd.DataFrame
+        All gather results. In case there are not dG_results.csv. It will return an empty DataFrame
+    """
+    if len(full_df):
+        if columns_to_process is None:
+            columns_to_process = [
+                "dg_c2_pb",
+                "dg_c2_gb",
+                "dg_ie_pb",
+                "dg_ie_gb",
+                "dg_qh_pb",
+                "dg_qh_gb",
+                "dg_en_pb",
+                "dg_en_gb",
+                "c2_pb",
+                "c2_gb",
+                "ie_pb",
+                "ie_gb",
+                "qh"
+                ]
+
+        # # Convert replica and sample column to integers
+        # full_df['sample'] = full_df['sample'].astype(int)
+
+        # Group by 'name' and calculate mean and SEM
+        grouped = full_df.groupby('name')
+
+        mean_df = grouped[columns_to_process].mean().reset_index()
+        sem_df = grouped[columns_to_process].sem().reset_index()
+
+        # Count unique replicas
+        replica_counts = grouped['replica'].nunique().reset_index(name='num_replicas')
+
+        # Calculate total samples
+        total_samples = grouped['sample'].sum().reset_index(name='total_samples')
+
+        # Merge the results
+        final_df = mean_df.merge(sem_df, on='name', suffixes=('_mean', '_sem'))
+        final_df = final_df.merge(replica_counts, on='name')
+        final_df = final_df.merge(total_samples, on='name')
+
+        if out_csv:
+            final_df.to_csv(out_csv, index=False)
+        return final_df
+    else:
+        return pd.DataFrame()
+
+
+def get_raw_mmxbsa_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
+    """Main function to retrieve MM(P/G)BSA simulation data
+    generated through BindFlow
+
+    Parameters
+    ----------
+    root_folder_path : PathLike
+        Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv".
+        This directory is the same specified on :meth:`bindflow.run_mmpbsa.calculate_mmpbsa` through the keyword `out_root_folder_path`
+    out_csv : PathLike, optional
+        If given, a pandas.DataFrame will be written as csv file with the raw data, by default None
+
+    Returns
+    -------
+    pd.DataFrame
+        Raw MM(P/G)BSA data
+    """
     collected_dfs = []
     collected_files = glob.glob(root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
     if len(collected_files) == 0:
-        return None
-    for inp_file in collected_files: # collecting all of the mmxbsa.csv files
+        print(f"There is not mmxbsa.csv yet on {root_folder_path}/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
+        return pd.DataFrame()
+    for inp_file in collected_files:  # collecting all of the mmxbsa.csv files
         string_data = inp_file.removeprefix(root_folder_path).split("/")
         ligand_name, replica, sample = string_data[1], string_data[2], string_data[6].removeprefix("rep.")
         collected_dfs.append(mmxbsa_analysis.convert_format_flatten(pd.read_csv(inp_file), ligand_name, replica, sample))
     full_df = pd.concat(collected_dfs, ignore_index=True)
-    if out_csv_raw:
-        full_df.to_csv(out_csv_raw, index=False)
-    
-    if out_csv_pretty:
-        mmxbsa_analysis.prettify_df(full_df).to_csv(out_csv_pretty, index=False)
-    
+
+    if out_csv:
+        full_df.to_csv(out_csv, index=False)
     return full_df
 
 

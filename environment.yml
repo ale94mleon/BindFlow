@@ -2,21 +2,12 @@ name: BindFlow
 channels:
   - conda-forge
 dependencies:
-  - python >=3.8,<3.11
+  - python>3.8,<3.11
   - pip
   - bioconda::snakemake
   - ambertools
-  - mpi4py <=3.1.5
   - openmm
   - openmmforcefields
   - pdbfixer
   - openff-toolkit
-  - parmed
-  # - espaloma >=0.3.1
-  # - dglteam::dgl
-  - scipy
-  - graphviz
-  # - nvidia::cuda-toolkit=11.4.2
-  # - pip:
-  #   - git+https://github.com/ale94mleon/BindFlow.git
 

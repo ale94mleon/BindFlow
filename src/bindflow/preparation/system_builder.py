@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import copy
-import glob
 import logging
 import os
 import shutil
 import tarfile
 import warnings
-from typing import Union, List
+from itertools import chain
+from pathlib import Path
+from typing import List, Union
 
 from parmed.gromacs import GromacsGroFile, GromacsTopologyFile
 from parmed.structure import Structure
@@ -39,8 +40,8 @@ def readParmEDMolecule(top_file: PathLike, gro_file: PathLike) -> Structure:
     Structure
         Structure with topologies, coordinates and box information
     """
-    gmx_top = GromacsTopologyFile(top_file)
-    gmx_gro = GromacsGroFile.parse(gro_file)
+    gmx_top = GromacsTopologyFile(str(top_file))
+    gmx_gro = GromacsGroFile.parse(str(gro_file))
 
     # Add positions
     gmx_top.positions = gmx_gro.positions
@@ -119,25 +120,27 @@ def make_abfe_dir(out_dir: PathLike, ligand_dir: PathLike, sys_dir: PathLike):
     sys_dir : PathLike
         Origin of the complex inputs configuration and topologies files
     """
-    complex_out = os.path.join(out_dir, "complex")
-    ligand_out = os.path.join(out_dir, "ligand")
-    if (not os.path.exists(complex_out)):
-        os.makedirs(complex_out)
-    if (not os.path.exists(ligand_out)):
-        os.makedirs(ligand_out)
+    out_dir = Path(out_dir)
+    ligand_dir = Path(ligand_dir)
+    sys_dir = Path(sys_dir)
 
-    for itp_ndx_file in glob.glob(os.path.join(ligand_dir, "*.itp")) + glob.glob(os.path.join(ligand_dir, "*.ndx")):
+    complex_out = out_dir/"complex"
+    ligand_out = out_dir/"ligand"
+    complex_out.mkdir(exist_ok=True, parents=True)
+    ligand_out.mkdir(exist_ok=True, parents=True)
+
+    for itp_ndx_file in chain(ligand_dir.rglob("*.itp"), ligand_dir.rglob("*.ndx")):
         shutil.copy(src=itp_ndx_file, dst=ligand_out)
 
-    shutil.copyfile(src=os.path.join(ligand_dir, "solvated.gro"), dst=os.path.join(ligand_out, "ligand.gro"))
-    shutil.copyfile(src=os.path.join(ligand_dir, "solvated.top"), dst=os.path.join(ligand_out, "ligand.top"))
+    shutil.copyfile(src=ligand_dir/"solvated.gro", dst=ligand_out/"ligand.gro")
+    shutil.copyfile(src=ligand_dir/"solvated.top", dst=ligand_out/"ligand.top")
 
-    for itp_ndx_file in glob.glob(os.path.join(sys_dir, "*.itp")) + glob.glob(os.path.join(sys_dir, "*.ndx")):
+    for itp_ndx_file in chain(sys_dir.rglob("*.itp"), sys_dir.rglob("*.ndx")):
         shutil.copy(src=itp_ndx_file, dst=complex_out)
 
-    shutil.copyfile(src=os.path.join(sys_dir, "solvated.gro"), dst=os.path.join(complex_out, "complex.gro"))
+    shutil.copyfile(src=sys_dir/"solvated.gro", dst=complex_out/"complex.gro")
     # The last one in be copy, this will be used in the snake rule
-    shutil.copyfile(src=os.path.join(sys_dir, "solvated.top"), dst=os.path.join(complex_out, "complex.top"))
+    shutil.copyfile(src=sys_dir/"solvated.top", dst=complex_out/"complex.top")
 
 
 class CRYST1:
@@ -201,7 +204,7 @@ class MakeInputs:
     It will create the necessary topology and configuration files, as well the
     correct directory trees.
     """
-    def __init__(self, protein: dict = None, membrane: dict = None, cofactor: dict = None,
+    def __init__(self, protein: dict = None, host_name: str = "Protein", membrane: dict = None, cofactor: dict = None,
                  cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
                  custom_ff_path: Union[None, PathLike] = None, hmr_factor: Union[float, None] = None,
                  builder_dir: PathLike = 'builder', load_dependencies: List[str] = None):
@@ -209,7 +212,7 @@ class MakeInputs:
 
         Parameters
         ----------
-        protein : PathLike, optional
+        protein : dict, optional
             This is a dictionary with the following information for the protein:
 
                 * conf -> The path of the protein PDB/GRO file [mandatory]
@@ -232,12 +235,16 @@ class MakeInputs:
                 * ff
                     * code -> GMX force field code [optional], by default amber99sb-ildn
                     You can use your custom force field, but custom_ff_path must be provided
+        host_name : str
+            The group name for the host in the configuration file, by default "Protein"
 
-        membrane : PathLike, optional
+        membrane : dict, optional
             This is a dictionary with the following information for the membrane:
 
                 * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
-                correct definition of the CRYST1. This information will be used for the solvation step
+                correct definition of the CRYST1. This information will be used for the solvation step.
+                The membrane must be already correctly placed around the protein. Servers like CHARM-GUI
+                can be used on this step.
 
                 * top -> GROMACS topology [optional], by default None.
                 Should be a single file topology with all the force field
@@ -268,16 +275,36 @@ class MakeInputs:
                 * top -> GROMACS topology [optional]. Must be a single file topology with all the
                 force field information and without the position restraint included, by default None
 
-                * ff
+                * ff:
 
-                    * code -> OpenFF code [optional], by default openff_unconstrained-2.0.0.offxml
+                    * type -> openff, gaff or espaloma
+
+                    * code -> force field code [optional], by default depending on type
+
+                        * openff -> openff_unconstrained-2.0.0.offxml
+
+                        * gaff -> gaff-2.11
+
+                        * espaloma -> espaloma-0.3.1
+
+                    With this parameter you can access different small molecule force fields
+
+                * is_water -> If presents and set to True; it is assumed that this is a water system
+                and that will change the settles section to tip3p-like triangular constraints.
+                This is needed for compatibility with GROMACS. Check here:
+                https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
 
         cofactor_on_protein : bool
             It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
             If True, the cofactor will be part of the protein and the ligand
-            if False will be part of the solvent and ions, by default True
+            if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
         hmr_factor : float, optional
             The Hydrogen Mass Factor to use, by default None
+            WARNING:
+                For provided topologies if hmr_factor is set, it will pass any way.
+                So for topology files with already HMR, this should be None.
+                And all the topologies should be provided
+                protein, cofactors, membrane, ligands with the HMR already done
         water_model : str, optional
             The water force field to use, by default amber/tip3p.
             if you would likle to use the flexible definition of the CHARMM TIP3P
@@ -295,19 +322,20 @@ class MakeInputs:
             e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
         """
         self.protein = protein
+        self.host_name = host_name
         self.membrane = membrane
         self.cofactor = cofactor
         self.cofactor_on_protein = cofactor_on_protein
         self.hmr_factor = hmr_factor
         self.water_model = water_model
         self.load_dependencies = load_dependencies
-        self.wd = os.path.abspath(builder_dir)
-        os.makedirs(self.wd, exist_ok=True)
+        self.wd = Path(builder_dir).resolve()
+        self.wd.mkdir(exist_ok=True, parents=True)
         self.__self_was_called = False
 
         # Setting environmental variable for user custom force field:
         if custom_ff_path:
-            self.custom_ff_path = os.path.abspath(custom_ff_path)
+            self.custom_ff_path = Path(custom_ff_path).resolve()
             os.environ["GMXLIB"] = self.custom_ff_path
         else:
             self.custom_ff_path = None
@@ -417,8 +445,8 @@ class MakeInputs:
             # Actually you can pass to parameterize Chem.rdchem.Mol, *.inchi, *.smi, *.mol, *.mol2, *.sdf
             parameterizer(input_mol=dict_to_work['conf'], mol_resi_name=name)
 
-            top_file = os.path.join(self.wd, f"{name}.top")
-            gro_file = os.path.join(self.wd, f"{name}.gro")
+            top_file = self.wd/f"{name}.top"
+            gro_file = self.wd/f"{name}.gro"
 
         parmed_system = readParmEDMolecule(top_file=top_file, gro_file=gro_file)
         if provided_top_flag and self.hmr_factor:
@@ -453,11 +481,11 @@ class MakeInputs:
         else:
             return None
         if dict_to_work['conf']:
-            dict_to_work['conf'] = os.path.abspath(dict_to_work['conf'])
-            name, ext = os.path.splitext(os.path.basename(dict_to_work['conf']))
+            dict_to_work['conf'] = Path(dict_to_work['conf']).resolve()
+            name, ext = dict_to_work['conf'].stem, dict_to_work['conf'].suffix
             if dict_to_work['top']:
                 # Convert to absolute paths
-                dict_to_work['top'] = os.path.abspath(dict_to_work['top'])
+                dict_to_work['top'] = Path(dict_to_work['top']).resolve()
                 logger.info(f"Using supplied: {dict_to_work['top']} for {dict_to_work['conf']}")
             else:
                 logger.info(f"Getting {dict_to_work['ff']['code']} parameters for: {dict_to_work['conf']}")
@@ -465,9 +493,9 @@ class MakeInputs:
         else:
             return None
 
-        gro_out = os.path.join(self.wd, f'{name}.gro')
-        top_out = os.path.join(self.wd, f'{name}.top')
-        posre_out = os.path.join(self.wd, f'{name}_posre.itp')
+        gro_out = self.wd/f'{name}.gro'
+        top_out = self.wd/f'{name}.top'
+        posre_out = self.wd/f'{name}_posre.itp'
 
         if is_membrane:
             if dict_to_work['ff']['code'] == 'Slipids_2020':
@@ -488,7 +516,6 @@ class MakeInputs:
                 @tools.gmx_command(load_dependencies=self.load_dependencies)
                 def editconf(**kwargs): ...
 
-                #run(f"gmx editconf -f {dict_to_work['conf']} -o {gro_out}")
                 editconf(f=dict_to_work['conf'], o=gro_out)
             elif ext == '.gro':
                 shutil.copy(dict_to_work['conf'], gro_out)
@@ -500,21 +527,18 @@ class MakeInputs:
 
             if is_membrane:
                 pdb2gmx(f=dict_to_work['conf'], ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out)
-                #run(f"gmx pdb2gmx -f {dict_to_work['conf']} -ff {dict_to_work['ff']['code']} -water none -o {gro_out} -p {top_out} -i {posre_out}")
             else:
                 env_prefix = os.environ["CONDA_PREFIX"]
                 fixed_pdb = os.path.join(self.wd, f"{name}_fixed.pdb")
                 run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
                 pdb2gmx(f=fixed_pdb, merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out, ignh=True)
-                #run(f"gmx pdb2gmx -f {fixed_pdb} -merge all -ff {dict_to_work['ff']['code']} "
-                #    f"-water none -o {gro_out} -p {top_out} -i {posre_out} -ignh")
         os.chdir(self.cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn
         system = readParmEDMolecule(top_file=top_out, gro_file=gro_out)
         if self.hmr_factor:
             HMassRepartition(system, self.hmr_factor).execute()
-        system.write(os.path.join(self.wd, f'{name}_final.top'))
+        system.write(str(self.wd/f'{name}_final.top'))
 
         return system
 
@@ -599,9 +623,11 @@ class MakeInputs:
 
                         * espaloma -> espaloma-0.3.1
 
+                    With this parameter you can access different small molecule force fields
+
                 In case of PathLike:
 
-                * The path of the small MOL/SDF molecule file
+                    * The path of the small MOL/SDF molecule file
 
         out_dir : str, optional
             Where you would like to export the generated files, by default 'abfe'
@@ -613,14 +639,13 @@ class MakeInputs:
             }
         logger.info(f"Processing ligand: {ligand_definition['conf']}")
         # Update (on multiple calls) or just create the out_dir (first call)
-        self.out_dir = out_dir
-        if not os.path.exists(self.out_dir):
-            os.makedirs(self.out_dir)
+        self.out_dir = Path(out_dir)
+        self.out_dir.mkdir(exist_ok=True, parents=True)
 
         # Construct MD system:
         self.make_system(ligand_definition)
-        system_dir = os.path.join(self.wd, 'system')
-        ligand_dir = os.path.join(self.wd, 'ligand')
+        system_dir = self.wd/'system'
+        ligand_dir = self.wd/'ligand'
 
         logger.info(f"Solvating with {self.water_model}:")
         if self.membrane:
@@ -631,7 +656,7 @@ class MakeInputs:
         else:
             f_xyz_complex = 3*[2500]
 
-        with solvent.Solvate(self.water_model, builder_dir=os.path.join(self.wd, '.solvating')) as SolObj:
+        with solvent.Solvate(self.water_model, builder_dir=self.wd/'.solvating') as SolObj:
 
             logger.info(f"Ligand in: {ligand_dir}")
             SolObj(structure=self.sys_ligand, bt='octahedron', d=1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
@@ -657,20 +682,22 @@ class MakeInputs:
         # Make index file in case of membrane systems
         if self.membrane:
             solvent.index_for_membrane_system(
-                configuration_file=os.path.join(system_dir, "solvated.gro"),
-                ndxout=os.path.join(system_dir, "index.ndx"),
-                lignad_name='LIG',
+                configuration_file=system_dir/"solvated.gro",
+                ndxout=system_dir/"index.ndx",
+                ligand_name="LIG",
+                host_name=self.host_name,
                 cofactor_name='COF' if self.cofactor else None,
                 cofactor_on_protein=self.cofactor_on_protein,
                 load_dependencies=self.load_dependencies
             )
         else:
             # This index file is only needed in case of MMPBSA
-            open(os.path.join(system_dir, "index.ndx"), "w").close()
+            (system_dir/"index.ndx").touch(exist_ok=True)
             solvent.index_for_soluble_system(
-                configuration_file=os.path.join(system_dir, "solvated.gro"),
-                ndxout=os.path.join(system_dir, "index.ndx"),
-                ligand_name='LIG',
+                configuration_file=system_dir/"solvated.gro",
+                ndxout=system_dir/"index.ndx",
+                ligand_name="LIG",
+                host_name=self.host_name,
                 load_dependencies=self.load_dependencies
             )
 

@@ -1,6 +1,3 @@
-"""
-calculate dF for ligand system
-"""
 import json
 import math
 import os
@@ -21,7 +18,7 @@ from bindflow.utils.tools import PathLike
 
 
 def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None,
-                  min_samples: int = 500, temperature: float = 298.15, convergency_plots_prefix: str = None):
+                  min_samples: int = 500, temperature: float = 298.15, convergency_plots_prefix: str = None) -> dict:
     """
     Function to get MBAR and TI estimates using alchemlyb from an input set of
     xvgs

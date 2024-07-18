@@ -1,150 +1,235 @@
 import copy
 import glob
 import os
+from pathlib import Path
 from typing import List, Union
 from warnings import warn
 
 from bindflow._version import __version__
 from bindflow.free_energy import gather_results
-# TODO: Ligand and RuleThemAll is using CPUs  and they are only waiting
-# THink in a way to connect RuleThemAll to Ligand to avoid the use of its CPUs on
-# each Ligand simulation
-# Think also about in reduce disk space of the simulation
-# Maybe at the end of the simulation one command that tar the files
-# Do not export so many frames in the xtc file, their are not needed for the analysis.
-# For sure not during equilibration phase, keep a relative small number of frames
 from bindflow.orchestration.flow_builder import approach_flow
 from bindflow.utils import tools
+from bindflow._gmx_check import check_gromacs_installation
 
 PathLike = Union[os.PathLike, str, bytes]
 
 
-def input_helper(arg_name: str, user_input: Union[tools.PathLike, dict, None], default_ff: Union[tools.PathLike, str],
-                 default_ff_type: Union[str, None] = None, optional: bool = False) -> dict:
-    """This helper function is called inside abfe.calculate_ABFE to check for the inputs: protein, ligands, membrane and cofactor
-
-    Parameters
-    ----------
-    arg_name : str
-        The name of the part of the system. It is just used for to print information in case of error
-    user_input : Union[tools.PathLike, dict, None]
-        The user input provided
-    default_ff : Union[tools.PathLike, str]
-        A code of the force field. Internally it will be check if [default_ff].ff exist as a directory. This allow a much bigger flexibility
-        on the use of different force fields that do not come with the GROMACS distribution by default
-    default_ff_type : Union[tools.PathLike, str]
-        This is used for the small molecules. It must be openff, gaff or espaloma (case insensitive).
-        If it is provided, default_ff will NOT be used and set to None.
-        During the building of the system, it will be converted internally as:
-            * openff -> openff_unconstrained-2.0.0.offxml
-            * gaff -> gaff-2.11
-            * espaloma -> espaloma-0.3.1
-    optional : bool, optional
-        if the arguments under analysis is optional or not, by default False
-
-    Returns
-    -------
-    dict
-        A dictionary with keywords: conf[configuration file], top[GROMACS topology file],
-        ff:code[force field code], path[absolute path in case the directory exists]
-
-    Raises
-    ------
-    ValueError
-        if user_input is None but optional is False
-    FileNotFoundError
-        The configuration file is not found even when some path was provided
-    ValueError
-        In case conf is not provided when user_input is a dict and optional is False
-    FileNotFoundError
-        The configuration file is not found when user_input is suppose to be a path
-    """
-    valid_ff_types = ['openff', 'gaff', 'espaloma']
-
-    if default_ff_type:
-        default_ff_type = str(default_ff_type).lower()
-        if default_ff_type not in valid_ff_types:
-            raise ValueError(f"{default_ff_type =} is not valid. Choose from {valid_ff_types}")
-
-    if not user_input:
-        if optional:
-            return None
-        else:
-            raise ValueError(f"{arg_name =} was set with {user_input =} but {optional =}")
-    else:
-        internal_dict = {
-            'conf': None,
-            # This must be a single file topology with all the force field information
-            # without positional restraint definition for the heavy atoms, thi will be generated internally.
-            'top': None,
-            'ff': {
-                'code': default_ff,
-            }
-        }
-        if default_ff_type:
-            internal_dict['ff']['type'] = default_ff_type
-            internal_dict['ff']['code'] = None
-
-        if isinstance(user_input, dict):
-            tools.recursive_update_dict(internal_dict, user_input)
-
-            # Convert to absolute paths
-            if internal_dict['conf']:
-                if not os.path.exists(internal_dict['conf']):
-                    raise FileNotFoundError(f"{internal_dict['conf'] = } is not accessible.")
-                internal_dict['conf'] = os.path.abspath(internal_dict['conf'])
-            else:
-                if not optional:
-                    raise ValueError(f'conf must be provided on the `{arg_name}` entry when a dictionary is used')
-
-            if internal_dict['top']:
-                if not os.path.exists(internal_dict['top']):
-                    raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
-                internal_dict['top'] = os.path.abspath(internal_dict['top'])
-
-        # This is the case that only a path was provided
-        else:
-            if not os.path.exists(user_input):
-                raise FileNotFoundError(f"On {arg_name} entry; {user_input = } is not accessible")
-            internal_dict['conf'] = os.path.abspath(user_input)
-        return copy.deepcopy(internal_dict)
-
-
 def calculate_abfe(
-        protein: Union[tools.PathLike, dict],  # conf, top, ff
+        protein: Union[tools.PathLike, dict],
         ligands: Union[tools.PathLike, List[dict]],
         out_root_folder_path: tools.PathLike,
-        # You can also specify the keyword is_water in case that the cofactor is a water system,
-        # that will change the settles section to triangular constraints. That is needed for compatibility with GROMACS
         cofactor: Union[tools.PathLike, dict, None] = None,
-        # this is to the correct group on the thermostat
+        host_name: str = 'Protein',
+        # For boresch restraint detection
+        host_selection: str = 'protein and name CA',
         cofactor_on_protein: bool = True,
         membrane: Union[tools.PathLike, dict, None] = None,
-        # For provided topologies if hmr_factor is set, it will pass any way.
-        # So for topology files with already HMR, this should be None.
-        # And all the topologies should be provided
-        # protein, cofactors, membrane, ligands with the HMR already done
         hmr_factor: Union[float, None] = 3.0,
-        # The water force field to use, by default amber/tip3p.
-        # if you would likle to use the flexible definition of the CHARMM TIP3P
-        # you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
         water_model: str = 'amber/tip3p',
         custom_ff_path: Union[None, PathLike] = None,
-        # The maximum integration time in ps for all the steps in the workflow.
-        # This will be overwrite by the definitions in the global_config
         dt_max: float = 0.004,
-        # This is the maximum number of threads to use on the rules, for example to run gmx mdrun
-        threads: int = 8,
-        # Maximum number of jobs to run in parallel
+        threads: int = 12,
         num_jobs: int = 10000,
         replicas: int = 3,
         submit: bool = False,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
         global_config: dict = {}
-        ):
-    print(f"You are using BindFlow: {__version__}.")
+        ) -> None:
+    """Main function of BindFlow to execute Absolute Binding Free Energy (ABFE) calculations
+
+    Parameters
+    ----------
+    protein : Union[tools.PathLike, dict]
+        This could be the path to the PDB file of the protein which will be processed through
+        GMX with amber99sb-ildn; or a dictionary with the specific definition of the protein.
+
+        In case a dictionary is provided, it should have:
+
+            * conf -> The path of the protein PDB/GRO file [mandatory]
+
+            * top -> GROMACS topology [optional], by default None.
+            Should be a single file topology with all the force field
+            information and without the position restraint included. However, in case,
+            you need to use an include statement such as:
+
+                include "./charmm36-jul2022.ff/forcefield.itp"
+
+            You must change the statement to the absolute path:
+
+                include "{prefix of the absolute path}/charmm36-jul2022.ff/forcefield.itp"
+
+            And copy the charmm36-jul2022.ff to custom_ff_path and set this parameter accordingly. If not
+            you may get some errors about files not founded. The force field directory
+            must end with the suffix ".ff".
+
+            * ff
+                * code -> GMX force field code [optional], by default amber99sb-ildn
+                You can use your custom force field, but custom_ff_path must be provided
+
+    ligands : Union[tools.PathLike, List[dict]]
+        This is a list of either path to the MOL/SDF file of the ligands which will be processed through
+        TOFF with openff_unconstrained-2.0.0.offxml; or a dictionary which expose more options to use with
+        the TOFF Python library; or a combination of both.
+
+        In case the element is a dictionary, it should have:
+
+            * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided,
+            this must be a .gro, a ValueError will be raised if it is not the case
+            the molecule will not get its parameters.
+
+            * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
+            information and without the position restraint included, by default None
+
+            * ff:
+
+                * type -> openff, gaff or espaloma
+
+                * code -> force field code [optional], by default depending on type
+
+                    * openff -> openff_unconstrained-2.0.0.offxml
+
+                    * gaff -> gaff-2.11
+
+                    * espaloma -> espaloma-0.3.1
+
+                With this parameter you can access different small molecule force fields
+
+    out_root_folder_path : tools.PathLike
+        Where the workflow is going to run
+
+    cofactor : Union[tools.PathLike, dict, None], optional
+        This is either None (default); a path to the MOL/SDF file of the ligands which will be processed
+        through TOFF with openff_unconstrained-2.0.0.offxml; or a dictionary which expose more options
+        to use with the TOFF Python library
+
+        In case the element is a dictionary, it should have:
+
+            * conf -> The path of the small molecule MOL/SDF file [mandatory]. In case that top is provided,
+            this must be a .gro, a ValueError will be raised if it is not the case
+            the molecule will not get its parameters.
+
+            * top -> GROMACS topology [optional]. Must be a single file topology with all the force field
+            information and without the position restraint included, by default None
+
+            * ff:
+
+                * type -> openff, gaff or espaloma
+
+                * code -> force field code [optional], by default depending on type
+
+                    * openff -> openff_unconstrained-2.0.0.offxml
+
+                    * gaff -> gaff-2.11
+
+                    * espaloma -> espaloma-0.3.1
+
+                With this parameter you can access different small molecule force fields
+
+            * is_water -> If presents and set to True; it is assumed that this is a water system
+            and that will change the settles section to tip3p-like triangular constraints.
+            This is needed for compatibility with GROMACS. Check here:
+            https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
+
+    host_name : str, optional
+        The group name for the host in the configuration file, by default "Protein".
+         This is used for making index, solvate the system and working with trajectories
+
+    host_selection : str, optional
+        MDAnalysis selection to define the host (receptor or protein), by default 'protein and name CA'.
+        This is used for boresch restraint detection.
+
+    cofactor_on_protein : bool, optional
+        It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
+        If True, the cofactor will be part of the protein and the ligand
+        if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
+
+    membrane : Union[tools.PathLike, dict, None], optional
+        This is either None (default); a path to the PDB file of the membrane which will be processed
+        through GMX with SLipid2020; or a dictionary with the specific definition of the protein.
+
+        In case a dictionary is provided, it should have:
+
+            * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
+            correct definition of the CRYST1. This information will be used for the solvation step.
+            The membrane must be already correctly placed around the protein. Servers like CHARM-GUI
+            can be used on this step.
+
+            * top -> GROMACS topology [optional], by default None.
+            Should be a single file topology with all the force field
+            information and without the position restraint included. However, in case,
+            you need to use an include statement such as:
+
+                include "./amber-lipids14.ff/forcefield.itp"
+
+            You must change the statement to the absolute path:
+
+                include "{prefix of the absolute path}/amber-lipids14.ff/forcefield.itp"
+
+            And copy theamber-lipids14.ff to custom_ff_path and set this parameter accordingly. If not
+            You may get some errors about files not founded. The force field directory
+            must end with the suffix ".ff".
+
+            * ff
+
+                * code -> GMX force field code [optional], by default Slipids_2020
+                You can use yoru custom force field, but custom_ff_path must be provided
+
+    hmr_factor : Union[float, None], optional
+         The Hydrogen Mass Factor to use, by default 3.0.
+
+         WARNING:
+            For provided topologies if hmr_factor is set, it will pass any way.
+            So for topology files with already HMR, this should be None.
+            And all the topologies should be provided
+            protein, cofactors, membrane, ligands with the HMR already done
+
+    water_model : str, optional
+        The water force field to use, by default amber/tip3p.
+        if you would likle to use the flexible definition of the CHARMM TIP3P
+        you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
+
+    custom_ff_path : Union[None, PathLike], optional
+        All the custom force field must be in this directory. The class will set:
+
+            os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
+
+    dt_max : float, optional
+        This is the maximum integration time step that will be used by any MD simulation step
+        This will be override by the specific MDP step definition through the  the definitions
+        in the global_config, by default 0.004
+    threads : int, optional
+        This is the maximum number of CPUs/threads to use by any Snakemake rule. E.g. `gmx mdrun` will run with this amount of threads, by default 12
+    num_jobs : int, optional
+        This is the maximum Snakemake concurrent jobs, by default 10000.
+        When you launch in a HPC (e.g.Slurm) you can use (if your system allows it) a high number; In this case Snakemake counts as running
+        jobs both those ones actually running and the pending ones.
+        In the other hand, if (for testing or any other use) the FrontEnd is been used, this parameter should be set to the amount of CPUs that
+        you would like to allocate for the entire workflow. This will prevent to overheat your machine.
+        For example in a workstation of 12 CPus, if you set threads = 4, then num_jobs should be 3.
+    replicas : int, optional
+        The number of independent repeats of the entire workflow (the building of the system is not repeated), by default 3
+    submit : bool, optional
+        If True the workflow will woke alive, by default False
+    debug : bool, optional
+        If True more stuff will be printed, by default False
+    job_prefix : Union[None, str], optional
+        A prefix to identify the jobs in the HPc cluster queue, by default None
+    global_config : dict, optional
+        The rest of the configuration and fine tunning of the workflow goes here, by default {}
+
+    Raises
+    ------
+    ValueError
+        In case of invalid global_config
+    ValueError
+        In case the ligand paths are not found
+    """
+
+    print(f"You are using BindFlow: {__version__}✨")
+    check_gromacs_installation()
     orig_dir = os.getcwd()
+    out_root_folder_path = Path(out_root_folder_path)
 
     # Make internal copy of configuration
     _global_config = copy.deepcopy(global_config)
@@ -166,24 +251,24 @@ def calculate_abfe(
     # Initialize inputs on config
     _global_config["calculation_type"] = 'fep'  # To leave room for other type of calculations
     _global_config["inputs"] = {}
-    _global_config["inputs"]["protein"] = input_helper(arg_name='protein', user_input=protein, default_ff='amber99sb-ildn', optional=False)
+    _global_config["inputs"]["protein"] = tools.input_helper(arg_name='protein', user_input=protein, default_ff='amber99sb-ildn', optional=False)
     # TODO check that is a list, tuple or string, iterable is nto enough because the dict is an iterable. Not clear how to check for this
-    _global_config["inputs"]["ligands"] = [input_helper(arg_name='ligand', user_input=ligand,
-                                                        default_ff=None, default_ff_type='openff', optional=False)
+    _global_config["inputs"]["ligands"] = [tools.input_helper(arg_name='ligand', user_input=ligand,
+                                                              default_ff=None, default_ff_type='openff', optional=False)
                                            for ligand in ligands]
-    _global_config["inputs"]["cofactor"] = input_helper(arg_name='cofactor', user_input=cofactor, default_ff=None,
-                                                        default_ff_type='openff', optional=True)
-    _global_config["inputs"]["membrane"] = input_helper(arg_name='membrane', user_input=membrane, default_ff='Slipids_2020', optional=True)
+    _global_config["inputs"]["cofactor"] = tools.input_helper(arg_name='cofactor', user_input=cofactor, default_ff=None,
+                                                              default_ff_type='openff', optional=True)
+    _global_config["inputs"]["membrane"] = tools.input_helper(arg_name='membrane', user_input=membrane, default_ff='Slipids_2020', optional=True)
 
+    _global_config["host_name"] = host_name
+    _global_config["host_selection"] = host_selection
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     _global_config["custom_ff_path"] = custom_ff_path
     # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology
     _global_config["water_model"] = water_model
     _global_config["dt_max"] = dt_max
-
-    out_root_folder_path = os.path.abspath(out_root_folder_path)
-    _global_config["out_approach_path"] = out_root_folder_path
+    _global_config["out_approach_path"] = os.path.abspath(out_root_folder_path)
 
     if job_prefix:
         _global_config["job_prefix"] = f"{job_prefix}"
@@ -194,13 +279,13 @@ def calculate_abfe(
     os.environ['abfe_debug'] = str(debug)
 
     # Generate output folders
-    if not os.path.isdir(_global_config["out_approach_path"]):
-        tools.makedirs(_global_config["out_approach_path"])
+    if not Path(_global_config["out_approach_path"]).is_dir():
+        Path(_global_config["out_approach_path"]).mkdir(exist_ok=True, parents=True)
 
     # Prepare Input / Parametrize
     os.chdir(_global_config["out_approach_path"])
 
-    _global_config["ligand_names"] = [os.path.splitext(os.path.basename(mol['conf']))[0] for mol in _global_config["inputs"]["ligands"]]
+    _global_config["ligand_names"] = [Path(mol['conf']).stem for mol in _global_config["inputs"]["ligands"]]
     _global_config["num_jobs"] = num_jobs
     _global_config["replicas"] = replicas
     _global_config["threads"] = threads
@@ -208,7 +293,7 @@ def calculate_abfe(
     print("Prepare")
     print("\tstarting preparing ABFE-ligand file structure")
 
-    print("\tStarting preparing ABFE-Approach file structure: ", out_root_folder_path)
+    print("\tStarting preparing ABFE-Approach file structure: ", _global_config["out_approach_path"])
     if not _global_config["ligand_names"]:
         raise ValueError("No ligands found")
 
@@ -228,6 +313,6 @@ def calculate_abfe(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        gather_results.get_all_dgs(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results.csv'))
-        gather_results.get_raw_data(root_folder_path=out_root_folder_path, out_csv=os.path.join(out_root_folder_path, 'abfe_partial_results_raw.csv'))
+        gather_results.get_all_abfe_dgs(root_folder_path=out_root_folder_path, out_csv=out_root_folder_path/'abfe_partial_results.csv')
+        gather_results.get_raw_abfe_data(root_folder_path=out_root_folder_path, out_csv=out_root_folder_path/'abfe_partial_results_raw.csv')
     os.chdir(orig_dir)
