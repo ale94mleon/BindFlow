@@ -29,7 +29,7 @@ dependencies:
   - parmed=4.1.0
   - pandas=2.0.3
   - numpy=1.22.4
-  - mpi4py=3.1.6
+  - mpi4py=3.1.5
   - pip:
       - alchemlyb==2.0.0
       - mdanalysis==2.5.0
@@ -60,7 +60,7 @@ dependencies:
   - parmed=4.1.0
   - pandas=2.0.3
   - numpy=1.22.4
-  - mpi4py=3.1.6
+  - mpi4py=3.1.5
   - pip:
       - alchemlyb==2.0.0
       - mdanalysis==2.5.0
