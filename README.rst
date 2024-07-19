@@ -45,7 +45,7 @@ Discussion
 If you have questions on how to use **BindFlow**, or if you want to give feedback or share ideas and new features, please head to the `GitHub Discussions <https://github.com/ale94mleon/BindFlow/discussions>`_.
 
 Citing **BindFlow**
-------------------
+-------------------
 
 Please refer to the `citation page <https://BindFlow.readthedocs.io/en/latest/source/citations.html>`__ on the documentation.
 

@@ -4,31 +4,32 @@
    contain the root `toctree` directive.
 
 Welcome to BindFlow's documentation!
-=========================================
+====================================
 .. include:: ../README.rst
 
 .. toctree::
-   :caption: User guide
-   :maxdepth: 2
+   :maxdepth: 1
 
    source/installation
    source/citations
-   source/CHANGELOG.md
+   source/tutorials
 
-.. toctree::
-   :caption: Tutorials
-   :numbered:
-
-   notebooks/quickstart
 
 .. toctree::
    :caption: Documentation
-   :maxdepth: 2
+   :maxdepth: 1
    :glob:
 
    source/api
-   source/faq.md
-   source/modules/*
+
+.. toctree::
+   :caption: Reference
+   :maxdepth: 1
+   :glob:
+
+   source/CHANGELOG
+   source/api-reference
+   source/faq
 
 
 Indices and tables
