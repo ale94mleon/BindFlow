@@ -309,7 +309,7 @@ class MakeInputs:
             The water force field to use, by default amber/tip3p.
             if you would likle to use the flexible definition of the CHARMM TIP3P
             you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
-        custom_ff_path Union[None, PathLike], optional
+        custom_ff_path : Union[None, PathLike], optional
             All the custom force field must be in this directory. The class will set:
 
                 os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
@@ -453,21 +453,22 @@ class MakeInputs:
             HMassRepartition(parmed_system, self.hmr_factor).execute()
         return parmed_system
 
-    def gmx_process(self, mol_definition: dict, is_membrane: bool = False):
-        """Used to process the biomolecules compatibles.
+    def gmx_process(self, mol_definition: dict, is_membrane: bool = False) -> Structure:
+        """Used to process the compatibles biomolecules.
         By default it will use amber99sb-ildn (protein, DNA, ..) Slipids_2020 (membrane).
-        However, these setups are overwrite by the definitions on mol_definition 
+        However, these setups are overwrite by the definitions on `mol_definition` 
+        
         Parameters
         ----------
         mol_definition : dict
-            This dictionary is wither self.protein or self.membrane, its definition is accessible at the 
-            constructor-method's documentation.
+            This dictionary with the self.protein or self.membrane. See the
+            constructor-method's documentation for more information in its definition.
         is_membrane : bool, optional
             If True, Slipids_2020 will be set as internal default instead of amber99sb-ildn, by default False
         Returns
         -------
-        object
-            A par
+        Structure
+            A parameterize Structure object
         """
         # Setting default parameters
         dict_to_work = {

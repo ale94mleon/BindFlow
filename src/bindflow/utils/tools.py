@@ -185,15 +185,17 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
 
     The following commands will be executed by default:
 
-    gmx grompp -f {mdp} -c {structure} -r {structure} -p {topology} -o {mdp-name}.tpr -maxwarn 2
-    gmx mdrun -nt 12 -deffnm {mdp-name}
+        gmx grompp -f {mdp} -c {structure} -r {structure} -p {topology} -o {mdp-name}.tpr -maxwarn 2
+        gmx mdrun -nt 12 -deffnm {mdp-name}
 
-    mdrun will update the command based on mdrun_extra. You can also suppress the use of nt and/or deffnm passing them as
-    False and construct your own mdrun command:
-    e.g. gmx_runner(mdp='emin.mdp', topology='ligand.top',structure='ligand.gro', deffnm = False, cpi = True, s = 'emin.tpr', o = 'emin2', c = 'emin3')
+    ``mdrun`` will update the command based on ``mdrun_extra``. You can also suppress the use of ``nt`` and/or ``deffnm`` passing them as
+    ``False`` and construct your own mdrun command. E.g.
 
-    The last will give:
-    gmx mdrun -nt 12 -cpi -s emin.tpr -o emi666 -c emi55
+        gmx_runner(mdp='emin.mdp', topology='ligand.top', structure='ligand.gro', deffnm=False, cpi=True, s='emin.tpr')
+
+    The last will give ():
+
+        gmx mdrun -nt 12 -cpi -s emin.tpr -o emin2
 
     Parameters
     ----------
@@ -215,7 +217,8 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
     run_dir : PathLike, optional
         Where the simulation should run (write files). If it does not exist will be created, by default '.'
     **mdrun_extra : any
-        Any valid keyword for mdrun. flags are passing as boolean. E.g: cpi = True
+        Any valid keyword for mdrun. Flags are passing as boolean. E.g: cpi = True. There is not check of right keywords,
+        for wrong keywords an error will be raised at GROMACS level
     """
     # Create run directory on demand
     run_dir = Path(run_dir)
@@ -406,8 +409,8 @@ def find_xtc(root_path: PathLike, exclude_suffixes: List[str] = None) -> List[Pa
 
 def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str = 'archive',
             compress_type: str = 'gz', remove_dirs: bool = False, out_check_file: bool = True):
-    """Recursively archive root_path. Directories and/or files with ny suffixes from
-     exclude_suffixes are ignored . It creates a tar file with the XTC files (without compress)
+    """Recursively archive root_path. Directories and/or files with any suffixes from
+    exclude_suffixes are ignored . It creates a tar file with the XTC files (without compress)
     and a main_project.tar.{compress_type} with the rest of directories. Compression will only be applied to
     those files included in main_project.tar.{compress_type}. In-house benchmark showed a compress
     rate close to for a abfe campaign 1.8 using gz compression
@@ -533,7 +536,7 @@ def _filter_helper(TarInfo: str, suffix: Tuple[str], prefix: Tuple[str] = ('main
 
 def unarchive(archive_file: PathLike, target_path: PathLike,
               only_with_suffix: Union[None, List[str]] = None, prefix: Tuple[str] = ('main_project.tar')):
-    """It unarchive a project archived by the function :meth:`abfe.utils.tools.archive`
+    """It unarchive a project archived by the function :meth:`bindflow.utils.tools.archive`
 
     Parameters
     ----------
@@ -763,12 +766,26 @@ def input_helper(arg_name: str, user_input: Union[PathLike, dict, None], default
 
 
 def natsort(iterable: List) -> Iterable:
-    """natural sort of an iterable
+    """Natural sort of an iterable
 
     Parameters
     ----------
     iterable : List
         Some iterable
+
+    Example
+    -------
+    .. ipython:: python
+
+        from bindflow.utils import tools
+        my_list = ['1', '2', 3, '4', '11', 5, 'A', '0', 13, '6']
+        try:
+            print(sorted(my_list))
+        except TypeError:
+            print("We need to convert to string but still is not what we are expecting")
+            print(sorted(map(str, my_list)))
+        print(tools.natsort(my_list))
+
 
     Returns
     -------
