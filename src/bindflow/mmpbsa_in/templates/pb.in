@@ -20,7 +20,7 @@ Be careful with the variables you modify, some can have severe consequences on t
   full_traj            = 0                                              # Print a full traj. AND the thread trajectories
   gmx_path             = ""                                             # Force to use this path to get GROMACS executable
   keep_files           = 0                                              # How many files to keep after successful completion
-  netcdf               = 0                                              # Use NetCDF intermediate trajectories
+  netcdf               = 1                                              # Use NetCDF intermediate trajectories
   solvated_trajectory  = 1                                              # Define if it is necessary to cleanup the trajectories
   verbose              = 1                                              # How many energy terms to print in the final output
 /
