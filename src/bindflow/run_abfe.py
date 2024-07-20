@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import List, Union
 from warnings import warn
 
+from bindflow._gmx_check import check_gromacs_installation
 from bindflow._version import __version__
 from bindflow.free_energy import gather_results
-from bindflow.orchestration.generate_scheduler import SlurmScheduler, Scheduler
 from bindflow.orchestration.flow_builder import approach_flow
+from bindflow.orchestration.generate_scheduler import Scheduler, SlurmScheduler
 from bindflow.utils import tools
-from bindflow._gmx_check import check_gromacs_installation
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -35,7 +35,7 @@ def calculate_abfe(
         submit: bool = False,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
-        schedular_class: Scheduler = SlurmScheduler,
+        scheduler_class: Scheduler = SlurmScheduler,
         global_config: dict = {}
         ) -> None:
     """Main function of BindFlow to execute Absolute Binding Free Energy (ABFE) calculations
@@ -218,7 +218,7 @@ def calculate_abfe(
     job_prefix : Union[None, str], optional
         A prefix to identify the jobs in the HPc cluster queue, by default None
 
-    schedular_class : Schedular, optional
+    scheduler_class : Schedular, optional
         This is a class to schedule the jobs and specify how to handle computational resources, by default SlurmScheduler
 
         The module :mod:`bindflow.orchestration.generate_scheduler` presents the template class
@@ -262,7 +262,7 @@ def calculate_abfe(
 
     # Initialize inputs on config
     _global_config["calculation_type"] = 'fep'
-    _global_config["schedular_class"] = schedular_class
+    _global_config["scheduler_class"] = scheduler_class
     _global_config["inputs"] = {}
     _global_config["inputs"]["protein"] = tools.input_helper(arg_name='protein', user_input=protein, default_ff='amber99sb-ildn', optional=False)
     # TODO check that is a list, tuple or string, iterable is nto enough because the dict is an iterable. Not clear how to check for this

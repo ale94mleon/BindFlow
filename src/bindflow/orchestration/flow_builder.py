@@ -1,7 +1,7 @@
 import json
 import os
-from pathlib import Path
 import tarfile
+from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -210,8 +210,8 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
 
     generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path, calculation_type=global_config["calculation_type"])
 
-    schedular_class = global_config['schedular_class']
-    scheduler = schedular_class(
+    scheduler_class = global_config['scheduler_class']
+    scheduler = scheduler_class(
         # by default, run with the main cluster options
         # only if global_config["cluster"]["options"]["job"] is defined it will change during submit
         cluster_config=global_config["cluster"]["options"]["calculation"],
