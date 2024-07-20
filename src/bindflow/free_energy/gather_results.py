@@ -70,7 +70,7 @@ def get_all_abfe_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd
     Returns
     -------
     pd.DataFrame
-        All gather results. In case there are not dG_results.csv. It will return an empty DataFrame
+        All gather results. If there are not dG_results.csv; It will return an empty DataFrame
     """
     # Get all dG_results.csv files
     dg_files_dir = dict()
@@ -115,8 +115,8 @@ def get_raw_abfe_data(root_folder_path: PathLike, out_csv: PathLike = None) -> p
 
     Returns
     -------
-    _type_
-        _description_
+     pd.DataFrame
+        Raw ABFE data, all the contributions for all ligand/replicas
     """
     sample_data = []
     root_folder_path = Path(root_folder_path).resolve()

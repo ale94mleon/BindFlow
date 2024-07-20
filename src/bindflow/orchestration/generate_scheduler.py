@@ -279,7 +279,7 @@ class FrontEnd(Scheduler):
     submit_command = "bash"
     shebang = "#!/bin/bash"
 
-    # TODO build a class to execute the workflow in a frontend like environment, E.g LAPTOP.
+    # TODO build a class to execute the workflow in a frontend-like environment, E.g LAPTOP.
     def __init__(self, cluster_config: None = None, out_dir: PathLike = '.', prefix_name: str = '', snake_executor_file: str = None) -> None:
         super().__init__(cluster_config=cluster_config, out_dir=out_dir, prefix_name=prefix_name, snake_executor_file=snake_executor_file)
 
@@ -388,7 +388,7 @@ def create_scheduler(scheduler_type: str, **kwargs) -> Scheduler:
     Parameters
     ----------
     scheduler_type : str
-        Name of the scheduler, e.g slurm
+        Name of the scheduler, e.g Slurm or FrontEnd
 
     Returns
     -------
@@ -406,7 +406,7 @@ def create_scheduler(scheduler_type: str, **kwargs) -> Scheduler:
     elif scheduler_type == 'frontend':
         return FrontEnd(**kwargs)
     else:
-        raise NotImplementedError("Invalid scheduler type. Choose from: [slurm].")
+        raise NotImplementedError("Invalid scheduler type. Choose from: [slurm, frontend].")
 
 
 if __name__ == "__main__":
