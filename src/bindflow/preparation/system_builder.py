@@ -300,11 +300,13 @@ class MakeInputs:
             if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
         hmr_factor : float, optional
             The Hydrogen Mass Factor to use, by default None
-            WARNING:
+
+            .. warning::
                 For provided topologies if hmr_factor is set, it will pass any way.
                 So for topology files with already HMR, this should be None.
                 And all the topologies should be provided
                 protein, cofactors, membrane, ligands with the HMR already done
+
         water_model : str, optional
             The water force field to use, by default amber/tip3p.
             if you would likle to use the flexible definition of the CHARMM TIP3P

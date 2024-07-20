@@ -67,15 +67,15 @@ class MDP:
 
 
 class StepMDP(MDP):
-    """This subclass will inherit from :meth:`abfe.mdp.mdp.MDP`
+    """This subclass will inherit from :meth:`bindflow.mdp.mdp.MDP`
     It is meant to be used in combination with the templates that can
-    be access from :mod: `abfe.mdp.templates.TemplatePath`.
-    This class define the method `set_new_step`. One time initialized,
+    be access from :mod:`bindflow.mdp.templates.TemplatePath`.
+    This class define the method ``set_new_step``. One time initialized,
     the instance could be used to access other steps on the step_path
 
     Parameters
     ----------
-    MDP : abfe.utils.mdp.MDP
+    MDP : :meth:`bindflow.mdp.mdp.MDP`
         base MDP class
     """
     def __init__(self, step: str = None, step_path: PathLike = None, **kwargs):
