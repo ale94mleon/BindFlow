@@ -1,5 +1,4 @@
 cluster:
-  type: FrontEnd
   options:
     calculation: None   
 extra_directives: # Optional

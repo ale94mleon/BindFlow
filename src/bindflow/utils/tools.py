@@ -597,7 +597,7 @@ def recursive_update_dict(original_dict: dict, update_dict: dict) -> None:
 
 def config_validator(global_config: dict) -> List:
     """It checks for the validity of the global config.
-    This dictionary is usually passed to :meth:`abfe.calculate_abfe.calculate_abfe`
+    This dictionary is used for :meth:`bindflow.run_abfe.calculate_abfe` and :meth:`bindflow.run_mmpbsa.calculate_mmpbsa`
 
     Parameters
     ----------
@@ -614,9 +614,6 @@ def config_validator(global_config: dict) -> List:
     # Checking cluster
     if 'cluster' not in global_config:
         return False, "Cluster configuration is missing"
-
-    if 'type' not in global_config['cluster']:
-        return False, "Cluster type is missing"
 
     if 'options' not in global_config['cluster']:
         return False, "Cluster configuration is valid, but no cluster options provided"

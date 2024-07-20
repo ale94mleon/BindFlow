@@ -2,6 +2,7 @@
 import yaml
 import glob
 from bindflow.run_mmpbsa import calculate_mmpbsa
+from bindflow.orchestration.generate_scheduler import FrontEnd
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 
@@ -22,6 +23,7 @@ calculate_mmpbsa(
     replicas=1,
     samples=2,
     submit=False,
+    schedular_class=FrontEnd,
     global_config=global_config)
 
 

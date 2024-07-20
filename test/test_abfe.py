@@ -11,6 +11,7 @@ def test_abfe():
     from pathlib import Path
     # import pytest
     from multiprocessing import cpu_count
+    from bindflow.orchestration.generate_scheduler import FrontEnd
     from bindflow.run_abfe import calculate_abfe
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
@@ -69,6 +70,7 @@ def test_abfe():
             submit=True,
             debug=True,
             job_prefix='host_guest.test',
+            schedular_class=FrontEnd,
             global_config=global_config)
 
 

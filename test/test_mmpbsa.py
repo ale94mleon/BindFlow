@@ -11,6 +11,7 @@ def test_mmpbsa():
     from pathlib import Path
     # import pytest
     from multiprocessing import cpu_count
+    from bindflow.orchestration.generate_scheduler import FrontEnd
     from bindflow.run_mmpbsa import calculate_mmpbsa
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_mmpbsa_') as tmp:
@@ -69,6 +70,7 @@ def test_mmpbsa():
             submit=True,
             debug=True,
             job_prefix='host_guest.test',
+            schedular_class=FrontEnd,
             global_config=global_config)
 
 

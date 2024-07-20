@@ -382,32 +382,5 @@ class FrontEnd(Scheduler):
             raise RuntimeError("'snake_executor_file' attribute is not present on the current instance. Consider to call build_snakemake first")
 
 
-def create_scheduler(scheduler_type: str, **kwargs) -> Scheduler:
-    """Factory method to create the appropriate scheduler instance
-
-    Parameters
-    ----------
-    scheduler_type : str
-        Name of the scheduler, e.g Slurm or FrontEnd
-
-    Returns
-    -------
-    Scheduler
-        An instance of the proper selected scheduler
-
-    Raises
-    ------
-    NotImplementedError
-        In case of non implemented scheduler.
-    """
-    scheduler_type = scheduler_type.lower()
-    if scheduler_type == "slurm":
-        return SlurmScheduler(**kwargs)
-    elif scheduler_type == 'frontend':
-        return FrontEnd(**kwargs)
-    else:
-        raise NotImplementedError("Invalid scheduler type. Choose from: [slurm, frontend].")
-
-
 if __name__ == "__main__":
     pass
