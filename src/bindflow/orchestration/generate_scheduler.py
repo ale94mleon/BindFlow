@@ -10,6 +10,18 @@ from bindflow.utils.tools import PathLike
 
 
 class Scheduler(ABC):
+    """Abstract Base Class to build an Schedular
+
+    Class variables
+    ---------------
+    submit_command : str
+        The command used for your scheduler to launch jobs
+    cancel_command : str
+        Command used to cancel jobs
+    shebang : str
+        Used to build script and detect properly the environment E.g: ``#!/bin/bash``, ``#!/bin/sh``, ...
+        This will be used to make the ``snake_executor_file`` executable.
+    """
     # Default class variables
     submit_command = None
     cancel_command = None
@@ -17,6 +29,19 @@ class Scheduler(ABC):
     job_keyword = None
 
     def __init__(self, cluster_config: dict, out_dir: PathLike = '.', prefix_name: str = '', snake_executor_file: str = None) -> None:
+        """Constructor of the class
+
+        Parameters
+        ----------
+        cluster_config : dict
+            All the necessary information for the specific schedular
+        out_dir : PathLike, optional
+            Where all files will be exported and executed, by default '.'
+        prefix_name : str, optional
+            A prefix append to the jobs names for easy identification, by default ''
+        snake_executor_file : str, optional
+            The name/path of the file that will be used for execution of the workflow, by default None
+        """
         self.cluster_config = cluster_config
         self.out_dir = Path(out_dir).resolve()
         self.prefix_name = prefix_name
@@ -33,14 +58,25 @@ class Scheduler(ABC):
     def __cluster_validation__(self):
         """Each scheduler should validate if the necessary options, as partition, CPUs, etc are in cluster_config.
         """
+        pass
 
     @abstractmethod
-    def build_snakemake(self): ...
+    def build_snakemake(self):
+        """Function to create the snakemake command"""
+        pass
 
     @abstractmethod
-    def submit(self): ...
+    def submit(self):
+        """Command to submit the jobs"""
 
-    def __get_full_data(self):
+    def __get_full_data(self) -> dict:
+        """Get the data of the class
+
+        Returns
+        -------
+        dict
+            Information of the class
+        """
         data = {
             "submit_command": self.__class__.submit_command,
             "cancel_command": self.__class__.cancel_command,
@@ -279,13 +315,13 @@ class FrontEnd(Scheduler):
     submit_command = "bash"
     shebang = "#!/bin/bash"
 
-    # TODO build a class to execute the workflow in a frontend like environment, E.g LAPTOP.
+    # TODO build a class to execute the workflow in a frontend-like environment, E.g LAPTOP.
     def __init__(self, cluster_config: None = None, out_dir: PathLike = '.', prefix_name: str = '', snake_executor_file: str = None) -> None:
         super().__init__(cluster_config=cluster_config, out_dir=out_dir, prefix_name=prefix_name, snake_executor_file=snake_executor_file)
 
     def __cluster_validation__(self): ...
 
-    def build_snakemake(self, jobs: int = 100000, latency_wait: int = 360,
+    def build_snakemake(self, jobs: int = 12, latency_wait: int = 360,
                         verbose: bool = False, debug_dag: bool = False,
                         rerun_incomplete: bool = True, keep_incomplete: bool = True,
                         keep_going: bool = True) -> str:
@@ -380,33 +416,6 @@ class FrontEnd(Scheduler):
                 tools.run(f"{self.submit_command} {self.snake_executor_file}", interactive=True)
         else:
             raise RuntimeError("'snake_executor_file' attribute is not present on the current instance. Consider to call build_snakemake first")
-
-
-def create_scheduler(scheduler_type: str, **kwargs) -> Scheduler:
-    """Factory method to create the appropriate scheduler instance
-
-    Parameters
-    ----------
-    scheduler_type : str
-        Name of the scheduler, e.g slurm
-
-    Returns
-    -------
-    Scheduler
-        An instance of the proper selected scheduler
-
-    Raises
-    ------
-    NotImplementedError
-        In case of non implemented scheduler.
-    """
-    scheduler_type = scheduler_type.lower()
-    if scheduler_type == "slurm":
-        return SlurmScheduler(**kwargs)
-    elif scheduler_type == 'frontend':
-        return FrontEnd(**kwargs)
-    else:
-        raise NotImplementedError("Invalid scheduler type. Choose from: [slurm].")
 
 
 if __name__ == "__main__":

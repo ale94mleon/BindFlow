@@ -1,5 +1,4 @@
 cluster:
-  type: SLURM
   options:
     calculation:
       partition: uds-hub

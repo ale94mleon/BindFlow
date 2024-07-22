@@ -1,5 +1,5 @@
-System Bilder
-=============
+System Builder
+==============
 
 .. automodule:: bindflow.preparation.system_builder
     :members:

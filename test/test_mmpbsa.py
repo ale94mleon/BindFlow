@@ -2,15 +2,19 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+
 @pytest.mark.filterwarnings("ignore")
 def test_mmpbsa():
-    from bindflow.home import home
-    import tempfile
     import tarfile
-    import yaml
-    from pathlib import Path
+    import tempfile
     # import pytest
     from multiprocessing import cpu_count
+    from pathlib import Path
+
+    import yaml
+
+    from bindflow.home import home
+    from bindflow.orchestration.generate_scheduler import FrontEnd
     from bindflow.run_mmpbsa import calculate_mmpbsa
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_mmpbsa_') as tmp:
@@ -69,6 +73,7 @@ def test_mmpbsa():
             submit=True,
             debug=True,
             job_prefix='host_guest.test',
+            scheduler_class=FrontEnd,
             global_config=global_config)
 
 

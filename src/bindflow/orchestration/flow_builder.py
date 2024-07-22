@@ -1,14 +1,12 @@
 import json
 import os
-from pathlib import Path
 import tarfile
+from pathlib import Path
 from typing import Union
 
 import numpy as np
 
 from bindflow import rules
-from bindflow.orchestration import generate_scheduler
-from bindflow.utils import tools
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -93,7 +91,7 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str, calcul
 
 
 def approach_flow(global_config: dict, submit: bool = False) -> str:
-    """This is the main workflow, it controls the rest of the workflows
+    """It controls the rest of the workflows
     that make the actual calculations. It will only hang and wait till the rest
     subprocess finish. In case that cluster/options/job is defined in global_config,
     those options will be used to create the proper cluster submit script, if not
@@ -212,8 +210,8 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
 
     generate_approach_snake_file(out_file_path=snake_path, conf_file_path=approach_conf_path, calculation_type=global_config["calculation_type"])
 
-    scheduler = generate_scheduler.create_scheduler(
-        scheduler_type=global_config["cluster"]["type"],
+    scheduler_class = global_config['scheduler_class']
+    scheduler = scheduler_class(
         # by default, run with the main cluster options
         # only if global_config["cluster"]["options"]["job"] is defined it will change during submit
         cluster_config=global_config["cluster"]["options"]["calculation"],

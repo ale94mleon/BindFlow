@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from bindflow.utils.tools import List, PathLike, list_if_file
 
@@ -68,21 +67,22 @@ class MDP:
 
 
 class StepMDP(MDP):
-    """This subclass will inherit from :meth:`abfe.mdp.mdp.MDP`
+    """This subclass will inherit from :meth:`bindflow.mdp.mdp.MDP`
     It is meant to be used in combination with the templates that can
-    be access from :mod: `abfe.mdp.templates.TemplatePath`.
-    This class define the method `set_new_step`. One time initialized,
+    be access from :mod:`bindflow.mdp.templates.TemplatePath`.
+    This class define the method ``set_new_step``. One time initialized,
     the instance could be used to access other steps on the step_path
 
     Parameters
     ----------
-    MDP : abfe.utils.mdp.MDP
+    MDP : :meth:`bindflow.mdp.mdp.MDP`
         base MDP class
     """
     def __init__(self, step: str = None, step_path: PathLike = None, **kwargs):
         """Constructor. It is assume a tree directory as:
 
-        ::
+        .. code-block:: text
+
             .
             ├── emin.mdp
             ├── npt.mdp
@@ -96,14 +96,15 @@ class StepMDP(MDP):
             the step, basically the name of the mdp file on templates, by default None
         step_path : PathLike, optional
             where to look for the mdp, by default None
+        
         Example
         -------
         .. ipython:: python
 
-            from abfe.mdp import mdp
-            from abfe.mdp.templates import TemplatePath
+            from bindflow.mdp import mdp
+            from bindflow.mdp.templates import TemplatePath
             from pathlib import Path
-            my_mdp = mdp.StepMDP(step='00_min', step_path=Path(TemplatePath.ligand.fep)/'coul'))
+            my_mdp = mdp.StepMDP(step='00_min', step_path=Path(TemplatePath.ligand.fep)/'coul')
             my_mdp.set_parameters(**{"init-lambda-state": "0", "coul-lambdas": "0 0.5 1",})
             print(my_mdp)
             my_mdp.set_new_step(step='02_npt')
@@ -130,9 +131,11 @@ class StepMDP(MDP):
 
 def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_values: List[float], lambda_type: str, sys_type: str,
                            dt_max: float, mdp_extra_kwargs: dict = None):
-    """This function is mean to be used on ligand_fep_setup and complex_fet_setup.
-    It will create the structure of the simulation directory: {sim_dir}/simulation/{lambda_type}.{i}/{step}/{step}.mdp
+    """This function is meant to be used on ``ligand_fep_setup`` and ``complex_fet_setup`` rules.
+    It will create the structure of the simulation directory: ``{sim_dir}/simulation/{lambda_type}.{i}/{step}/{step}.mdp``
+
     Where:
+
         * i:  init-lambda-state,
         * step: the name of the simulation to carry on
 
@@ -152,6 +155,9 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
         lambdas for the complex simulations
     mdp_extra_kwargs : dict
         The MDP options for the fep calculations on every step. This dictionary must have the structure:
+
+        .. code-block:: text
+
             {
             'vdw':{
                 'step1': <mdp options>,
@@ -171,9 +177,9 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
     Raises
     ------
     ValueError
-        In case of an invalid lambda_type
+        In case of an invalid ``lambda_type``
     ValueError
-        In case of an invalid sys_type
+        In case of an invalid ``sys_type``
     """
     sim_dir = Path(sim_dir)
     valid_lambda_types = ["vdw", "coul", "bonded"]

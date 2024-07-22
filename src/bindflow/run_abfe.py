@@ -5,11 +5,12 @@ from pathlib import Path
 from typing import List, Union
 from warnings import warn
 
+from bindflow._gmx_check import check_gromacs_installation
 from bindflow._version import __version__
 from bindflow.free_energy import gather_results
 from bindflow.orchestration.flow_builder import approach_flow
+from bindflow.orchestration.generate_scheduler import Scheduler, SlurmScheduler
 from bindflow.utils import tools
-from bindflow._gmx_check import check_gromacs_installation
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -34,6 +35,7 @@ def calculate_abfe(
         submit: bool = False,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
+        scheduler_class: Scheduler = SlurmScheduler,
         global_config: dict = {}
         ) -> None:
     """Main function of BindFlow to execute Absolute Binding Free Energy (ABFE) calculations
@@ -176,9 +178,9 @@ def calculate_abfe(
                 You can use yoru custom force field, but custom_ff_path must be provided
 
     hmr_factor : Union[float, None], optional
-         The Hydrogen Mass Factor to use, by default 3.0.
+        The Hydrogen Mass Factor to use, by default 3.0.
 
-         WARNING:
+        .. warning::
             For provided topologies if hmr_factor is set, it will pass any way.
             So for topology files with already HMR, this should be None.
             And all the topologies should be provided
@@ -215,6 +217,17 @@ def calculate_abfe(
         If True more stuff will be printed, by default False
     job_prefix : Union[None, str], optional
         A prefix to identify the jobs in the HPc cluster queue, by default None
+
+    scheduler_class : Schedular, optional
+        This is a class to schedule the jobs and specify how to handle computational resources, by default SlurmScheduler
+
+        The module :mod:`bindflow.orchestration.generate_scheduler` presents the template class
+        :meth:`bindflow.orchestration.generate_scheduler.Scheduler` which can be used to create customized Schedular based on user needs.
+        :mod:`bindflow.orchestration.generate_scheduler` also contains the following functional and already tested schedular:
+
+        #. :meth:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
+        #. :meth:`bindflow.orchestration.generate_scheduler.FrontEnd`: To execute the workflow in a frontend-like computer. E.g. LAPTOP, workstation, etc.
+
     global_config : dict, optional
         The rest of the configuration and fine tunning of the workflow goes here, by default {}
 
@@ -247,9 +260,9 @@ def calculate_abfe(
         if dt_max > 0.002:
             warn(f"{hmr_factor =} and {dt_max =}. hmr_factor is not been, therefore dt_max should be <= 0.002 ps")
 
-    # IO:
     # Initialize inputs on config
-    _global_config["calculation_type"] = 'fep'  # To leave room for other type of calculations
+    _global_config["calculation_type"] = 'fep'
+    _global_config["scheduler_class"] = scheduler_class
     _global_config["inputs"] = {}
     _global_config["inputs"]["protein"] = tools.input_helper(arg_name='protein', user_input=protein, default_ff='amber99sb-ildn', optional=False)
     # TODO check that is a list, tuple or string, iterable is nto enough because the dict is an iterable. Not clear how to check for this
