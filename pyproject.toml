@@ -82,8 +82,8 @@ where = ["src"]
 bindflow = [
     "LICENSE",
     "data/gmx_ff/*.tar.gz",
-    "data/water_models/*.tar.gz",
-    "data/water_models/*.yml",
+    "data/gmx_water_models/*.tar.gz",
+    "data/gmx_water_models/*.yml",
     "data/ci_systems/**/*.yml",
     "data/ci_systems/**/*.tar.gz",
     "mdp/templates/**/*.mdp",
