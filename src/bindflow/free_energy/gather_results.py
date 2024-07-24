@@ -233,7 +233,7 @@ def get_all_mmxbsa_dgs(full_df: pd.DataFrame, columns_to_process: Union[None, Li
         replica_counts = grouped['replica'].nunique().reset_index(name='num_replicas')
 
         # Calculate total samples
-        total_samples = grouped['sample'].sum().reset_index(name='total_samples')
+        total_samples = grouped['sample'].count().reset_index(name='total_samples')
 
         # Merge the results
         final_df = mean_df.merge(sem_df, on='name', suffixes=('_mean', '_sem'))
