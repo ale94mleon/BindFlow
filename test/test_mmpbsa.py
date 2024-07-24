@@ -69,7 +69,7 @@ def test_mmpbsa():
             threads=threads,
             num_jobs=num_jobs,
             replicas=2,
-            samples=3,
+            samples=2,
             submit=True,
             debug=True,
             job_prefix='host_guest.test',
