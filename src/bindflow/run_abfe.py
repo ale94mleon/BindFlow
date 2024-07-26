@@ -221,11 +221,11 @@ def calculate_abfe(
         This is a class to schedule the jobs and specify how to handle computational resources, by default SlurmScheduler
 
         The module :mod:`bindflow.orchestration.generate_scheduler` presents the template class
-        :meth:`bindflow.orchestration.generate_scheduler.Scheduler` which can be used to create customized Scheduler based on user needs.
+        :class:`bindflow.orchestration.generate_scheduler.Scheduler` which can be used to create customized Scheduler based on user needs.
         :mod:`bindflow.orchestration.generate_scheduler` also contains the following functional and already tested schedular:
 
-        #. :meth:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
-        #. :meth:`bindflow.orchestration.generate_scheduler.FrontEnd`: To execute the workflow in a frontend-like computer. E.g. LAPTOP, workstation, etc.
+        #. :class:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
+        #. :class:`bindflow.orchestration.generate_scheduler.FrontEnd`: To execute the workflow in a frontend-like computer. E.g. LAPTOP, workstation, etc.
 
     global_config : dict, optional
         The rest of the configuration and fine tunning of the workflow goes here, by default {}

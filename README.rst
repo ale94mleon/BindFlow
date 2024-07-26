@@ -15,8 +15,6 @@ BindFlow
       - |github|
     * - **Dependencies**
       - |rdkit|
-    * - **License**
-      - |license|
 
 
 Description
@@ -96,8 +94,8 @@ This project received funding from `Marie Skłodowska-Curie Actions <https://cor
 .. ..  |crem| image:: https://img.shields.io/static/v1?label=Powered%20by&message=CReM&color=9438ff&style=flat
 ..     :target: https://crem.readthedocs.io/en/latest/
 ..     :alt: crem
-..  |license| image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
-    :target: https://github.com/ale94mleon/BindFlow/?tab=Apache-2.0-1-ov-file#readme
+..  |license| image:: https://img.shields.io/badge/License-GPLv3-green
+    :target: https://github.com/ale94mleon/BindFlow/
     :alt: license
 .. ..  |downloads| image:: https://static.pepy.tech/personalized-badge/BindFlow?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads
 ..     :target: https://pepy.tech/project/BindFlow
