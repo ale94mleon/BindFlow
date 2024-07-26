@@ -38,7 +38,7 @@ def calculate_mmpbsa(
         global_config: dict = {}
         ) -> None:
     """Main function of BindFlow to execute
-    Molecular Mechanic Poisson/General-Boltzmann Surface Area MM(P/G)BSA calculations
+    Molecular Mechanic Poisson-Boltzmann/Generalized-Born Surface Area MM(P/G)BSA calculations
 
     Parameters
     ----------
