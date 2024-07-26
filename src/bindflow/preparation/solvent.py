@@ -355,7 +355,7 @@ class Solvate:
             if isinstance(load_dependencies, List):
                 self.load_dependencies = tools.HARD_CODE_DEPENDENCIES + ["export GMX_MAXBACKUP=-1"] + load_dependencies
             else:
-                raise ValueError(f"load_dependencies must be an List. Provided: {load_dependencies}")
+                raise ValueError(f"load_dependencies must be a List. Provided: {load_dependencies}")
 
     def _get_gmx_water_model(self, out_dir: tools.PathLike) -> Tuple[tools.PathLike]:
         """
@@ -400,7 +400,7 @@ class Solvate:
 
         Parameters
         ----------
-        top : _type_
+        top : top: tools.PathLike
             Topology file to be modified.
         """
         with open(top, 'r') as f:

@@ -184,7 +184,7 @@ def calculate_mmpbsa(
 
     water_model : str, optional
         The water force field to use, by default amber/tip3p.
-        if you would likle to use the flexible definition of the CHARMM TIP3P
+        if you would like to use the flexible definition of the CHARMM TIP3P
         you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
 
     custom_ff_path : Union[None, PathLike], optional
@@ -220,11 +220,11 @@ def calculate_mmpbsa(
     job_prefix : Union[None, str], optional
         A prefix to identify the jobs in the HPc cluster queue, by default None
 
-    scheduler_class : Schedular, optional
+    scheduler_class : Scheduler, optional
         This is a class to schedule the jobs and specify how to handle computational resources, by default SlurmScheduler
 
         The module :mod:`bindflow.orchestration.generate_scheduler` presents the template class
-        :meth:`bindflow.orchestration.generate_scheduler.Scheduler` which can be used to create customized Schedular based on user needs.
+        :meth:`bindflow.orchestration.generate_scheduler.Scheduler` which can be used to create customized Scheduler based on user needs.
         :mod:`bindflow.orchestration.generate_scheduler` also contains the following functional and already tested schedular:
 
         #. :meth:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
@@ -290,7 +290,7 @@ def calculate_mmpbsa(
         _global_config["job_prefix"] = ""
 
     # This will only be needed for developing propose.
-    os.environ['abfe_debug'] = str(debug)
+    os.environ['BINDFLOW_DEBUG'] = str(debug)
 
     # Generate output folders
     if not Path(_global_config["out_approach_path"]).is_dir():

@@ -175,8 +175,8 @@ class SlurmScheduler(Scheduler):
             It also will set self._snakemake_str_cmd to the command string value
         """
         # TODO, For DEBUG Only
-        if 'abfe_debug' in os.environ:
-            if os.environ['abfe_debug'] == 'True':
+        if 'BINDFLOW_DEBUG' in os.environ:
+            if os.environ['BINDFLOW_DEBUG'] == 'True':
                 verbose = True
                 debug_dag = True
                 keep_going = False
@@ -358,8 +358,8 @@ class FrontEnd(Scheduler):
             It also will set self._snakemake_str_cmd to the command string value
         """
         # TODO, For DEBUG Only
-        if 'abfe_debug' in os.environ:
-            if os.environ['abfe_debug'] == 'True':
+        if 'BINDFLOW_DEBUG' in os.environ:
+            if os.environ['BINDFLOW_DEBUG'] == 'True':
                 verbose = True
                 debug_dag = True
                 keep_going = False
