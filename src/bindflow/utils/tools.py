@@ -5,7 +5,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import List, Tuple, Union, Iterable
+from typing import Iterable, List, Tuple, Union
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -421,7 +421,7 @@ def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str =
         It may be that the function fail because the directory is too large, in this case you must split the directory,
         this was the case for the p38 campaign (https://github.com/openforcefield/protein-ligand-benchmark) with 3 replicas
 
-        BE AWARE OF THE IMPLICATION TO DELETE A SIMULATION DIRECTORY with the option remove_dirs = True
+        BE AWARE OF THE IMPLICATION TO DELETE A SIMULATION DIRECTORY with the option ``remove_dirs = True``
 
     In-house benchmark showed:
 
@@ -536,7 +536,7 @@ def _filter_helper(TarInfo: str, suffix: Tuple[str], prefix: Tuple[str] = ('main
 
 def unarchive(archive_file: PathLike, target_path: PathLike,
               only_with_suffix: Union[None, List[str]] = None, prefix: Tuple[str] = ('main_project.tar')):
-    """It unarchive a project archived by the function :meth:`bindflow.utils.tools.archive`
+    """It unarchive a project archived by the function :func:`bindflow.utils.tools.archive`
 
     Parameters
     ----------
@@ -597,7 +597,7 @@ def recursive_update_dict(original_dict: dict, update_dict: dict) -> None:
 
 def config_validator(global_config: dict) -> List:
     """It checks for the validity of the global config.
-    This dictionary is used for :meth:`bindflow.run_abfe.calculate_abfe` and :meth:`bindflow.run_mmpbsa.calculate_mmpbsa`
+    This dictionary is used for :func:`bindflow.run_abfe.calculate_abfe` and :func:`bindflow.run_mmpbsa.calculate_mmpbsa`
 
     Parameters
     ----------
@@ -753,6 +753,12 @@ def input_helper(arg_name: str, user_input: Union[PathLike, dict, None], default
                 if not Path(internal_dict['top']).exists():
                     raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
                 internal_dict['top'] = os.path.abspath(internal_dict['top'])
+
+            # set to None unused variables:
+            if internal_dict['conf'] and internal_dict['top']:
+                internal_dict['ff']['code'] = None
+                if 'type' in internal_dict['ff']:
+                    internal_dict['ff']['type'] = None
 
         # This is the case that only a path was provided
         else:
