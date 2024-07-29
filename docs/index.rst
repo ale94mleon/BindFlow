@@ -16,16 +16,13 @@ Welcome to BindFlow's documentation!
 
 
 .. toctree::
-   :caption: Documentation
    :maxdepth: 1
-   :glob:
 
-   source/api
+   source/guides/index
 
 .. toctree::
-   :caption: Reference
+   :caption: 📖 Reference
    :maxdepth: 1
-   :glob:
 
    source/CHANGELOG
    source/api-reference

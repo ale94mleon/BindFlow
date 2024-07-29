@@ -128,7 +128,7 @@ def calculate_abfe(
                 With this parameter you can access different small molecule force fields
 
             * is_water -> If presents and set to True; it is assumed that this is a water system
-            and that will change the settles section to tip3p-like triangular constraints.
+            and that will change the settles section (if any) to tip3p-like triangular constraints.
             This is needed for compatibility with GROMACS. Check here:
             https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
 

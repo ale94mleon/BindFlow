@@ -45,6 +45,7 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
     "myst_nb",
+    "sphinx_design",
     "sphinx_inline_tabs",
     "sphinx_copybutton",
 ]
