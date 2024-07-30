@@ -16,7 +16,7 @@ Welcome to BindFlow's documentation!
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    source/guides/index
 
