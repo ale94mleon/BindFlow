@@ -1,7 +1,8 @@
 # Force fields
 
-BindFlow provides several out-of-the-box force fields for users. This section explains how to access these force fields and integrate custom force fields within BindFlow. We mainly focus on the input possibilities for [BindFlow's runner](../modules/runners) functions.
-BindFlow offers a variety of force fields, but as Uncle Ben says, "With great power comes great responsibility." Users must choose the appropriate combination of force fields. By default, BindFlow offers a suitable combination.
+BindFlow provides several out-of-the-box force fields. This section explains how to access them and integrate custom force fields within BindFlow. We mainly focus on the input possibilities for [BindFlow's runner](#bindflow-runners) functions.
+
+BindFlow offers a variety of force field options, but as Uncle Ben says, "With great power comes great responsibility." Users must choose the appropriate combination of force fields. By default, BindFlow offers a suitable combination.
 
 ## Structure inputs
 
@@ -120,8 +121,18 @@ calculate_abfe(
 `````{tab} by code
 ````{tab} on GROMACS distribution
 
-You can access all the [GROMACS force fields](https://manual.gromacs.org/current/user-guide/force-fields.html) by their code, they will be pass to [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) through the flag `-ff`.
+You can access all the [GROMACS force fields](https://manual.gromacs.org/current/user-guide/force-fields.html) by their code, they will be pass to [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) through the flag `-ff` after been fixed with [PDBFixer](https://github.com/openmm/pdbfixer).
 
+```{hint}
+It is advised to spend some time on the processing of the protein beforehand (better a minute than repeat the whole campaign):
+
+1. Missing atoms
+2. Missing loops
+3. Terminal capping
+4. Protonation state
+
+All the above steps are highly system-dependent, and while PDBFixer can handle some minor issues, it is far from perfect. In addition, our use of PDBFixer is very simple
+```
 
 ```python
 calculate_abfe(
@@ -138,7 +149,7 @@ calculate_abfe(
 ````
 ````{tab} external
 
-To add even more flexibility, you can use any external force field ported to GROMACS, in this case you just need to copy your `force_field.ff` (e.g. `charmm36-jul2022.ff`) to your desired directory and pass the path to `custom_ff_path` parameter. If you have more force fields, you can copy all of them in the same directory. BindFlow will internally set the following environmental variable at run time.
+To add even more flexibility, you can use any external force field ported to GROMACS, in this case you just need to copy your `force_field.ff` (e.g. `charmm36-jul2022.ff`) to your desired directory and pass the path of this directory to `custom_ff_path` parameter. If you have more force fields, you can copy all of them in the same directory. BindFlow will internally set the following environmental variable at run time.
 
 ```python
 os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
@@ -148,7 +159,18 @@ os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
 See how the force field directory ends in `.ff`; e.g. `charmm36-jul2022.ff`. This is needed.
 ```
 
-custom_ff_path='parent/directory/of/custom.ff'
+The force field code (e.g. for `charmm36-jul2022.ff`, the code is `charmm36-jul2022`) will be pass to [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) through the flag `-ff` after been fixed with [PDBFixer](https://github.com/openmm/pdbfixer).
+
+```{hint}
+It is advised to spend some time on the processing of the protein beforehand (better a minute than repeat the whole campaign):
+
+1. Missing atoms
+2. Missing loops
+3. Terminal capping
+4. Protonation state
+
+All the above steps are highly system-dependent, and while PDBFixer can handle some minor issues, it is far from perfect. In addition, our use of PDBFixer is very simple
+```
 
 ```python
 calculate_abfe(
@@ -474,3 +496,60 @@ calculate_abfe(
 `````
 ``````
 ````````
+
+## Water models
+
+BindFlow comes with (at present 07.2024) all water models distributed with GROMACS. They are set by the keyword: `water_model`. E.g.:
+
+```python
+calculate_abfe(
+    ...
+    water_model="amber/tip3p"
+    ...
+)
+```
+
+The structure of the string is `force_field_family/water_model`; `amber/tip3p` is the default. See {py:meth}`bindflow.preparation.solvent.Solvate.__init__` for a list of all available water models.
+
+## MDP options modification based on the force field. AMBER and CHARMM36-like force fields example
+
+Some Molecular Dynamic Parameters (MDP) are usually, rather than interchangeable options, parts of each force field derivation and parametrization. So, we should always use those parameters during our simulations. A typical example are AMBER and CHARMM36-like force fields:
+
+````{tab} AMBER-like force fields
+
+BindFlow use this parameter by default. So, you do not need to modify them.
+
+```yaml
+constraints: all-bonds
+cutoff-scheme: Verlet
+vdwtype: cutoff
+vdw-modifier: Potential-Shift-Verlet
+rlist: 1.2
+rvdw: 1.0
+coulombtype: PME
+rcoulomb: 1.0
+DispCorr: EnerPres
+```
+````
+
+````{tab} CHARMM36-like force fields
+
+In this case you should pass to to all the steps these parameters. BindFlow works with AMBER-like force fields by default
+
+```yaml
+constraints: h-bonds
+cutoff-scheme: Verlet
+vdwtype: cutoff
+vdw-modifier: force-switch
+rlist: 1.2
+rvdw: 1.2
+rvdw-switch: 1.0
+coulombtype: PME
+rcoulomb: 1.2
+DispCorr: no
+```
+````
+
+## Final note
+
+Remember to cite properly the main references if you use any of the force fields in your work.
