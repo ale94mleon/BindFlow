@@ -416,9 +416,13 @@ class Solvate:
                 if line.startswith('['):
                     idx_ends = i
                     break
+        # Add missing atom_types for solvation
+        # Extra atom_types will be removed when parmed write the structure
         if idx_begins is not None and idx_ends is not None:
             atom_types = get_atom_types(top)
-            atom_types.update(get_atom_types(self.ffnonbonded_itp))
+            for atom_type_name, atom_type_info in get_atom_types(self.ffnonbonded_itp).items():
+                if atom_type_name not in atom_types:
+                    atom_types[atom_type_name] = atom_type_info
             with open(top, 'w') as f:
                 f.write("".join(lines[:idx_begins] + list(atom_types.values()) + lines[idx_ends:]))
 
