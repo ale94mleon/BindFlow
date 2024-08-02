@@ -12,6 +12,7 @@ Welcome to BindFlow's documentation!
 
    source/installation
    source/citations
+   source/about-us
    source/tutorials
 
 
