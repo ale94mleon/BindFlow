@@ -327,10 +327,6 @@ class Solvate:
         self.builder_dir = Path(builder_dir).resolve()
         self.builder_dir.mkdir(exist_ok=True, parents=True)
 
-        # Make directory to save water model files (those could be used during several calls)
-        self.water_model_dir = self.builder_dir/'water_model'
-        self.water_model_dir.mkdir(exist_ok=True, parents=True)
-
         # Make directory to save topologies after solvation.
         # This will be cleaned out and created every time the class is called (at the beginning)
         # to avoid mismatch.ch between files generated on different calls
@@ -349,7 +345,7 @@ class Solvate:
 
         self.force_field_family = force_field_family
         self.water_model = water_model
-        self.water_itp, self.ions_itp, self.ffnonbonded_itp, self.water_gro = self._get_gmx_water_model(self.water_model_dir)
+        self.water_itp, self.ions_itp, self.ffnonbonded_itp, self.water_gro = self._get_gmx_water_model()
         self.cwd = os.getcwd()
         if load_dependencies:
             if isinstance(load_dependencies, List):
@@ -357,14 +353,9 @@ class Solvate:
             else:
                 raise ValueError(f"load_dependencies must be a List. Provided: {load_dependencies}")
 
-    def _get_gmx_water_model(self, out_dir: tools.PathLike) -> Tuple[tools.PathLike]:
+    def _get_gmx_water_model(self) -> Tuple[tools.PathLike]:
         """
         Retrieve water model files
-
-        Parameters
-        ----------
-        water_model_code : tools.PathLike
-            Water model code in the form: "{force field family}/{water model}"
 
         Returns
         -------
@@ -375,22 +366,14 @@ class Solvate:
                 * water (configuration) gro file
                 * atom type itp definition
         """
-        out_dir = Path(out_dir)
         # Extract water and ions topologies
-        fname_wm = Path(home(dataDir='gmx_water_models'))/f'{self.force_field_family}.tar.gz'
-        with tarfile.open(fname_wm, "r:gz") as tf:
-            tf.extract(member=f"{self.force_field_family}/{self.water_model}.itp", path=out_dir)
-            tf.extract(member=f"{self.force_field_family}/ions.itp", path=out_dir)
-            tf.extract(member=f"{self.force_field_family}/ffnonbonded.itp", path=out_dir)
+        ff_dir = Path(home(dataDir='gmx_water_models'))
 
-        # Extract water configuration
-        fname_wc = Path(home(dataDir='gmx_water_models'))/'configurations.tar.gz'
-        with tarfile.open(fname_wc, "r:gz") as tf:
-            tf.extract(member=f"configurations/{self.water_models_data[self.force_field_family][self.water_model]}", path=out_dir)
-        water_itp = (out_dir/str(self.force_field_family)/f"{self.water_model}.itp").resolve()
-        ions_itp = (out_dir/str(self.force_field_family)/"ions.itp").resolve()
-        ffnonbonded_itp = (out_dir/str(self.force_field_family)/"ffnonbonded.itp").resolve()
-        water_gro = (out_dir/"configurations"/self.water_models_data[self.force_field_family][self.water_model]).resolve()
+        water_itp = (ff_dir/str(self.force_field_family)/f"{self.water_model}.itp").resolve()
+        ions_itp = (ff_dir/str(self.force_field_family)/"ions.itp").resolve()
+        ffnonbonded_itp = (ff_dir/str(self.force_field_family)/"ffnonbonded.itp").resolve()
+        water_gro = (ff_dir/"configurations"/self.water_models_data[self.force_field_family][self.water_model]).resolve()
+
         return water_itp, ions_itp, ffnonbonded_itp, water_gro
 
     def _include_all_atom_types(self, top: tools.PathLike) -> None:

@@ -1,8 +1,8 @@
 # Descriptions of files and force fields
 
-All configuration and topology files are sourced from GROMACS force fields, available at: [GROMACS GitLab - share/top](https://gitlab.com/gromacs/gromacs/-/tree/main/share/top?ref_type=heads). These files contain topologies and configurations for water models and ions within three force field families: AMBER, CHARMM, and OPLS-AA.
+All configuration and topology files are sourced from GROMACS force fields, available at [GROMACS GitLab - share/top](https://gitlab.com/gromacs/gromacs/-/tree/main/share/top?ref_type=heads). These files contain topologies and configurations for water models and ions within three force field families: AMBER, CHARMM, and OPLS-AA.
 
-It is assumed that inside the same family the non-bonded interactions are the same (`epsilon` and `sigma` parameters), which is true for the force fields presented in the GROMACS distribution.
+It is assumed that inside the same family, the non-bonded interactions are the same (`epsilon` and `sigma` parameters), which is true for the force fields presented in the GROMACS distribution.
 
 The `ffnonbonded.itp` for each family was taken from:
 
