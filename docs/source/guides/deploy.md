@@ -1,5 +1,7 @@
 # BindFlow's deploy
 
+(bindflow-deploy)=
+
 As with any other Snakemake workflow, BindFlow can be deployed in a variety of environments, the only thing to change is how we call the [snakemake command](https://snakemake.readthedocs.io/en/stable/executing/cli.html).
 
 At the `approach` directory, you can:

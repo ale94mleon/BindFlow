@@ -213,6 +213,7 @@ This project has an [Sphinx](https://www.sphinx-doc.org/en/master/) documentatio
   sphinx==7.2.6
   sphinx_design
   sphinxcontrib-katex
+  sphinxcontrib-mermaid
   sphinx-inline-tabs
   sphinx_copybutton
   sphinx-autobuild

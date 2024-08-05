@@ -48,6 +48,7 @@ extensions = [
     "sphinx_design",
     "sphinx_inline_tabs",
     "sphinx_copybutton",
+    "sphinxcontrib.mermaid",
 ]
 
 
@@ -119,5 +120,4 @@ intersphinx_mapping = {'Python': ('https://docs.python.org/3/', None),
                        'numpy': ('https://numpy.org/doc/stable/', None),
                        'rdkit': ('https://www.rdkit.org/docs/', None),
                        'pandas': ('https://pandas.pydata.org/docs/', None),
-                       'parmed': ('https://parmed.github.io/ParmEd/html/index.html', None),
                        }

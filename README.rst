@@ -11,8 +11,6 @@ BindFlow
       - |github|
     * - **License**
       - |license|
-    * - **Source Code**
-      - |github|
     * - **Dependencies**
       - |rdkit|
 
