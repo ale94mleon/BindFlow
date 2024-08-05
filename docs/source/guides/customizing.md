@@ -177,3 +177,156 @@ nwindows:
       bonded: 11
 ```
 ````
+
+## `mmpbsa` (optional)
+
+This section is used to set the MM(PB/GB)SA calculations (only useful if {py:func}`bindflow.run_mmpbsa.calculate_mmpbsa`). These parameters are passed to [gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/) package through the `.in` file.
+
+````{dropdown} Example of nwindows section
+:color: info
+:animate: fade-in-slide-down
+:icon: rocket
+
+```yaml   
+mmpbsa:
+  general: 
+    c2_entropy: 1
+    qh_entropy: 1
+    interaction_entropy: 1
+    startframe: 10
+  pb: {} # enable MMPBSA computation
+  gb: {} # enable MMGBSA computation
+```
+````
+
+## `mdp` (optional)
+
+This section is used to control all Molecular Dynamic Parameters for every single step
+
+`````{dropdown} Example of mdp section
+:color: info
+:animate: fade-in-slide-down
+:icon: rocket
+
+Here we are only changing the `nsteps` parameter of some of the involved steps.
+
+````{tab} Equilibration
+```yaml   
+mdp:
+  ligand:
+    equi:
+      01_nvt:
+        nsteps: 25
+      prod:
+        nsteps: 250
+  complex:
+    equi:
+      04_npt:
+        nsteps: 25
+      prod:
+        nsteps: 250
+
+```
+````
+
+````{tab} FEP
+```yaml   
+mdp:
+  ligand:
+    fep:
+      vdw:
+        01_nvt:
+          nsteps: 25
+        prod:
+          nsteps: 250
+      coul:
+        01_nvt:
+          nsteps: 25
+        prod:
+          nsteps: 250
+  complex:
+    equi:
+    fep:
+      vdw:
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
+      coul:
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
+      bonded:
+        02_npt:
+          nsteps: 25
+        03_npt_norest:
+          nsteps: 25
+        prod:
+          nsteps: 250
+
+```
+````
+
+````{tab} MM(PB/GB)SA
+```yaml   
+mdp:
+  complex:
+    mmpbsa:
+      prod:
+        nsteps: 400
+
+```
+````
+
+`````
+
+You can explore what are the steps involved in your calculation:
+
+````{tab} Equilibration steps for membrane protein-ligand system
+
+```python
+from bindflow.utils.tools import list_if_file
+from bindflow.mdp._path_handler import _TemplatePath
+print(list_if_file(_TemplatePath.complex.membrane.equi))
+```
+````
+
+````{tab} FEP steps for soluble protein-ligand system
+
+```python
+from bindflow.utils.tools import list_if_file
+from bindflow.mdp._path_handler import _TemplatePath
+print(list_if_file(_TemplatePath.complex.soluble.fep))
+```
+````
+
+````{tab} MM(PB/GB)SA step for membrane protein-ligand system
+
+```python
+from bindflow.utils.tools import list_if_file
+from bindflow.mdp._path_handler import _TemplatePath
+print(list_if_file(_TemplatePath.complex.membrane.mmpbsa))
+```
+````
+
+````{tab} Equilibration steps for the ligand in water
+
+```python
+from bindflow.utils.tools import list_if_file
+from bindflow.mdp._path_handler import _TemplatePath
+print(list_if_file(_TemplatePath.ligand.equi))
+```
+````
+
+You can also take a look a the default parameters of the step. In the following example, you can print the parameters for the `prod` step of the membrane protein-ligand complex equilibration phase in the MDP format.
+
+```python
+from bindflow.mdp._path_handler import _TemplatePath
+from bindflow.mdp.mdp import MDP
+print(MDP().from_file(_TemplatePath.complex.membrane.equi + "/prod.mdp").to_string())
+```
