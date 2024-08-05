@@ -424,7 +424,7 @@ class Solvate:
                 if atom_type_name not in atom_types:
                     atom_types[atom_type_name] = atom_type_info
             with open(top, 'w') as f:
-                f.write("".join(lines[:idx_begins] + list(atom_types.values()) + lines[idx_ends:]))
+                f.write("".join(lines[:idx_begins] + list(atom_types.values()) + ["\n\n"] + lines[idx_ends:]))
 
     def _include_water_ions_params(self, top: tools.PathLike) -> None:
         """It add include statements to the corresponded water and ion itp files
