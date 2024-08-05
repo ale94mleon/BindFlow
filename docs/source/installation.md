@@ -100,7 +100,7 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
 
 ````{tab} Linux 🐧
   ```bash
-  VERSION="2024.6"
+  VERSION="2022.6"
   TARGET_LOCATION="gromacs/${VERSION}"
   SOURCE="https://gitlab.com/gromacs/gromacs.git"
   SOURCE_REF="v${VERSION}"
