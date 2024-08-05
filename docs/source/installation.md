@@ -96,7 +96,7 @@ conda activate BindFlow
 
 Here, we will demonstrate how to build GROMACS from Source (courtesy of [Maciej Wójcik](https://biophys.uni-saarland.de/author/maciej-wojcik/)). If this method does not work, consult the [GROMACS Installation Guide](https://manual.gromacs.org/current/install-guide/index.html) for more information.
 
-BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis-2.7.0 (2024.07.16), does not read TPR files generated for GROMACS >= 2023. So, GROMACS==2024.6 is a good option.
+BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis-2.7.0 (2024.07.16), does not read TPR files generated for GROMACS >= 2023. So, GROMACS==2022.6 is a good option.
 
 ````{tab} Linux 🐧
   ```bash
