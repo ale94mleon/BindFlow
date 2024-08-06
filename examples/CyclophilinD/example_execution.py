@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 import glob
 import yaml
-from bindflow.run_abfe import calculate_abfe
+from bindflow.runners import calculate
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 
 with open("config.yml", "r") as c:
     global_config = yaml.safe_load(c)
 
-calculate_abfe(
+calculate(
+    calculation_type='fep',
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
-    out_root_folder_path="abfe",
+    out_root_folder_path="fep",
     hmr_factor=2.5,
     threads=12,
     num_jobs=100000,

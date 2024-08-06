@@ -1,12 +1,13 @@
 import glob
-from bindflow.run_abfe import calculate_abfe
+from bindflow.runners import calculate
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
 
-calculate_abfe(
+calculate(
+    calculation_type='fep',
     protein_pdb_path='inputs/protein.pdb',
     ligand_mol_paths=ligand_mols,
-    out_root_folder_path="abfe",
+    out_root_folder_path="fep",
     membrane_pdb_path='inputs/membrane.pdb',
     cofactor_mol_path='inputs/dummy_cofactor_23.mol',
     hmr_factor=3,

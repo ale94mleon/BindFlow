@@ -19,17 +19,17 @@ def dag_maker(input_path, out_name):
     os.chdir(cwd)
 
 
-def abfe_check_results(out_root_folder_path, out_csv_summary, out_csv_raw):
+def fep_check_results(out_root_folder_path, out_csv_summary, out_csv_raw):
     from bindflow.free_energy import gather_results
 
-    df_summary = gather_results.get_all_abfe_dgs(root_folder_path=out_root_folder_path)
+    df_summary = gather_results.get_all_fep_dgs(root_folder_path=out_root_folder_path)
     if len(df_summary):
         df_summary = df_summary.sort_values(by='MBAR').reset_index()
         if out_csv_summary:
             df_summary.to_csv(out_csv_summary)
         print(df_summary)
         if out_csv_raw:
-            df_raw = gather_results.get_raw_abfe_data(root_folder_path=out_root_folder_path)
+            df_raw = gather_results.get_raw_fep_data(root_folder_path=out_root_folder_path)
             if len(df_raw):
                 df_raw.to_csv(out_csv_raw)
     else:
@@ -75,21 +75,21 @@ def main():
         help='Name of the output image. The suffix `.png` will be added at the end',
         default='dag', type=str)
 
-    abfe_check = subparsers.add_parser(
-        'check_abfe',
-        help="Check for completion of an ABFE workflow")
-    abfe_check.add_argument(
+    fep_check = subparsers.add_parser(
+        'check_fep',
+        help="Check for completion of an FEP workflow")
+    fep_check.add_argument(
         dest='out_root_folder_path',
-        help='ABFE directory (`out_root_folder_path` kwarg of :func:`bindflow.run_abfe.calculate_abfe`)',
+        help='fep directory (`out_root_folder_path` kwarg of :func:`bindflow.runners.calculate`)',
         type=str)
-    abfe_check.add_argument(
+    fep_check.add_argument(
         '-os', '--out_csv_summary',
         help="The path to output the summary csv file, by default None",
         dest='out_csv_summary',
         nargs=argparse.OPTIONAL,
         default=None,
         type=str)
-    abfe_check.add_argument(
+    fep_check.add_argument(
         '-or', '--out_csv_raw',
         help="The path to output the raw csv file, by default None",
         dest='out_csv_raw',
@@ -99,10 +99,10 @@ def main():
 
     mmxbsa_check = subparsers.add_parser(
         'check_mmxbsa',
-        help="Check for completion of an MM(P/B)BSA workflow")
+        help="Check for completion of an MM(PB/GB)SA workflow")
     mmxbsa_check.add_argument(
         dest='out_root_folder_path',
-        help='MM(P/B)BSA directory (`out_root_folder_path` kwarg of :func:`bindflow.run_mmpbsa.calculate_mmpbsa`)',
+        help='MM(P/B)BSA directory (`out_root_folder_path` kwarg of :func:`bindflow.runners.calculate`)',
         type=str)
     mmxbsa_check.add_argument(
         '-os', '--out_csv_summary',
@@ -123,11 +123,11 @@ def main():
 
     if args.command is None:
         print(f"You are using BindFlow: {__version__}")
-        print("Chose from the commands options: dag, check_abfe ...")
+        print("Chose from the commands options: dag, check_fep, check_mmxbsa")
     elif args.command == "dag":
         dag_maker(input_path=args.input_path, out_name=args.out_name)
-    elif args.command == "check_abfe":
-        abfe_check_results(
+    elif args.command == "check_fep":
+        fep_check_results(
             out_root_folder_path=args.out_root_folder_path,
             out_csv_summary=args.out_csv_summary,
             out_csv_raw=args.out_csv_raw)

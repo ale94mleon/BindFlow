@@ -15,7 +15,7 @@ def test_mmpbsa():
 
     from bindflow.home import home
     from bindflow.orchestration.generate_scheduler import FrontEnd
-    from bindflow.run_mmpbsa import calculate_mmpbsa
+    from bindflow.runners import calculate
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_mmpbsa_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
@@ -55,7 +55,8 @@ def test_mmpbsa():
 
         num_jobs = cpu_count()
         threads = min(4, num_jobs)
-        calculate_mmpbsa(
+        calculate(
+            calculation_type='mmpbsa',
             protein=protein,
             ligands=ligands,
             out_root_folder_path=str(tmp_path / "mmpbsa-frontend"),
@@ -69,7 +70,6 @@ def test_mmpbsa():
             threads=threads,
             num_jobs=num_jobs,
             replicas=2,
-            samples=2,
             submit=True,
             debug=True,
             job_prefix='host_guest.test',

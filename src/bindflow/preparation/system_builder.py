@@ -108,8 +108,8 @@ def system_combiner(**md_elements):
     return md_system
 
 
-def make_abfe_dir(out_dir: PathLike, ligand_dir: PathLike, sys_dir: PathLike):
-    """A copy and paste function to create the structure of the abfe directory
+def make_bindflow_dir(out_dir: PathLike, ligand_dir: PathLike, sys_dir: PathLike):
+    """A copy and paste function to create the structure of the BindFlow directory
 
     Parameters
     ----------
@@ -200,7 +200,7 @@ class CRYST1:
 
 
 class MakeInputs:
-    """This class is used for building the systems for ABFE calculation.
+    """This class is used for building the systems for a BindFlow calculation.
     It will create the necessary topology and configuration files, as well the
     correct directory trees.
     """
@@ -595,7 +595,7 @@ class MakeInputs:
     def __exit__(self, exception_type, exception_value, exception_traceback):
         self.clean()
 
-    def __call__(self, ligand_definition: Union[dict, PathLike], out_dir: str = 'abfe'):
+    def __call__(self, ligand_definition: Union[dict, PathLike], out_dir: str = 'fep'):
         """The call implementation. It identify if it is needed to build
         all the components of the systems,
         In case that the class was already called, it will assume that all the components of the system,
@@ -633,7 +633,7 @@ class MakeInputs:
                     * The path of the small MOL/SDF molecule file
 
         out_dir : str, optional
-            Where you would like to export the generated files, by default 'abfe'
+            Where you would like to export the generated files, by default 'fep'
         """
         logger.info(39*"-")
         if not isinstance(ligand_definition, dict):
@@ -704,9 +704,9 @@ class MakeInputs:
                 load_dependencies=self.load_dependencies
             )
 
-        # Construct ABFE system:
-        logger.info(f"Final build of ABFE directory on: {self.out_dir}")
-        make_abfe_dir(out_dir=self.out_dir, ligand_dir=ligand_dir, sys_dir=system_dir)
+        # Construct BindFlow system:
+        logger.info(f"Final build of BindFlow directory on: {self.out_dir}")
+        make_bindflow_dir(out_dir=self.out_dir, ligand_dir=ligand_dir, sys_dir=system_dir)
 
         # Change state
         self.__self_was_called = True

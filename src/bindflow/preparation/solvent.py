@@ -550,8 +550,8 @@ class Solvate:
     def clean(self, directory: Union[None, tools.PathLike] = None) -> None:
         """Used to delete self.builder_dir or directory if provided
 
-        Warning
-        -------
+        Danger
+        ------
         Use it wisely (when directory is provided), you may ended up deleting your computer :-)
 
         Parameters

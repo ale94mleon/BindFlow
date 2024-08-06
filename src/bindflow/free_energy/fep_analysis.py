@@ -228,7 +228,7 @@ def get_ufloat(value_error: dict) -> ufloat:
     return ufloat(value_error['value'], value_error['error'])
 
 
-# TODO, check what is going on here calculate_ABFE_ligand_dG
+# TODO, check what is going on here calculate_FEP_ligand_dG
 def get_dg_cycle(ligand_contributions: PathLike = 'dg_ligand_contributions.json',
                  complex_contributions: PathLike = 'dg_complex_contributions.json', out_csv: PathLike = 'dG_results.csv'):
 

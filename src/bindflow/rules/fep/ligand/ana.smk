@@ -1,4 +1,4 @@
-from bindflow.free_energy import abfe_analysis
+from bindflow.free_energy import fep_analysis
 # Ana
 
 # TODO Here is the main issue!!!! How can I isolate for each ligand and each replica
@@ -28,7 +28,7 @@ rule fep_ana_get_dg_ligand_contributions:
         elif 'ref_t' in mdp_params:
             temperature = float(mdp_params['ref_t'].split()[0])
 
-        abfe_analysis.get_dG_contributions(
+        fep_analysis.get_dG_contributions(
             boresch_data=None,
             out_json_path=output.ligand_json,
             # Check if it is necessary to remove some initial burning simulation time

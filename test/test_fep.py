@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.filterwarnings("ignore")
-def test_abfe():
+def test_fep():
     import tarfile
     import tempfile
     # import pytest
@@ -15,9 +15,9 @@ def test_abfe():
 
     from bindflow.home import home
     from bindflow.orchestration.generate_scheduler import FrontEnd
-    from bindflow.run_abfe import calculate_abfe
+    from bindflow.runners import calculate
 
-    with tempfile.TemporaryDirectory(dir='.', prefix='.test_abfe_') as tmp:
+    with tempfile.TemporaryDirectory(dir='.', prefix='.test_fep_') as tmp:
         home_path = Path(home(dataDir='ci_systems'))
         fname = Path(home(dataDir='ci_systems')) / 'WP6.tar.gz'
         tar = tarfile.open(fname, "r:gz")
@@ -55,10 +55,11 @@ def test_abfe():
 
         num_jobs = cpu_count()
         threads = min(4, num_jobs)
-        calculate_abfe(
+        calculate(
+            calculation_type='fep',
             protein=protein,
             ligands=ligands,
-            out_root_folder_path=str(tmp_path / "abfe-frontend"),
+            out_root_folder_path=str(tmp_path / "fep-frontend"),
             cofactor=None,
             host_name='WP6',
             host_selection='resname WP6',

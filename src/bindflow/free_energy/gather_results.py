@@ -12,7 +12,7 @@ from bindflow.free_energy import mmxbsa_analysis
 from bindflow.utils.tools import PathLike
 
 
-def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
+def get_fep_stats(replica_paths: List[PathLike]) -> dict:
     """Takes all the replica path and extract free energy statistics
 
     Parameters
@@ -28,7 +28,7 @@ def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
             #. <estimator>: the average value of the estimator
             #. <estimator>_sem: Standard error of the mean
             #. <estimator>_uncertainty_propagation: Propagate the uncertainties after the average.
-            This use the estimated uncertainties from alchemy (Check :func:`abfe.free_energy.analysis.run_alchemlyb`)
+            This use the estimated uncertainties from alchemy (Check :func:`bindflow.free_energy.fep_analysis.run_alchemlyb`)
             #. <estimator>_num_replicas: The number of replicas employed.
 
     """
@@ -55,15 +55,15 @@ def get_abfe_stats(replica_paths: List[PathLike]) -> dict:
     return final_result
 
 
-def get_all_abfe_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
-    """Get the independent ABFE free energy results and gather them.
+def get_all_fep_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
+    """Get the independent FEP results and gather them.
     Average and standard error of the mean are reported.
 
     Parameters
     ----------
     root_folder_path : PathLike
         Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/dG_results.csv".
-        This directory is the same specified on :func:`bindflow.run_abfe.calculate_abfe` through the keyword `out_root_folder_path`
+        This directory is the same specified on :func:`bindflow.runnner.calculate` through the keyword `out_root_folder_path`
     out_csv : PathLike, optional
         If given a pandas.DataFrame will be written as csv file, by default None
 
@@ -85,7 +85,7 @@ def get_all_abfe_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd
     gathered_results = []
     if dg_files_dir:
         for ligand in dg_files_dir:
-            statistics = get_abfe_stats(dg_files_dir[ligand])
+            statistics = get_fep_stats(dg_files_dir[ligand])
             statistics['ligand'] = ligand
             gathered_results.append(statistics)
 
@@ -102,21 +102,21 @@ def get_all_abfe_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd
         return pd.DataFrame()
 
 
-def get_raw_abfe_data(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
-    """Genereate raw dat for an ABFE calculation using BindFlow
+def get_raw_fep_data(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.DataFrame:
+    """Generate raw dat for an FEP calculation using BindFlow
 
     Parameters
     ----------
     root_folder_path : PathLike
         Where the simulation run. Inside it should be the files: root_folder_path + "/*/*/complex/fep/ana/dg_complex_contributions.json".
-        This directory is the same specified on :func:`bindflow.run_abfe.calculate_abfe` through the keyword `out_root_folder_path`
+        This directory is the same specified on :func:`bindflow.runners.calculate` through the keyword `out_root_folder_path`
     out_csv : PathLike, optional
         If given a pandas.DataFrame will be written as csv file, by default None
 
     Returns
     -------
      pd.DataFrame
-        Raw ABFE data, all the contributions for all ligand/replicas
+        Raw FEP data, all the contributions for all ligand/replicas
     """
     sample_data = []
     root_folder_path = Path(root_folder_path).resolve()

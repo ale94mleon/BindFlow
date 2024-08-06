@@ -122,7 +122,7 @@ We can rewrite it as:
 
 ## Where to run the main job?
 
-If you use `submit = True` for the functions `bindflow.calculate_abfe` or `bindflow.calculate_calculate_mmpbsa`. One job will be launched to the cluster with the only aim of launching the Snakemake jobs to the cluster and waiting till the completion of the entire workflow. This is inefficient: actively allocated resources in the cluster that are not been used.
+If you use `submit = True` for the functions {py:func}`bindflow.runners.calculate`. One job will be launched to the cluster with the only aim of launching the Snakemake jobs to the cluster and waiting till the completion of the entire workflow. This is inefficient: actively allocated resources in the cluster that are not been used.
 
 A workaround in case a frontend is available is to set `submit = False` and then on the `approach` directory do:
 
