@@ -20,7 +20,7 @@ extra_directives: # Optional
     ligand:
       <mdrun_keywords_for_ligand_simulation>
     complex:
-      <mdrun_keywords_for_ligand_simulation>
+      <mdrun_keywords_for_complex_simulation>
     all:
       <mdrun_keywords_for_ligand_and_complex_simulation>      
 nwindows: # Optional
@@ -64,6 +64,15 @@ mdp:  # Optional
         <mdp_complex_mm(pb/gb)sa_options>
 ```
 ````
+
+```{important}
+
+The options provided on this configuration have higher priority to those ones passed as keywords to the runner function. For example:
+
+* Pass to the runner `dt_max=0.003` and specify for an specific simulation `dt=0.004` (see [MDP section](#mdp-optional))
+* Pass to the runner `threads=12` and specify for `mdrun` the flag `-nt 10` (see [mdrun section](#mdrun-optional))
+
+```
 
 ## `cluster`
 
@@ -111,7 +120,7 @@ cluster:
 
 ### `dependencies` (optional)
 
-This is a list of executable commands to be executed before any `gmx` command. It helps inject dependencies required for the proper execution of the `gmx` command.
+This is a list of executable commands that should be run before any `gmx` command. These commands inject the necessary dependencies to ensure the proper execution of the `gmx` command.
 
 ````{dropdown} Example of dependencies section
 :color: info
@@ -127,6 +136,138 @@ extra_directives:
 
 ```
 ````
+
+### `mdrun` (optional)
+
+The user can customize the `gmx mdrun` command. By default, the command `gmx mdrun -nt {threads} -deffnm {simulation_step_name}` is built. You can adjust the `mdrun` options for the ligand, complex, or both simultaneously using the keywords `ligand`, `complex`, and `all`, respectively.
+
+``````{dropdown} Examples of mdrun section
+:color: info
+:animate: fade-in-slide-down
+:icon: rocket
+
+`````{tab} gmx mdrun [...] -cpi -stepout 5000 -v
+
+Example of full command:
+
+```bash
+gmx mdrun -nt 12 -deffnm 01_nvt -cpi -stepout 5000 -v
+```
+
+````{tab} Configuration acting only on ligand simulations
+
+```yaml
+extra_directives:
+  mdrun:
+    ligand:
+      cpi: True
+      stepout: 5000
+      v: True
+```
+````
+
+````{tab} Configuration acting only on complex simulations
+
+```yaml
+extra_directives:
+  mdrun:
+    complex:
+      cpi: True
+      stepout: 5000
+      v: True
+```
+````
+
+````{tab} Configuration acting on both ligand and complex simulations (1)
+
+```yaml
+extra_directives:
+  mdrun:
+    all:
+      cpi: True
+      stepout: 5000
+      v: True
+```
+````
+
+````{tab} Configuration acting on both ligand and complex simulations (2)
+
+```{tip}
+Note that the options for the ligand and complex are independent, meaning that you can set different options for the ligand and complex simulations.
+```
+
+```yaml
+extra_directives:
+  mdrun:
+    ligand:
+      cpi: True
+      stepout: 5000
+      v: True
+    complex:
+      cpi: True
+      stepout: 5000
+      v: True
+```
+````
+
+`````
+
+
+`````{tab} gmx mdrun [...] -ntmpi 1
+
+Example of full command
+
+```bash
+gmx mdrun -nt 12 -deffnm 01_nvt -ntmpi 1
+```
+
+````{tab} Configuration acting only on ligand simulations
+
+```yaml
+extra_directives:
+  mdrun:
+    ligand:
+      ntmpi: 1
+```
+````
+
+````{tab} Configuration acting only on complex simulations
+
+```yaml
+extra_directives:
+  mdrun:
+    complex:
+      ntmpi: 1
+```
+````
+
+````{tab} Configuration acting on both ligand and complex simulations (1)
+
+```yaml
+extra_directives:
+  mdrun:
+    all:
+      ntmpi: 1
+```
+````
+
+````{tab} Configuration acting on both ligand and complex simulations (2)
+
+```{tip}
+Note that the options for the ligand and complex are independent, meaning that you can set different options for the ligand and complex simulations.
+```
+
+```yaml
+extra_directives:
+  mdrun:
+    ligand:
+      ntmpi: 1
+    complex:
+      ntmpi: 1
+```
+````
+`````
+``````
 
 ## `nwindows` (optional)
 
@@ -201,7 +342,7 @@ mmpbsa:
 
 ## `mdp` (optional)
 
-This section is used to control all Molecular Dynamic Parameters for every single step
+This section is used to control all Molecular Dynamic Parameters for every simulation of single step
 
 `````{dropdown} Example of mdp section
 :color: info
