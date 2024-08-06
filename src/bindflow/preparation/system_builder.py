@@ -338,7 +338,7 @@ class MakeInputs:
         # Setting environmental variable for user custom force field:
         if custom_ff_path:
             self.custom_ff_path = Path(custom_ff_path).resolve()
-            os.environ["GMXLIB"] = self.custom_ff_path
+            os.environ["GMXLIB"] = str(self.custom_ff_path)
         else:
             self.custom_ff_path = None
 
