@@ -1,8 +1,5 @@
 # ❓FAQ
 
-<!-- :::{dropdown} Atom X in residue XXX was not found in rtp entry XX with X atoms while sorting atoms
-:open: -->
-
 ## Atom X in residue XXX was not found in rtp entry XX with X atoms while sorting atoms
 
 BindFlow uses [PDBFixer](https://github.com/openmm/pdbfixer) for the standardization of PDB files. However, [PDBFixer](https://github.com/openmm/pdbfixer) is not bulletproof. For such cases where [pdb2gmx](https://manual.gromacs.org/current/onlinehelp/gmx-pdb2gmx.html) fails with the generated PDB file from PDBFixer; the user may fix the PDB by hand.

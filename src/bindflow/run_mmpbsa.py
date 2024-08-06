@@ -16,7 +16,7 @@ PathLike = Union[os.PathLike, str, bytes]
 
 
 def calculate_mmpbsa(
-        protein: Union[tools.PathLike, dict],  # conf, top, ff
+        protein: Union[tools.PathLike, dict],
         ligands: Union[tools.PathLike, List[dict]],
         out_root_folder_path: tools.PathLike,
         cofactor: Union[tools.PathLike, dict, None] = None,
