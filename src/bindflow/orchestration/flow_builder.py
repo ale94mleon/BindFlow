@@ -119,7 +119,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     -------
     str
         Some identification of the submitted job. It will depend on how
-        the submit method of the corresponded Schedular (:meth:`bindflow.orchestration.generate_scheduler.Scheduler`) was implemented
+        the submit method of the corresponded Schedular (:class:`bindflow.orchestration.generate_scheduler.Scheduler`) was implemented
     """
     out_path = Path(global_config["out_approach_path"])
     snake_path = out_path/"Snakefile"

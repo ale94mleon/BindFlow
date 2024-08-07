@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import glob
-
 import yaml
-
 from bindflow.orchestration.generate_scheduler import FrontEnd
 from bindflow.run_mmpbsa import calculate_mmpbsa
 
@@ -17,16 +15,11 @@ calculate_mmpbsa(
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
     out_root_folder_path="mmpbsa",
-    cofactor='inputs/dummy_cofactor_30.mol',
-    membrane=None,
     hmr_factor=2.5,
     threads=12,
     num_jobs=100000,
     replicas=1,
     samples=2,
-    submit=False,
+    submit=True,
     scheduler_class=FrontEnd,
     global_config=global_config)
-
-
-# rm -r abfe/slurm_logs/* abfe/*/*/slurm_logs/* abfe/.snakemake/ abfe/*/*/.snakemake abfe/*/*/ligand/ abfe/*/*/complex/

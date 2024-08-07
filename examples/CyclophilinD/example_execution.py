@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import yaml
 import glob
+import yaml
 from bindflow.run_abfe import calculate_abfe
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
@@ -12,14 +12,9 @@ calculate_abfe(
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
     out_root_folder_path="abfe",
-    cofactor='inputs/dummy_cofactor_30.mol',
-    membrane=None,
     hmr_factor=2.5,
     threads=12,
     num_jobs=100000,
     replicas=3,
-    submit=False,
+    submit=True,
     global_config=global_config)
-
-
-# rm -r abfe/slurm_logs/* abfe/*/*/slurm_logs/* abfe/.snakemake/ abfe/*/*/.snakemake abfe/*/*/ligand/ abfe/*/*/complex/

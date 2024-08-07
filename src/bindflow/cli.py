@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+
 from bindflow import __version__
 
 loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
@@ -79,7 +80,7 @@ def main():
         help="Check for completion of an ABFE workflow")
     abfe_check.add_argument(
         dest='out_root_folder_path',
-        help='ABFE directory (`out_root_folder_path` kwarg of :meth:`bindflow.run_abfe.calculate_abfe`)',
+        help='ABFE directory (`out_root_folder_path` kwarg of :func:`bindflow.run_abfe.calculate_abfe`)',
         type=str)
     abfe_check.add_argument(
         '-os', '--out_csv_summary',
@@ -101,7 +102,7 @@ def main():
         help="Check for completion of an MM(P/B)BSA workflow")
     mmxbsa_check.add_argument(
         dest='out_root_folder_path',
-        help='MM(P/B)BSA directory (`out_root_folder_path` kwarg of :meth:`bindflow.run_mmpbsa.calculate_mmpbsa`)',
+        help='MM(P/B)BSA directory (`out_root_folder_path` kwarg of :func:`bindflow.run_mmpbsa.calculate_mmpbsa`)',
         type=str)
     mmxbsa_check.add_argument(
         '-os', '--out_csv_summary',

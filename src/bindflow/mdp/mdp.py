@@ -23,6 +23,8 @@ _MDP_PARAM_DEFAULT = {
 
 
 class MDP:
+    """Base class to work with MDP files
+    """
     def __init__(self, **kwargs):
         self.parameters = dict()
         self._set_default_parameters()
@@ -67,15 +69,15 @@ class MDP:
 
 
 class StepMDP(MDP):
-    """This subclass will inherit from :meth:`bindflow.mdp.mdp.MDP`
+    """This subclass will inherit from :class:`bindflow.mdp.mdp.MDP`
     It is meant to be used in combination with the templates that can
-    be access from :mod:`bindflow.mdp.templates.TemplatePath`.
+    be access from ``bindflow.mdp.templates.TemplatePath``.
     This class define the method ``set_new_step``. One time initialized,
     the instance could be used to access other steps on the step_path
 
     Parameters
     ----------
-    MDP : :meth:`bindflow.mdp.mdp.MDP`
+    MDP : :class:`bindflow.mdp.mdp.MDP`
         base MDP class
     """
     def __init__(self, step: str = None, step_path: PathLike = None, **kwargs):

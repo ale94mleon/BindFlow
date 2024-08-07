@@ -16,7 +16,7 @@ PathLike = Union[os.PathLike, str, bytes]
 
 
 def calculate_mmpbsa(
-        protein: Union[tools.PathLike, dict],  # conf, top, ff
+        protein: Union[tools.PathLike, dict],
         ligands: Union[tools.PathLike, List[dict]],
         out_root_folder_path: tools.PathLike,
         cofactor: Union[tools.PathLike, dict, None] = None,
@@ -38,7 +38,7 @@ def calculate_mmpbsa(
         global_config: dict = {}
         ) -> None:
     """Main function of BindFlow to execute
-    Molecular Mechanic Poisson/General-Boltzmann Surface Area MM(P/G)BSA calculations
+    Molecular Mechanic Poisson-Boltzmann/Generalized-Born Surface Area MM(P/G)BSA calculations
 
     Parameters
     ----------
@@ -129,7 +129,7 @@ def calculate_mmpbsa(
                 With this parameter you can access different small molecule force fields
 
             * is_water -> If presents and set to True; it is assumed that this is a water system
-            and that will change the settles section to tip3p-like triangular constraints.
+            and that will change the settles section (if any) to tip3p-like triangular constraints.
             This is needed for compatibility with GROMACS. Check here:
             https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
 
@@ -185,7 +185,8 @@ def calculate_mmpbsa(
     water_model : str, optional
         The water force field to use, by default amber/tip3p.
         if you would like to use the flexible definition of the CHARMM TIP3P
-        you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
+        you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file.
+        See :class:`bindflow.preparation.solvent.Solvate`
 
     custom_ff_path : Union[None, PathLike], optional
         All the custom force field must be in this directory. The class will set:
@@ -224,11 +225,11 @@ def calculate_mmpbsa(
         This is a class to schedule the jobs and specify how to handle computational resources, by default SlurmScheduler
 
         The module :mod:`bindflow.orchestration.generate_scheduler` presents the template class
-        :meth:`bindflow.orchestration.generate_scheduler.Scheduler` which can be used to create customized Scheduler based on user needs.
+        :class:`bindflow.orchestration.generate_scheduler.Scheduler` which can be used to create customized Scheduler based on user needs.
         :mod:`bindflow.orchestration.generate_scheduler` also contains the following functional and already tested schedular:
 
-        #. :meth:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
-        #. :meth:`bindflow.orchestration.generate_scheduler.FrontEnd`: To execute the workflow in a frontend-like computer. E.g. LAPTOP, workstation, etc.
+        #. :class:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
+        #. :class:`bindflow.orchestration.generate_scheduler.FrontEnd`: To execute the workflow in a frontend-like computer. E.g. LAPTOP, workstation, etc.
 
     global_config : dict, optional
         The rest of the configuration and fine tunning of the workflow goes here, by default {}

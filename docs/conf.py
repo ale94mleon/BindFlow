@@ -45,8 +45,10 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
     "myst_nb",
+    "sphinx_design",
     "sphinx_inline_tabs",
     "sphinx_copybutton",
+    "sphinxcontrib.mermaid",
 ]
 
 
@@ -115,8 +117,7 @@ html_logo = "source/_static/BindFlow-logo.svg"
 html_static_path = [] #['_static']
 
 intersphinx_mapping = {'Python': ('https://docs.python.org/3/', None),
-                       'NumPy': ('https://numpy.org/doc/stable/', None),
-                       'CReM': ('https://crem.readthedocs.io/en/latest/', None),
-                       'RDKit': ('https://www.rdkit.org/docs/', None),
-                       'Pandas': ('https://pandas.pydata.org/docs/', None),
+                       'numpy': ('https://numpy.org/doc/stable/', None),
+                       'rdkit': ('https://www.rdkit.org/docs/', None),
+                       'pandas': ('https://pandas.pydata.org/docs/', None),
                        }

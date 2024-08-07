@@ -1,8 +1,5 @@
 # ❓FAQ
 
-<!-- :::{dropdown} Atom X in residue XXX was not found in rtp entry XX with X atoms while sorting atoms
-:open: -->
-
 ## Atom X in residue XXX was not found in rtp entry XX with X atoms while sorting atoms
 
 BindFlow uses [PDBFixer](https://github.com/openmm/pdbfixer) for the standardization of PDB files. However, [PDBFixer](https://github.com/openmm/pdbfixer) is not bulletproof. For such cases where [pdb2gmx](https://manual.gromacs.org/current/onlinehelp/gmx-pdb2gmx.html) fails with the generated PDB file from PDBFixer; the user may fix the PDB by hand.
@@ -129,9 +126,12 @@ If you use `submit = True` for the functions `bindflow.calculate_abfe` or `bindf
 
 A workaround in case a frontend is available is to set `submit = False` and then on the `approach` directory do:
 
-
 ```bash
 conda activate BindFlow
+cd <approach_directory>
+nohup nice -19 ./job.sh > RuleThemAll.out 2>&1 &
 ```
+
+Now, even if you close your terminal, the process will continue running in the background because of the use of `nohup`. This process is mainly idle, but by using `nice -19`, we lower its priority, so it does not interfere with any main processes running on your front end. You can also use other persistent terminals like [screen](https://www.gnu.org/software/screen/manual/screen.html) or [byobu](https://www.byobu.org/).
 
 ## Cancelling running jobs in a Slurm HPC cluster

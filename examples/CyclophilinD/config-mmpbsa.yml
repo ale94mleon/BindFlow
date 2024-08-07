@@ -9,37 +9,37 @@ extra_directives: # Optional
       cpi: False
       stepout: 5000
       v: True
-nwindows: # optional
-  ligand:
-      vdw: 6
-      coul: 6
-  complex:
-      vdw: 6
-      coul: 6
-      bonded: 6
 mdp: # optional
   complex:
     equi:
       00_min:
-        nsteps: 15
+        nsteps: 100000
       01_nvt:
-          nsteps: 15
+          dt: 0.002
+          nsteps: 5000
       02_nvt:
-          nsteps: 15
+          dt: 0.003
+          nsteps: 5000
       03_npt:
-        nsteps: 15
+        dt: 0.003
+        nsteps: 7500
       04_npt:
-        nsteps: 15
+        dt: 0.004
+        nsteps: 15000
       prod:
-        nsteps: 300
-        nstxout-compressed: 100
+        dt: 0.004
+        nsteps: 237500
+        nstxout-compressed: 11875
     mmpbsa:
       prod:
-        nsteps: 1000
-#mmpbsa:
-#  general: 
-#    c2_entropy: 1
-#    qh_entropy: 1
-#    interaction_entropy: 1
-#  pb: {}
-#  gb: {}
+        dt: 0.004
+        nsteps: 37500
+        nstxout-compressed: 1250
+mmpbsa:
+  general: 
+    c2_entropy: 1
+    #qh_entropy: 1
+    interaction_entropy: 1
+    startframe: 10 # recommended burn phase to skip frames directly after the split
+  pb: {} # enable MMPBSA computation
+  gb: {} # enable MMGBSA computation
