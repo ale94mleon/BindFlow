@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from uncertainties import ufloat
 
-from bindflow.free_energy import mmxbsa_analysis
 from bindflow.utils.tools import PathLike
 
 
@@ -264,6 +263,7 @@ def get_raw_mmxbsa_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> 
     pd.DataFrame
         Raw MM(P/G)BSA data
     """
+    from bindflow.free_energy import mmxbsa_analysis
     collected_dfs = []
     collected_files = glob.glob(root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
     if len(collected_files) == 0:
