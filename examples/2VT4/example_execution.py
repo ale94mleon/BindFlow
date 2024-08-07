@@ -1,20 +1,25 @@
 import glob
 from bindflow.runners import calculate
+from bindflow.orchestration.generate_scheduler import FrontEnd
 
 ligand_mols = glob.glob("inputs/ligands/*mol")
+global_config = {
+    'cluster': {
+        'options': {
+            'calculation': None
+        }
+    }
+}
 
 calculate(
     calculation_type='fep',
-    protein_pdb_path='inputs/protein.pdb',
-    ligand_mol_paths=ligand_mols,
+    protein='inputs/protein.pdb',
+    ligands=ligand_mols,
     out_root_folder_path="fep",
-    membrane_pdb_path='inputs/membrane.pdb',
-    cofactor_mol_path='inputs/dummy_cofactor_23.mol',
-    hmr_factor=3,
-    approach_name="",
-    n_cores_per_job=8,
-    num_jobs_receptor_workflow=None,
-    num_jobs_per_ligand=40,
-    num_replicas=3,
+    membrane='inputs/membrane.pdb',
+    cofactor='inputs/dummy_cofactor_23.mol',
+    threads=4,
+    num_jobs=12,
+    scheduler_class=FrontEnd,
     submit=True,
-    cluster_config={})
+    global_config=global_config)

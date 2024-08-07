@@ -19,23 +19,23 @@ def calculate(
         calculation_type: str,
         protein: Union[tools.PathLike, dict],
         ligands: Union[tools.PathLike, List[dict]],
-        out_root_folder_path: tools.PathLike,
-        cofactor: Union[tools.PathLike, dict, None] = None,
-        host_name: str = 'Protein',
-        host_selection: str = 'protein and name CA',
-        cofactor_on_protein: bool = True,
         membrane: Union[tools.PathLike, dict, None] = None,
-        hmr_factor: Union[float, None] = 3.0,
+        cofactor: Union[tools.PathLike, dict, None] = None,
+        cofactor_on_protein: bool = True,
         water_model: str = 'amber/tip3p',
         custom_ff_path: Union[None, PathLike] = None,
+        host_name: str = 'Protein',
+        host_selection: str = 'protein and name CA',
+        hmr_factor: Union[float, None] = 3.0,
         dt_max: float = 0.004,
         threads: int = 12,
         num_jobs: int = 10000,
         replicas: int = 3,
-        submit: bool = False,
+        scheduler_class: Scheduler = SlurmScheduler,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
-        scheduler_class: Scheduler = SlurmScheduler,
+        out_root_folder_path: tools.PathLike = 'bindflow-out',
+        submit: bool = False,
         global_config: dict = {}
         ) -> None:
     """Main function of BindFlow to execute the workflow
@@ -104,8 +104,36 @@ def calculate(
 
                 With this parameter you can access different small molecule force fields
 
-    out_root_folder_path : tools.PathLike
-        Where the workflow is going to run
+    membrane : Union[tools.PathLike, dict, None], optional
+        This is either None (default); a path to the PDB file of the membrane which will be processed
+        through GMX with SLipid2020; or a dictionary with the specific definition of the protein.
+
+        In case a dictionary is provided, it should have:
+
+            * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
+            correct definition of the CRYST1. This information will be used for the solvation step.
+            The membrane must be already correctly placed around the protein. Servers like CHARM-GUI
+            can be used on this step.
+
+            * top -> GROMACS topology [optional], by default None.
+            Should be a single file topology with all the force field
+            information and without the position restraint included. However, in case,
+            you need to use an include statement such as:
+
+                include "./amber-lipids14.ff/forcefield.itp"
+
+            You must change the statement to the absolute path:
+
+                include "{prefix of the absolute path}/amber-lipids14.ff/forcefield.itp"
+
+            And copy theamber-lipids14.ff to custom_ff_path and set this parameter accordingly. If not
+            You may get some errors about files not founded. The force field directory
+            must end with the suffix ".ff".
+
+            * ff
+
+                * code -> GMX force field code [optional], by default Slipids_2020
+                You can use yoru custom force field, but custom_ff_path must be provided
 
     cofactor : Union[tools.PathLike, dict, None], optional
         This is either None (default); a path to the MOL/SDF file of the ligands which will be processed
@@ -140,58 +168,10 @@ def calculate(
             This is needed for compatibility with GROMACS. Check here:
             https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
 
-    host_name : str, optional
-        The group name for the host in the configuration file, by default "Protein".
-         This is used for making index, solvate the system and working with trajectories
-
-    host_selection : str, optional
-        MDAnalysis selection to define the host (receptor or protein), by default 'protein and name CA'.
-        This is used for Boresch restraint detection.
-
     cofactor_on_protein : bool, optional
         It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
         If True, the cofactor will be part of the protein and the ligand
         if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
-
-    membrane : Union[tools.PathLike, dict, None], optional
-        This is either None (default); a path to the PDB file of the membrane which will be processed
-        through GMX with SLipid2020; or a dictionary with the specific definition of the protein.
-
-        In case a dictionary is provided, it should have:
-
-            * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
-            correct definition of the CRYST1. This information will be used for the solvation step.
-            The membrane must be already correctly placed around the protein. Servers like CHARM-GUI
-            can be used on this step.
-
-            * top -> GROMACS topology [optional], by default None.
-            Should be a single file topology with all the force field
-            information and without the position restraint included. However, in case,
-            you need to use an include statement such as:
-
-                include "./amber-lipids14.ff/forcefield.itp"
-
-            You must change the statement to the absolute path:
-
-                include "{prefix of the absolute path}/amber-lipids14.ff/forcefield.itp"
-
-            And copy theamber-lipids14.ff to custom_ff_path and set this parameter accordingly. If not
-            You may get some errors about files not founded. The force field directory
-            must end with the suffix ".ff".
-
-            * ff
-
-                * code -> GMX force field code [optional], by default Slipids_2020
-                You can use yoru custom force field, but custom_ff_path must be provided
-
-    hmr_factor : Union[float, None], optional
-        The Hydrogen Mass Factor to use, by default 3.0.
-
-        .. warning::
-            For provided topologies if hmr_factor is set, it will pass any way.
-            So for topology files with already HMR, this should be None.
-            And all the topologies should be provided
-            protein, cofactors, membrane, ligands with the HMR already done
 
     water_model : str, optional
         The water force field to use, by default amber/tip3p.
@@ -202,6 +182,23 @@ def calculate(
         All the custom force field must be in this directory. The class will set:
 
             os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
+
+    host_name : str, optional
+        The group name for the host in the configuration file, by default "Protein".
+         This is used for making index, solvate the system and working with trajectories
+
+    host_selection : str, optional
+        MDAnalysis selection to define the host (receptor or protein), by default 'protein and name CA'.
+        This is used for Boresch restraint detection.
+
+    hmr_factor : Union[float, None], optional
+        The Hydrogen Mass Factor to use, by default 3.0.
+
+        .. warning::
+            For provided topologies if hmr_factor is set, it will pass any way.
+            So for topology files with already HMR, this should be None.
+            And all the topologies should be provided
+            protein, cofactors, membrane, ligands with the HMR already done
 
     dt_max : float, optional
         This is the maximum integration time step that will be used by any MD simulation step
@@ -218,12 +215,6 @@ def calculate(
         For example in a workstation of 12 CPus, if you set threads = 4, then num_jobs should be 3.
     replicas : int, optional
         The number of independent repeats of the entire workflow (the building of the system is not repeated), by default 3
-    submit : bool, optional
-        If True the workflow will woke alive, by default False
-    debug : bool, optional
-        If True more stuff will be printed, by default False
-    job_prefix : Union[None, str], optional
-        A prefix to identify the jobs in the HPc cluster queue, by default None
 
     scheduler_class : Scheduler, optional
         This is a class to schedule the jobs and specify how to handle computational resources, by default SlurmScheduler
@@ -234,6 +225,15 @@ def calculate(
 
         #. :class:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
         #. :class:`bindflow.orchestration.generate_scheduler.FrontEnd`: To execute the workflow in a frontend-like computer. E.g. LAPTOP, workstation, etc.
+
+    debug : bool, optional
+        If True more stuff will be printed, by default False
+    job_prefix : Union[None, str], optional
+        A prefix to identify the jobs in the HPc cluster queue, by default None
+    out_root_folder_path : tools.PathLike
+        Where the workflow is going to run, by default bindflow-out
+    submit : bool, optional
+        If True the workflow will woke alive, by default False
 
     global_config : dict, optional
         The rest of the configuration and fine tunning of the workflow goes here, by default {}

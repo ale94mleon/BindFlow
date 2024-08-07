@@ -13,9 +13,5 @@ calculate(
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
     out_root_folder_path="fep",
-    hmr_factor=2.5,
-    threads=12,
-    num_jobs=100000,
-    replicas=3,
     submit=True,
     global_config=global_config)
