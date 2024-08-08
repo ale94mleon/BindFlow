@@ -15,33 +15,40 @@ from bindflow.utils import tools
 PathLike = Union[os.PathLike, str, bytes]
 
 
-def calculate_mmpbsa(
+def calculate(
+        calculation_type: str,
         protein: Union[tools.PathLike, dict],
         ligands: Union[tools.PathLike, List[dict]],
-        out_root_folder_path: tools.PathLike,
-        cofactor: Union[tools.PathLike, dict, None] = None,
-        host_name: str = 'Protein',
-        cofactor_on_protein: bool = True,
         membrane: Union[tools.PathLike, dict, None] = None,
-        hmr_factor: Union[float, None] = 3.0,
+        cofactor: Union[tools.PathLike, dict, None] = None,
+        cofactor_on_protein: bool = True,
         water_model: str = 'amber/tip3p',
         custom_ff_path: Union[None, PathLike] = None,
+        host_name: str = 'Protein',
+        host_selection: str = 'protein and name CA',
+        hmr_factor: Union[float, None] = 3.0,
         dt_max: float = 0.004,
         threads: int = 12,
         num_jobs: int = 10000,
-        replicas: int = 1,
-        samples: int = 20,
-        submit: bool = False,
+        replicas: int = 3,
+        scheduler_class: Scheduler = SlurmScheduler,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
-        scheduler_class: Scheduler = SlurmScheduler,
+        out_root_folder_path: tools.PathLike = 'bindflow-out',
+        submit: bool = False,
         global_config: dict = {}
         ) -> None:
-    """Main function of BindFlow to execute
-    Molecular Mechanic Poisson-Boltzmann/Generalized-Born Surface Area MM(P/G)BSA calculations
+    """Main function of BindFlow to execute the workflow
 
     Parameters
     ----------
+    calculation_type : str
+
+        Any of (case-insensitive):
+
+            * "fep": For Free Energy Perturbation simulations
+            * "mmpbsa": For Molecular  Molecular Mechanic Poisson-Boltzmann/Generalized-Born Surface Area MM(PB/GB)SA simulations
+
     protein : Union[tools.PathLike, dict]
         This could be the path to the PDB file of the protein which will be processed through
         GMX with amber99sb-ildn; or a dictionary with the specific definition of the protein.
@@ -97,8 +104,36 @@ def calculate_mmpbsa(
 
                 With this parameter you can access different small molecule force fields
 
-    out_root_folder_path : tools.PathLike
-        Where the workflow is going to run
+    membrane : Union[tools.PathLike, dict, None], optional
+        This is either None (default); a path to the PDB file of the membrane which will be processed
+        through GMX with SLipid2020; or a dictionary with the specific definition of the protein.
+
+        In case a dictionary is provided, it should have:
+
+            * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
+            correct definition of the CRYST1. This information will be used for the solvation step.
+            The membrane must be already correctly placed around the protein. Servers like CHARM-GUI
+            can be used on this step.
+
+            * top -> GROMACS topology [optional], by default None.
+            Should be a single file topology with all the force field
+            information and without the position restraint included. However, in case,
+            you need to use an include statement such as:
+
+                include "./amber-lipids14.ff/forcefield.itp"
+
+            You must change the statement to the absolute path:
+
+                include "{prefix of the absolute path}/amber-lipids14.ff/forcefield.itp"
+
+            And copy theamber-lipids14.ff to custom_ff_path and set this parameter accordingly. If not
+            You may get some errors about files not founded. The force field directory
+            must end with the suffix ".ff".
+
+            * ff
+
+                * code -> GMX force field code [optional], by default Slipids_2020
+                You can use yoru custom force field, but custom_ff_path must be provided
 
     cofactor : Union[tools.PathLike, dict, None], optional
         This is either None (default); a path to the MOL/SDF file of the ligands which will be processed
@@ -133,45 +168,28 @@ def calculate_mmpbsa(
             This is needed for compatibility with GROMACS. Check here:
             https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
 
-    host_name : str, optional
-        The group name for the host in the configuration file, by default "Protein".
-         This is used for making index, solvate the system and working with trajectories
-
     cofactor_on_protein : bool, optional
         It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
         If True, the cofactor will be part of the protein and the ligand
         if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
 
-    membrane : Union[tools.PathLike, dict, None], optional
-        This is either None (default); a path to the PDB file of the membrane which will be processed
-        through GMX with SLipid2020; or a dictionary with the specific definition of the protein.
+    water_model : str, optional
+        The water force field to use, by default amber/tip3p.
+        if you would like to use the flexible definition of the CHARMM TIP3P
+        you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file
 
-        In case a dictionary is provided, it should have:
+    custom_ff_path : Union[None, PathLike], optional
+        All the custom force field must be in this directory. The class will set:
 
-            * conf -> The path of the membrane PDB file [mandatory]. If provided, the PDB must have a
-            correct definition of the CRYST1. This information will be used for the solvation step.
-            The membrane must be already correctly placed around the protein. Servers like CHARM-GUI
-            can be used on this step.
+            os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
 
-            * top -> GROMACS topology [optional], by default None.
-            Should be a single file topology with all the force field
-            information and without the position restraint included. However, in case,
-            you need to use an include statement such as:
+    host_name : str, optional
+        The group name for the host in the configuration file, by default "Protein".
+         This is used for making index, solvate the system and working with trajectories
 
-                include "./amber-lipids14.ff/forcefield.itp"
-
-            You must change the statement to the absolute path:
-
-                include "{prefix of the absolute path}/amber-lipids14.ff/forcefield.itp"
-
-            And copy theamber-lipids14.ff to custom_ff_path and set this parameter accordingly. If not
-            You may get some errors about files not founded. The force field directory
-            must end with the suffix ".ff".
-
-            * ff
-
-                * code -> GMX force field code [optional], by default Slipids_2020
-                You can use yoru custom force field, but custom_ff_path must be provided
+    host_selection : str, optional
+        MDAnalysis selection to define the host (receptor or protein), by default 'protein and name CA'.
+        This is used for Boresch restraint detection.
 
     hmr_factor : Union[float, None], optional
         The Hydrogen Mass Factor to use, by default 3.0.
@@ -181,17 +199,6 @@ def calculate_mmpbsa(
             So for topology files with already HMR, this should be None.
             And all the topologies should be provided
             protein, cofactors, membrane, ligands with the HMR already done
-
-    water_model : str, optional
-        The water force field to use, by default amber/tip3p.
-        if you would like to use the flexible definition of the CHARMM TIP3P
-        you must define FLEXIBLE and CHARMM_TIP3P in the define statement of the mdp file.
-        See :class:`bindflow.preparation.solvent.Solvate`
-
-    custom_ff_path : Union[None, PathLike], optional
-        All the custom force field must be in this directory. The class will set:
-
-            os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
 
     dt_max : float, optional
         This is the maximum integration time step that will be used by any MD simulation step
@@ -207,19 +214,7 @@ def calculate_mmpbsa(
         you would like to allocate for the entire workflow. This will prevent to overheat your machine.
         For example in a workstation of 12 CPus, if you set threads = 4, then num_jobs should be 3.
     replicas : int, optional
-        The number of independent repeats of the entire workflow (the building of the system is not repeated), by default 1.
-        Average and standard error of the mean across all replicas and samples for each ligand are reported for each ligand.
-    samples : int, optional
-        The number of independents runs that will run internally to estimate the MM(P/G)BSA, by default 20.
-        The workflow launches {replicas} independent simulations. Each one of them after the equilibration phase of the protein-ligand
-        complex; runs a production simulation from which {samples} frames will be collected. Each of this sample will be run
-        independently and analyzed through gmx_MMPBSA Python package. Average and standard error of the mean are reported for each sample
-    submit : bool, optional
-        If True the workflow will woke alive, by default False
-    debug : bool, optional
-        If True more stuff will be printed, by default False
-    job_prefix : Union[None, str], optional
-        A prefix to identify the jobs in the HPc cluster queue, by default None
+        The number of independent repeats of the entire workflow (the building of the system is not repeated), by default 3
 
     scheduler_class : Scheduler, optional
         This is a class to schedule the jobs and specify how to handle computational resources, by default SlurmScheduler
@@ -231,6 +226,15 @@ def calculate_mmpbsa(
         #. :class:`bindflow.orchestration.generate_scheduler.SlurmScheduler`: To interact with `Slurm <https://slurm.schedmd.com/documentation.html>`_
         #. :class:`bindflow.orchestration.generate_scheduler.FrontEnd`: To execute the workflow in a frontend-like computer. E.g. LAPTOP, workstation, etc.
 
+    debug : bool, optional
+        If True more stuff will be printed, by default False
+    job_prefix : Union[None, str], optional
+        A prefix to identify the jobs in the HPc cluster queue, by default None
+    out_root_folder_path : tools.PathLike
+        Where the workflow is going to run, by default bindflow-out
+    submit : bool, optional
+        If True the workflow will woke alive, by default False
+
     global_config : dict, optional
         The rest of the configuration and fine tunning of the workflow goes here, by default {}
 
@@ -240,9 +244,19 @@ def calculate_mmpbsa(
         In case of invalid global_config
     ValueError
         In case the ligand paths are not found
+    ValueError
+        In case wrong calculation_type
     """
+
     print(f"You are using BindFlow: {__version__}✨")
+
+    if calculation_type.lower() not in ['fep', 'mmpbsa']:
+        raise ValueError(f"calculation_type must be one of: [fep, mmpbsa] (case-insensitive).\nProvided: {calculation_type}")
+    else:
+        calculation_type = calculation_type.lower()
+
     check_gromacs_installation()
+
     orig_dir = os.getcwd()
     out_root_folder_path = Path(out_root_folder_path)
 
@@ -263,10 +277,11 @@ def calculate_mmpbsa(
             warn(f"{hmr_factor =} and {dt_max =}. hmr_factor is not been, therefore dt_max should be <= 0.002 ps")
 
     # Initialize inputs on config
-    _global_config["calculation_type"] = 'mmpbsa'
+    _global_config["calculation_type"] = calculation_type
     _global_config["scheduler_class"] = scheduler_class
     _global_config["inputs"] = {}
     _global_config["inputs"]["protein"] = tools.input_helper(arg_name='protein', user_input=protein, default_ff='amber99sb-ildn', optional=False)
+    # TODO check that is a list, tuple or string, iterable is nto enough because the dict is an iterable. Not clear how to check for this
     _global_config["inputs"]["ligands"] = [tools.input_helper(arg_name='ligand', user_input=ligand,
                                                               default_ff=None, default_ff_type='openff', optional=False)
                                            for ligand in ligands]
@@ -275,15 +290,14 @@ def calculate_mmpbsa(
     _global_config["inputs"]["membrane"] = tools.input_helper(arg_name='membrane', user_input=membrane, default_ff='Slipids_2020', optional=True)
 
     _global_config["host_name"] = host_name
+    _global_config["host_selection"] = host_selection
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     _global_config["custom_ff_path"] = custom_ff_path
     # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology
     _global_config["water_model"] = water_model
     _global_config["dt_max"] = dt_max
-
-    out_root_folder_path = os.path.abspath(out_root_folder_path)
-    _global_config["out_approach_path"] = out_root_folder_path
+    _global_config["out_approach_path"] = os.path.abspath(out_root_folder_path)
 
     if job_prefix:
         _global_config["job_prefix"] = f"{job_prefix}"
@@ -303,15 +317,28 @@ def calculate_mmpbsa(
     _global_config["ligand_names"] = [Path(mol['conf']).stem for mol in _global_config["inputs"]["ligands"]]
     _global_config["num_jobs"] = num_jobs
     _global_config["replicas"] = replicas
-    _global_config["samples"] = samples
     _global_config["threads"] = threads
 
-    print("Prepare")
-    print("\tstarting preparing MM(P/G)BSA-ligand file structure")
+    # Check default samples for mmpbsa simulations
+    if calculation_type == 'mmpbsa':
+        if 'samples' in _global_config:
+            samples = _global_config['samples']
+        else:
+            _global_config['samples'] = 20
+            samples = 20
 
-    print("\tStarting preparing MM(P/G)BSA-Approach file structure: ", out_root_folder_path)
-    expected_out_paths = replicas * samples * len(_global_config["ligand_names"])
-    result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
+    print("Prepare")
+    print(f"\tPreparing {calculation_type}-Approach file structure: {_global_config['out_approach_path']}")
+
+    if not _global_config["ligand_names"]:
+        raise ValueError("No ligands found")
+
+    if calculation_type == 'fep':
+        expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
+        result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/dG*csv")
+    elif calculation_type == 'mmpbsa':
+        expected_out_paths = replicas * samples * len(_global_config["ligand_names"])
+        result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
 
     # Only if there is something missing
     if (len(result_paths) != expected_out_paths):
@@ -325,13 +352,14 @@ def calculate_mmpbsa(
     print("\tAlready got results?: " + str(len(result_paths)))
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
-        full_df = gather_results.get_raw_mmxbsa_dgs(
-            root_folder_path=out_root_folder_path,
-            out_csv=out_root_folder_path/'mmxbsa_partial_results_raw.csv'
-        )
-        gather_results.get_all_mmxbsa_dgs(
-            full_df=full_df,
-            columns_to_process=None,
-            out_csv=out_root_folder_path/'mmxbsa_partial_results.csv'
-        )
+        if calculation_type == 'fep':
+            gather_results.get_all_fep_dgs(root_folder_path=out_root_folder_path,
+                                           out_csv=out_root_folder_path/'fep_partial_results.csv')
+            gather_results.get_raw_fep_data(root_folder_path=out_root_folder_path,
+                                            out_csv=out_root_folder_path/'fep_partial_results_raw.csv')
+        elif calculation_type == 'mmpbsa':
+            full_df = gather_results.get_raw_mmxbsa_dgs(root_folder_path=out_root_folder_path,
+                                                        out_csv=out_root_folder_path/'mmxbsa_partial_results_raw.csv')
+            gather_results.get_all_mmxbsa_dgs(full_df=full_df, columns_to_process=None,
+                                              out_csv=out_root_folder_path/'mmxbsa_partial_results.csv')
     os.chdir(orig_dir)

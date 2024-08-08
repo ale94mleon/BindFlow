@@ -9,10 +9,10 @@ jupyter_execute
 Snakemake
 
 data/*
-/examples/CyclophilinD_data/abfe/
+/examples/CyclophilinD_data/fep/
 /examples/internal_example
 /examples/2VT4/extra
-/examples/2VT4/abfe
+/examples/2VT4/fep
 /examples/4HW3/mmpbsa
 
 public

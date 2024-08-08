@@ -1,4 +1,4 @@
-from bindflow.free_energy import abfe_analysis
+from bindflow.free_energy import fep_analysis
 # Ana
 rule fep_ana_get_dg_complex_contributions:
     input:
@@ -27,7 +27,7 @@ rule fep_ana_get_dg_complex_contributions:
             temperature = float(mdp_params['ref-t'].split()[0])
         elif 'ref_t' in mdp_params:
             temperature = float(mdp_params['ref_t'].split()[0])
-        abfe_analysis.get_dG_contributions(
+        fep_analysis.get_dG_contributions(
             boresch_data=input.boresch_dat,
             out_json_path=output.complex_json,
             # Check if it is necessary to remove some initial burning simulation time

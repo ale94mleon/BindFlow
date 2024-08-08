@@ -1,4 +1,4 @@
-from bindflow.free_energy import abfe_analysis
+from bindflow.free_energy import fep_analysis
 
 rule fep_get_dg_cycle:
     input:
@@ -7,7 +7,7 @@ rule fep_get_dg_cycle:
     output:
         out_file_path=out_approach_path+"/{ligand_name}/{replica}/dG_results.csv",
     run:
-        abfe_analysis.get_dg_cycle(
+        fep_analysis.get_dg_cycle(
             ligand_contributions=input.ligand_json,
             complex_contributions=input.complex_json,
             out_csv=output.out_file_path

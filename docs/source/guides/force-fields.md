@@ -19,7 +19,7 @@ Six keywords control the type of force field used for each specific component in
 
 For a straightforward setup, you can provide the path to the corresponding file(s), which we will call the _partial definition_. However, you also have the option to fine-tune the definition of force fields for each component, referred to as the _full definition_.
 
-In the following examples, we will use the runner {py:func}`bindflow.run_abfe.calculate_abfe`, but the same applies to {py:func}`bindflow.run_mmpbsa.calculate_mmpbsa`.
+In the following examples, we will use the runner {py:func}`bindflow.runners.calculate`.
 
 ````````{tab} Partial definition
 ``````{tab} protein
@@ -37,7 +37,7 @@ All the above steps are highly system-dependent, and while PDBFixer can handle s
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     protein="path/to/protein.{pdb;gro}",
     ...   
@@ -84,7 +84,7 @@ In [PyMOL](https://www.pymol.org):
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     membrane="path/to/membrane.pdb",
     ...   
@@ -93,7 +93,7 @@ calculate_abfe(
 ``````
 ``````{tab} ligands
 ```python
-calculate_abfe(
+calculate(
     ...
     ligands=[
         "path/to/ligand1.{mol;sdf}",
@@ -107,7 +107,7 @@ calculate_abfe(
 ``````
 ``````{tab} cofactor
 ```python
-calculate_abfe(
+calculate(
     ...
     cofactor="path/to/cofactor.{mol;sdf}",
     ...   
@@ -135,7 +135,7 @@ All the above steps are highly system-dependent, and while PDBFixer can handle s
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     protein={
         "conf": "path/to/protein.{pdb;gro}",
@@ -173,7 +173,7 @@ All the above steps are highly system-dependent, and while PDBFixer can handle s
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     protein={
         "conf": "path/to/protein.{pdb;gro}",
@@ -196,7 +196,7 @@ It is advised to build a single topology file without any `include` statements. 
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     protein={
         "conf": "path/to/protein.gro",
@@ -257,7 +257,7 @@ You may also need to manually split the topology into protein and membrane.
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     membrane={
         "conf": "path/to/membrane.pdb",
@@ -292,7 +292,7 @@ for ligand_file in ligand_files:
         }
     })
 
-calculate_abfe(
+calculate(
     ...
     ligands=ligands,
     ...
@@ -323,7 +323,7 @@ for ligand_file in ligand_files:
         }
     })
 
-calculate_abfe(
+calculate(
     ...
     ligands=ligands,
     ...
@@ -352,7 +352,7 @@ for ligand_file in ligand_files:
         }
     })
 
-calculate_abfe(
+calculate(
     ...
     ligands=ligands,
     ...
@@ -384,7 +384,7 @@ ligands = [
     ...
 ]
 
-calculate_abfe(
+calculate(
     ...
     ligands=ligands,    
     ...
@@ -400,7 +400,7 @@ Any force field from [OpenFF](https://openforcefield.org/force-fields/force-fiel
 If `code` is not provided, the default force field for `type = "openff"` is `openff_unconstrained-2.0.0.offxml`.
 
 ```python
-calculate_abfe(
+calculate(
     ...
     cofactor={
         "conf": "path/to/cofactor.{mol;sdf}",
@@ -420,7 +420,7 @@ It is recommended to use `espaloma >= 0.3.1`.
 If `code` is not provided, the default force field for `type = "espaloma"` is `espaloma-0.3.1`.
 
 ```python
-calculate_abfe(
+calculate(
     ...
     cofactor={
         "conf": "path/to/cofactor.{mol;sdf}",
@@ -438,7 +438,7 @@ calculate_abfe(
 If `code` is not provided, the default force field for `type = "gaff"` is `gaff-2.11`.
 
 ```python
-calculate_abfe(
+calculate(
     ...
     cofactor={
         "conf": "path/to/cofactor.{mol;sdf}",
@@ -461,7 +461,7 @@ It is advised to build a single topology file without any `include` statements. 
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     cofactor={
         "conf": "path/to/cofactor.gro",
@@ -482,7 +482,7 @@ In the case that the cofactor(s) is (are) water-like molecule(s), this should be
 ```
 
 ```python
-calculate_abfe(
+calculate(
     ...
     cofactor={
         "conf": "path/to/cofactor.gro",
@@ -502,7 +502,7 @@ calculate_abfe(
 BindFlow comes with (at present 07.2024) all water models distributed with GROMACS. They are set by the keyword: `water_model`. E.g.:
 
 ```python
-calculate_abfe(
+calculate(
     ...
     water_model="amber/tip3p"
     ...
@@ -511,7 +511,7 @@ calculate_abfe(
 
 The structure of the string is `force_field_family/water_model`; `amber/tip3p` is the default.
 
-All configuration and topology files are sourced from GROMACS force fields, available at: [GROMACS GitLab - share/top](https://gitlab.com/gromacs/gromacs/-/tree/main/share/top?ref_type=heads). These files contain topologies and configurations for water models and ions within three force field families: AMBER, CHARMM, and OPLS-AA.
+All configuration and topology files are sourced from GROMACS force fields, available at [GROMACS GitLab - share/top](https://gitlab.com/gromacs/gromacs/-/tree/main/share/top?ref_type=heads). These files contain topologies and configurations for water models and ions within three force field families: AMBER, CHARMM, and OPLS-AA.
 
 ```{note}
 It is assumed that inside the same family, the non-bonded interactions (for water models and ions) are the same (`epsilon` and `sigma` parameters), which is true for the force fields presented in the GROMACS distribution.

@@ -413,7 +413,7 @@ def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str =
     exclude_suffixes are ignored . It creates a tar file with the XTC files (without compress)
     and a main_project.tar.{compress_type} with the rest of directories. Compression will only be applied to
     those files included in main_project.tar.{compress_type}. In-house benchmark showed a compress
-    rate close to for a abfe campaign 1.8 using gz compression
+    rate close to for a fep campaign 1.8 using gz compression
     (data taken from MCL1).
     139 GB to 77 GB
 
@@ -597,12 +597,12 @@ def recursive_update_dict(original_dict: dict, update_dict: dict) -> None:
 
 def config_validator(global_config: dict) -> List:
     """It checks for the validity of the global config.
-    This dictionary is used for :func:`bindflow.run_abfe.calculate_abfe` and :func:`bindflow.run_mmpbsa.calculate_mmpbsa`
+    This dictionary is used for :func:`bindflow.runners.calculate`
 
     Parameters
     ----------
     global_config : dict
-        The configuration of the ABFE workflow
+        The configuration of the BindFlow workflow
 
     Returns
     -------
@@ -672,7 +672,7 @@ def config_validator(global_config: dict) -> List:
 
 def input_helper(arg_name: str, user_input: Union[PathLike, dict, None], default_ff: Union[PathLike, str],
                  default_ff_type: Union[str, None] = None, optional: bool = False) -> dict:
-    """This helper function is called inside bindflow.run_abfe.calculate_abfe and bindflow.run_mmpbsa.calculate_mmpbsa
+    """This helper function is called inside bindflow.runners.calculate
     to check for the inputs: protein, ligands, membrane and cofactor
 
     Parameters

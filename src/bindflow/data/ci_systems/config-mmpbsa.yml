@@ -17,6 +17,7 @@ extra_directives: # Optional
       cpi: False
       stepout: 5000
       v: True
+samples: 2 # optional
 mdp: # optional
   complex:
     equi:

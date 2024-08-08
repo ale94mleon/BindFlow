@@ -82,7 +82,7 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str, calcul
         "rule RuleThemAll:\n"
 
     if calculation_type == 'fep':
-        file_str += "    input: Path(config[\"out_approach_path\"]) / \"abfe_results.csv\""
+        file_str += "    input: Path(config[\"out_approach_path\"]) / \"fep_results.csv\""
     elif calculation_type == 'mmpbsa':
         file_str += "    input: Path(config[\"out_approach_path\"]) / \"mmxbsa_results.csv\""
 
@@ -104,7 +104,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         out_approach_path[PathLike], inputs[dict[dict]], water_model[str],
         host_name[str], host_selection[str] (no needed for mmpbsa),
         cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
-        ligand_names[list[str]], replicas[float], threads[int], samples[int] (no needed for abfe)
+        ligand_names[list[str]], replicas[float], threads[int], samples[int] (no needed for fep)
         hmr_factor[float, None], custom_ff_path[str, None], cluster/type[str], cluster/options/calculation[dict]
         num_max_thread: int, The maximum number of threads to be used on each simulation.
         mdrun: dict: A dict of mdrun keywords to add to gmx mdrun, flag must be passed with boolean values. E.g {'cpi': True}
@@ -123,10 +123,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     """
     out_path = Path(global_config["out_approach_path"])
     snake_path = out_path/"Snakefile"
-    approach_conf_path = out_path/"snake_conf.json"
-
-    # Update (or set) nwindows on global_config.
-    global_config = update_nwindows_config(global_config)
+    approach_conf_path = out_path/"snake_conf.json"       
 
     approach_config = {
         "calculation_type": global_config["calculation_type"],
@@ -146,6 +143,8 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         # With this implementation the user can select the number of windows setting them up on the global configuration.
     }
     if global_config["calculation_type"] == 'fep':
+        # Update number of windows if needed and create the lambda-schedule
+        global_config = update_nwindows_config(global_config)
         approach_config['lambdas'] = {
             'ligand': {
                 'vdw': list(np.round(np.linspace(0, 1, global_config['nwindows']['ligand']['vdw']), 2)),

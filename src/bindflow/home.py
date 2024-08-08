@@ -9,7 +9,7 @@ import platform
 
 
 def home(dataDir=None, libDir=False):
-    """Return the pathname of the abfe root directory (or a data subdirectory).
+    """Return the pathname of the bindflow root directory (or a data subdirectory).
     Parameters
     ----------
     dataDir : str
@@ -24,7 +24,7 @@ def home(dataDir=None, libDir=False):
     -------
     .. ipython:: python
 
-        from abfe.home import home
+        from bindflow.home import home
         import os
         print(home())
         print(home(dataDir="gmx_ff"))
@@ -50,9 +50,4 @@ def home(dataDir=None, libDir=False):
 
 
 if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
-
-    h = home()
-    print(h)
+    pass

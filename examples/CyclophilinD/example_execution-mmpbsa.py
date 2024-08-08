@@ -15,11 +15,9 @@ calculate_mmpbsa(
     protein='inputs/protein.pdb',
     ligands=ligand_mols,
     out_root_folder_path="mmpbsa",
-    hmr_factor=2.5,
-    threads=12,
-    num_jobs=100000,
+    threads=4,
+    num_jobs=12,
     replicas=1,
-    samples=2,
     submit=True,
     scheduler_class=FrontEnd,
     global_config=global_config)

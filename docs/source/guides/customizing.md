@@ -23,6 +23,7 @@ extra_directives: # Optional
       <mdrun_keywords_for_complex_simulation>
     all:
       <mdrun_keywords_for_ligand_and_complex_simulation>      
+samples: <number_of_samples_for_mmpbsa> # Optional
 nwindows: # Optional
   ligand:
       vdw: <number_of_vdw_windows>
@@ -76,7 +77,7 @@ The options provided on this configuration have higher priority to those ones pa
 
 ## `cluster`
 
-This section specifies the computational resources required by the selected scheduler (see the [Deploy](#bindflow-deploy) section). It allows you to control the allocated resources for two types of jobs:
+This section specifies the computational resources required by the selected scheduler (see the [BindFlow’s deploy](#bindflow-deploy) section). It allows you to control the allocated resources for two types of jobs:
 
 1. **Main Job (`job`):** This job primarily waits and launches other jobs.
 2. **Calculation Jobs (`calculation`):** These jobs perform the actual calculations.

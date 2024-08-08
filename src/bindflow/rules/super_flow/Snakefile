@@ -1,5 +1,5 @@
 from pathlib import Path
-from bindflow import root_path as abfe_root_path
+from bindflow import root_path as fep_root_path
 from bindflow.utils import tools
 from bindflow.mdp import mdp
 from bindflow.mdp.templates import TemplatePath
@@ -19,11 +19,11 @@ mdrun_extra = config['extra_directives']['mdrun']
 include: 'build_ligand_systems.smk'
 
 # Do Equilibration
-include: abfe_root_path+"/rules/equi/Snakefile"
+include: fep_root_path+"/rules/equi/Snakefile"
 
 if config["calculation_type"] == "fep":
     # Do FEP
-    include: abfe_root_path+"/rules/fep/Snakefile"
+    include: fep_root_path+"/rules/fep/Snakefile"
 elif config["calculation_type"] == "mmpbsa":
     # Do MMPBSA
-    include: abfe_root_path+"/rules/mmpbsa/Snakefile"
+    include: fep_root_path+"/rules/mmpbsa/Snakefile"
