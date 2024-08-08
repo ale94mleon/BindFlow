@@ -773,6 +773,7 @@ def index_for_soluble_system(
 
     with open(tmpopt.name, "w") as opt:
         opt.write(sele_RECEPTOR + sele_LIGAND)
+
     @tools.gmx_command(load_dependencies=load_dependencies, stdin_command="echo \"q\"")
     def make_ndx(**kwargs): ...
 
@@ -799,6 +800,4 @@ def index_for_soluble_system(
 
 
 if __name__ == '__main__':
-    struc = readParmEDMolecule('testing/new.top', 'testing/new.gro')
-    with Solvate('amber/tip3p', builder_dir='jaja') as SolObj:
-        SolObj(struc, out_dir='solvated', out_name='complex')
+    pass
