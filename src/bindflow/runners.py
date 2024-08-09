@@ -325,7 +325,7 @@ def calculate(
             samples = 20
 
     print("Prepare")
-    print(f"\tPreparing {calculation_type}-Approach file structure: {out_root_folder_path}")
+    print(f"\tPreparing {calculation_type}-approach file structure: {out_root_folder_path}")
 
     if not _global_config["ligand_names"]:
         raise ValueError("No ligands found")

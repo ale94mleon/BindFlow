@@ -61,13 +61,31 @@ class Scheduler(ABC):
         pass
 
     @abstractmethod
-    def build_snakemake(self):
-        """Function to create the snakemake command"""
+    def build_snakemake(self, jobs: int):
+        """Function to create the snakemake command
+
+        Parameters
+        ----------
+        jobs : int
+            Number of snakemake jobs. Passed to the flag `--jobs`
+        """
         pass
 
     @abstractmethod
-    def submit(self):
-        """Command to submit the jobs"""
+    def submit(self, new_cluster_config: dict, only_build: bool, job_prefix: str):
+        """Command to submit the jobs
+
+        Parameters
+        ----------
+        new_cluster_config : dict
+            If an specific cluster configuration is wanted for the
+            man Snakemake job (this is mainly hanging and waiting
+            for rules completion)
+        only_build : bool
+            Only build the files but do not execute the command
+        job_prefix : str
+            A job prefix identification for the cluster
+        """
 
     def __get_full_data(self) -> dict:
         """Get the data of the class
