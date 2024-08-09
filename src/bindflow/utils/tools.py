@@ -613,13 +613,28 @@ def config_validator(global_config: dict) -> List:
 
     # Checking cluster
     if 'cluster' not in global_config:
-        return False, "Cluster configuration is missing"
+        global_config['cluster'] = {
+            'options': {
+                'calculation': None
+            }
+        }
+        print("No \"cluster\" definition. Setting cluster/options/calculation = None")
 
     if 'options' not in global_config['cluster']:
-        return False, "Cluster configuration is valid, but no cluster options provided"
+        global_config['cluster'] = {
+            'options': {
+                'calculation': None
+            }
+        }
+        print("No \"cluster/options\" definition. Setting cluster/options/calculation = None")
 
     if 'calculation' not in global_config['cluster']['options']:
-        return False, "cluster/options configuration is valid, but no cluster/options/calculation provided"
+        global_config['cluster'] = {
+            'options': {
+                'calculation': None
+            }
+        }
+        print("No \"cluster/options/calculation\" definition. Setting cluster/options/calculation = None")
 
     # Setting up default extra mdrun and job dependencies in case it was not provided
     if "extra_directives" in global_config:
