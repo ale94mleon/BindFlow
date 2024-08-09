@@ -350,6 +350,7 @@ def calculate(
     print("\tSubmit Job - ID: ", job_id)
     # Final gathering
     print("\tAlready got results?: " + str(len(result_paths)))
+    os.chdir(orig_dir)
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
         if calculation_type == 'fep':
@@ -362,4 +363,3 @@ def calculate(
                                                         out_csv=out_root_folder_path/'mmxbsa_partial_results_raw.csv')
             gather_results.get_all_mmxbsa_dgs(full_df=full_df, columns_to_process=None,
                                               out_csv=out_root_folder_path/'mmxbsa_partial_results.csv')
-    os.chdir(orig_dir)
