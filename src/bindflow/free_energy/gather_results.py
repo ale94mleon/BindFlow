@@ -72,6 +72,7 @@ def get_all_fep_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> pd.
         All gather results. If there are not dG_results.csv; It will return an empty DataFrame
     """
     # Get all dG_results.csv files
+    root_folder_path = str(root_folder_path)
     dg_files_dir = dict()
     for dg_file in glob.glob(root_folder_path + "/*/*/dG_results.csv"):
         dg_file = os.path.normpath(dg_file)
@@ -264,6 +265,7 @@ def get_raw_mmxbsa_dgs(root_folder_path: PathLike, out_csv: PathLike = None) -> 
         Raw MM(P/G)BSA data
     """
     from bindflow.free_energy import mmxbsa_analysis
+    root_folder_path = str(root_folder_path)
     collected_dfs = []
     collected_files = glob.glob(root_folder_path + "/*/*/complex/mmpbsa/simulation/*/mmxbsa.csv")
     if len(collected_files) == 0:
