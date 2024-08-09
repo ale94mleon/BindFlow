@@ -46,7 +46,7 @@ def test_fep():
             },
         }
 
-        with open(home_path / "config.yml", "r") as c:
+        with open(home_path / "config-fep.yml", "r") as c:
             global_config = yaml.safe_load(c)
             # TODO
             # This is needed for MacOS when GROMACS is build wth -DGMX_GPU=OpenCL
