@@ -227,5 +227,9 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         job_cluster_config = None
 
     # if global_config["cluster"]["options"]["job"] changes during submit the cluster options
+    # Execute the pipeline in out_approach_path
+    cwd = os.getcwd()
+    os.chdir(global_config["out_approach_path"])
     job_id = scheduler.submit(new_cluster_config=job_cluster_config, only_build=not submit, job_prefix=global_config["job_prefix"])
+    os.chdir(cwd)
     return job_id

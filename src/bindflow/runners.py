@@ -256,8 +256,6 @@ def calculate(
         calculation_type = calculation_type.lower()
 
     check_gromacs_installation()
-
-    orig_dir = os.getcwd()
     out_root_folder_path = Path(out_root_folder_path)
 
     # Make internal copy of configuration
@@ -312,7 +310,6 @@ def calculate(
         Path(_global_config["out_approach_path"]).mkdir(exist_ok=True, parents=True)
 
     # Prepare Input / Parametrize
-    os.chdir(_global_config["out_approach_path"])
 
     _global_config["ligand_names"] = [Path(mol['conf']).stem for mol in _global_config["inputs"]["ligands"]]
     _global_config["num_jobs"] = num_jobs
@@ -350,7 +347,6 @@ def calculate(
     print("\tSubmit Job - ID: ", job_id)
     # Final gathering
     print("\tAlready got results?: " + str(len(result_paths)))
-    os.chdir(orig_dir)
     if (len(result_paths) > 0):
         print("Trying to gather ready results", out_root_folder_path)
         if calculation_type == 'fep':
