@@ -575,7 +575,7 @@ DispCorr: EnerPres
 
 ````{tab} CHARMM36-like force fields
 
-In this case you should pass to to all the steps these parameters. BindFlow works with AMBER-like force fields by default
+In this case you should pass to to all the steps these parameters. BindFlow works with AMBER-like force fields by default. In the [GROMACS' docs](https://manual.gromacs.org/current/user-guide/force-fields.html) says:
 
 ```yaml
 constraints: h-bonds
@@ -589,6 +589,11 @@ coulombtype: PME
 rcoulomb: 1.2
 DispCorr: no
 ```
+
+Note that dispersion correction should be applied in the case of lipid monolayers, but not bilayers.
+
+Please also note that the switching distance is a matter of some debate in lipid bilayer simulations, and it is dependent to some extent on the nature of the lipid. Some studies have found that an 0.8-1.0 nm switch is appropriate, others argue 0.8-1.2 nm is best, and yet others stand by 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field literature for their chosen lipid(s) before beginning a simulation!
+
 ````
 
 ## Final note
