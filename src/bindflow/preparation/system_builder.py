@@ -412,7 +412,7 @@ class MakeInputs:
             if dict_to_work['ff']['type'] not in force_field_code_default and not dict_to_work['top']:
                 raise ValueError(f"Molecule {dict_to_work} has non valid type for the force field. Choose from {force_field_code_default.keys()}.")
             # Plug back the default option in case that the user defined None for the code but type was provided correctly
-            if not dict_to_work['ff']['code']:
+            if not dict_to_work['ff']['code'] and dict_to_work['ff']['type']:
                 dict_to_work['ff']['code'] = force_field_code_default[dict_to_work['ff']['type']]
         else:
             raise ValueError(f"Molecule {mol_definition} has a wrong definition.")
