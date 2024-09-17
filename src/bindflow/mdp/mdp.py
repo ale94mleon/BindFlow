@@ -11,14 +11,14 @@ _MDP_PARAM_DEFAULT = {
     "rlist": "1.0",
     "vdwtype": "Cut-off",
     "vdw-modifier": "Potential-shift-Verlet",
-    "rvdw_switch": "0",
+    "rvdw-switch": "0",
     "rvdw": "1.0",
     "coulombtype": "pme",
     "rcoulomb": "1.0",
     "epsilon-r": "1",
     "epsilon-rf": "1",
     "constraints": "h-bonds",
-    "constraint_algorithm": "LINCS"
+    "constraint-algorithm": "LINCS"
 }
 
 
@@ -35,6 +35,7 @@ class MDP:
         self.parameters = _MDP_PARAM_DEFAULT
 
     def set_parameters(self, **kwargs):
+        kwargs = {key.replace('_', '-'): value for key, value in kwargs.items()}
         self.parameters.update(kwargs)
 
     def from_file(self, template_filename, clean_current_parameters=True):
@@ -49,7 +50,7 @@ class MDP:
                 tokens = line.strip().split('=', 1)
                 if len(tokens) != 2:
                     continue
-                parameter_name = tokens[0].strip()
+                parameter_name = tokens[0].strip().replace('_', '-')
                 parameter_value = tokens[1].strip()
                 self.parameters[parameter_name] = parameter_value
         return self
