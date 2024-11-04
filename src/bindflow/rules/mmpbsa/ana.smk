@@ -55,12 +55,14 @@ rule run_gmx_mmpbsa:
             os.chdir(tmp_dir)
             try:
                 tools.run(f"mpirun --use-hwthread-cpus -np {max_parallel} {gmx_mmpbsa_command}")
-            except:
+            except Exception as e1:
+                logger.error(e1)
                 try:
                     # Try a second time. We saw that sometimes helps.
                     logger.info(f"🔂 gmx_MMPBSA parallel execution failed; trying a second time...")
                     tools.run(f"mpirun --use-hwthread-cpus -np {max_parallel} {gmx_mmpbsa_command}")
-                except:
+                except Exception as e2:
+                    logger.error(e2)
                     logger.info(f"⚠️ gmx_MMPBSA parallel execution failed; switching to sequential execution...")
                     tools.run(gmx_mmpbsa_command)
             finally:
