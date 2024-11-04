@@ -135,7 +135,7 @@ class SlurmScheduler(Scheduler):
         self.cluster_config = slurm_validation(self.cluster_config)
 
     def __update_internal_sbatch_values__(self):
-        """This will update self.cluster_config keywords: cpus-per-task, job-name, output and error
+        """This will update self.cluster_config keywords: ntasks, cpus-per-task, job-name, output and error
         for better interaction with snakemake rules.
         """
         # Make log directory on demand
@@ -148,7 +148,9 @@ class SlurmScheduler(Scheduler):
         self.cluster_config.update(
             {
                 # Always use the threads defined on the rules
-                "cpus-per-task": "{threads}",
+                # Need to define in this way so MPI process detect slots properly.
+                "ntasks": "{threads}",
+                "cpus-per-task": "1",
                 # Clear naming
                 "job-name": f"{self.prefix_name}{{rule}}.{{jobid}}",
                 "output": os.path.join(cluster_log_path, f"{self.prefix_name}{{rule}}.{{jobid}}.out"),
