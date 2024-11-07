@@ -30,7 +30,8 @@ rule run_gmx_mmpbsa:
             tpr=params.in_tpr,
             xtc=params.in_xtc,
             run_dir=params.run_dir,
-            host_name=config["host_name"]
+            host_name=config["host_name"],
+            load_dependencies=load_dependencies,
         )
 
         # Run gmx_mmpbsa
@@ -48,23 +49,25 @@ rule run_gmx_mmpbsa:
                         frames_for_gmx_mmpbsa_analysis = frames_for_gmx_mmpbsa_analysis - mmpbsa_config["general"]["startframe"]
         max_parallel = min(threads, frames_for_gmx_mmpbsa_analysis)
         logger.info(f"📊 Estimated number of frames {frames_for_gmx_mmpbsa_analysis}. Running with {max_parallel} threads.")
+        
+        dependencies = " && ".join(load_dependencies) + " && "
         gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {centered_xtc} -cp {input.top} -o res.dat -nogui"
 
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory(prefix='build_', dir=params.run_dir) as tmp_dir:
             os.chdir(tmp_dir)
             try:
-                tools.run(f"mpirun --use-hwthread-cpus -np {max_parallel} {gmx_mmpbsa_command}")
+                tools.run(f"{dependencies} mpirun --use-hwthread-cpus -np {max_parallel} {gmx_mmpbsa_command}")
             except Exception as e1:
                 logger.error(e1)
                 try:
                     # Try a second time. We saw that sometimes helps.
                     logger.info(f"🔂 gmx_MMPBSA parallel execution failed; trying a second time...")
-                    tools.run(f"mpirun --use-hwthread-cpus -np {max_parallel} {gmx_mmpbsa_command}")
+                    tools.run(f"{dependencies} mpirun --use-hwthread-cpus -np {max_parallel} {gmx_mmpbsa_command}")
                 except Exception as e2:
                     logger.error(e2)
                     logger.info(f"⚠️ gmx_MMPBSA parallel execution failed; switching to sequential execution...")
-                    tools.run(gmx_mmpbsa_command)
+                    tools.run(dependencies + gmx_mmpbsa_command)
             finally:
                 if Path("COMPACT_MMXSA_RESULTS.mmxsa").is_file():
                     logger.info(f"✅ gmx_MMPBSA completed successfully!")

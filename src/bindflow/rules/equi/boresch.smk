@@ -18,7 +18,8 @@ rule equil_complex_get_boresch_restraints:
             tpr=params.in_tpr,
             xtc=params.in_xtc,
             run_dir=params.run_dir,
-            host_name=config["host_name"]
+            host_name=config["host_name"],
+            load_dependencies=load_dependencies
         )
 
         # Getting Borech restraints
