@@ -59,6 +59,12 @@ rule mmxbsa_setup:
 rule create_mmxbsa_in:
     input:
         # All ligand simulations use the same temperature
+        # FIXME, in case the build fails for the first ligand, nothing will happens,
+        # I can combine with the mxbsa_setup rule but then I will have mmpbsa.in for each replica (not sample) and the previous
+        # workflow will run all the run_rmx_mmpbsa section because the DAG changed, this will happen anyway if we change the input file change any way
+        # And I would avoid unnecessary repetition, this happens in another part of the code where we get the temperature
+        # from the MDP. Temporal solution, modify the conf file to have as first ligand one that actually works, or remove 
+        # from the simulation the corrupted one any way.
         mdp=out_approach_path+f"/{ligand_names[0]}/1/complex/mmpbsa/simulation/rep.1/prod.mdp"
     output:
         mmpbsa_in=expand(out_approach_path+"/{ligand_name}/input/mmpbsa.in", ligand_name=ligand_names)
