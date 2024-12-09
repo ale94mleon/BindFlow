@@ -322,12 +322,16 @@ nwindows:
 
 ## `mmpbsa` (optional)
 
-This section is used to set the MM(PB/GB)SA calculations (only useful if {py:func}`bindflow.run_mmpbsa.calculate_mmpbsa`). These parameters are passed to [gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/) package through the `.in` file.
+This section is used to set the MM(PB/GB)SA calculations. These parameters are passed to [gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/) package through the `.in` file.
 
-````{dropdown} Example of nwindows section
+````{dropdown} Example of mmpbsa section
 :color: info
 :animate: fade-in-slide-down
 :icon: rocket
+
+In this example, the C2, QH, and IE methods are used to estimate entropy, while the PB and GB methods are applied to calculate the polar component of the solvation free energy. For your application, we recommend benchmarking all possible combinations on a small subset of your data to determine the most suitable methods. Once identified, you can streamline your workflow by using a single method (either PB or GB) for solvation free energy calculations and a single method for entropy estimation.
+
+In certain cases, especially within the same family of compounds and a common receptor where relative comparisons are the primary goal, entropy calculations may not be necessary. Omitting them can significantly improve the efficiency of your production workflow.
 
 ```yaml   
 mmpbsa:
@@ -335,7 +339,6 @@ mmpbsa:
     c2_entropy: 1
     qh_entropy: 1
     interaction_entropy: 1
-    startframe: 10
   pb: {} # enable MMPBSA computation
   gb: {} # enable MMGBSA computation
 ```
@@ -472,3 +475,102 @@ from bindflow.mdp._path_handler import _TemplatePath
 from bindflow.mdp.mdp import MDP
 print(MDP().from_file(_TemplatePath.complex.membrane.equi + "/prod.mdp").to_string())
 ```
+
+## Suggested options for MM(PB/GB)SA calculations
+
+The default MDP options are optimized for FEP calculations. However, for MM(PB/GB)SA calculations, we recommend using a less resource-intensive scheme. This approach has been shown to be effective, as demonstrated in the main BindFlow publication.
+
+`````{dropdown} Suggested mmpbsa scheme
+:color: info
+:animate: fade-in-slide-down
+:icon: rocket
+
+Note that we are collecting 20 samples (`samples: 20`), and in the `mdp/complex/prod` step, exactly 20 frames are output (`nsteps / nstxout-compressed`). This ensures that the size of the final workflow (which strongly depends on the XTC files) remains as compact as necessary.
+
+Additionally, note that a high amount of memory is allocated for the execution of calculations (`cluster/options/mem = 10GB`). This is necessary because [gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/) is memory-intensive, leveraging MPI to process frames in parallel. As a result, it requires a significant amount of memory. As a general rule, allocate at least 1 GB of memory per thread specified in the `{py:func}`bindflow.runners.calculate` function.
+
+````{tab} Soluble protein-ligand system
+```yaml   
+cluster:
+  options:
+    calculation:
+      mem: 10G
+samples: 20
+mdp:
+  complex:
+    equi:
+      00_min:
+        nsteps: 100000
+      01_nvt:
+          dt: 0.002
+          nsteps: 5000
+      02_nvt:
+          dt: 0.003
+          nsteps: 5000
+      03_npt:
+        dt: 0.003
+        nsteps: 7500
+      04_npt:
+        dt: 0.004
+        nsteps: 30000
+      prod:
+        dt: 0.004
+        nsteps: 237500
+        nstxout-compressed: 11875
+    mmpbsa:
+      prod:
+        dt: 0.004
+        nsteps: 25000
+        nstxout-compressed: 1250
+mmpbsa:
+  general: 
+    c2_entropy: 1
+  gb: {}
+```
+````
+````{tab} Membrane protein-ligand system
+```yaml   
+cluster:
+  options:
+    calculation:
+      mem: 10G
+samples: 20
+mdp:
+  complex:
+    equi:
+      00_min:
+        nsteps: 100000
+      01_nvt:
+          dt: 0.001
+          nsteps: 5000
+      02_nvt:
+          dt: 0.001
+          nsteps: 5000
+      03_npt:
+        dt: 0.001
+        nsteps: 5000
+      04_npt:
+        dt: 0.002
+        nsteps: 7500
+      05_npt:
+        dt: 0.002
+        nsteps: 7500
+      06_npt:
+        dt: 0.003
+        nsteps: 15000
+      prod:
+        dt: 0.004
+        nsteps: 237500
+        nstxout-compressed: 11875
+    mmpbsa:
+      prod:
+        dt: 0.004
+        nsteps: 25000
+        nstxout-compressed: 1250
+mmpbsa:
+  general: 
+    c2_entropy: 1
+  gb: {}
+```
+````
+`````
