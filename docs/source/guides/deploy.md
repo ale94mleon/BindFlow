@@ -52,7 +52,7 @@ In some cases, it may be convenient to run the workflow up to a specific point a
 
 ````{tab} until
 
-You can use the `--until` option to run the workflow up to a specific rule (without executing the rule itself). This is useful when you want to stop just before a particular step and complete the remaining workflow later on, potentially on different resources. For example:
+You can use the `--until` option to run the workflow up to a specific rule. This is useful when you want to stop at a particular step and complete the remaining workflow later on, potentially on different resources. For example:
 
 ```bash
 snakemake (...) --until run_gmx_mmpbsa (...)
@@ -61,7 +61,7 @@ snakemake (...) --until run_gmx_mmpbsa (...)
 
 ````{tab} target-jobs
 
-Another approach is to specify target jobs by providing the rule name and the associated wildcards. This allows you to execute only the dependencies of a specific job and its instances. For example:
+Another approach is to specify target jobs by providing the rule name and the associated wildcards. This allows you to execute the dependencies of a specific job and its instances. For example:
 
 ```bash
 snakemake (...) --target-jobs run_gmx_mmpbsa:ligand_name=ligand1,replica=3,sample=2 (...)
