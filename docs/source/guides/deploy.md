@@ -45,3 +45,33 @@ A rough estimation of the maximum level of parallelization for the computational
 * **MM(PB/GB)SA:** `samples` X `number of ligands` X `replicas`
 
 These estimates only represent the parallelization at the job level. Each of these jobs is also parallelized at the GMX level, where GPU acceleration can be utilized, just like any typical GROMACS simulation (and this is even cooler 😎).
+
+## Running workflow partially
+
+In some cases, it may be convenient to run the workflow up to a specific point and resume it at a later time. Snakemake provides several options to achieve this.
+
+````{tab} until
+
+You can use the `--until` option to run the workflow up to a specific rule (without executing the rule itself). This is useful when you want to stop just before a particular step and complete the remaining workflow later on, potentially on different resources. For example:
+
+```bash
+snakemake (...) --until run_gmx_mmpbsa (...)
+```
+````
+
+````{tab} target-jobs
+
+Another approach is to specify target jobs by providing the rule name and the associated wildcards. This allows you to execute only the dependencies of a specific job and its instances. For example:
+
+```bash
+snakemake (...) --target-jobs run_gmx_mmpbsa:ligand_name=ligand1,replica=3,sample=2 (...)
+```
+
+The above command will execute all dependent rules for `run_gmx_mmpbsa` and specifically the instances of `run_gmx_mmpbsa` with the following wildcards:
+
+```yml
+ligand_name: ligand1
+replica: 3
+sample: 2
+```
+````
