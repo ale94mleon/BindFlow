@@ -14,11 +14,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bindflow"
 dynamic = ["version"]
-description = "A snakemake-based workflow for ABFE calculations using GROMACS."
+description = "A snakemake-based workflow for binding free energy calculations using GROMACS."
 readme = "README.rst"
 
 authors=[
-    {name="Alejandro Martínez-León", email="ale94mleon@gmail.com"},
+    {name="Alejandro Martínez León", email="ale94mleon@gmail.com"},
 ]
 
 classifiers = [
