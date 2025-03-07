@@ -7,7 +7,7 @@ We highly recommend the latest version of [mamba](https://mamba.readthedocs.io/e
 `````{admonition} environment.yml
 :class: tip
 
-We are working in a more relaxed environment, but we have encountered challenging situations. For now, we recommend the following pinned environment.
+We would like to work in a more relaxed environment, but we have encountered challenging situations. For now, we recommend the following pinned environment.
 
 ````{tab} Linux 🐧
   ```yaml
@@ -82,6 +82,11 @@ dependencies:
     In other words, at the moment (if you can built the environment and the tests pass) only [OpenFF force fields](https://openforcefield.org/force-fields/force-fields/) for small molecules are accessible for MacOS users with Metal chips. The small molecules force field limitation is only for the automatic generation of topologies through [toff](https://toff.readthedocs.io/en/latest/index.html). User defined topologies of any kind can always be used as input for BindFlow.
   ```
 ````
+
+```{note}
+We observed that conda must be configured with `channel_priority: flexible` instead of `strict`.
+```
+
 
 `````
 
