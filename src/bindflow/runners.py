@@ -26,6 +26,7 @@ def calculate(
         custom_ff_path: Union[None, PathLike] = None,
         host_name: str = 'Protein',
         host_selection: str = 'protein and name CA',
+        fix_protein: bool = True,
         hmr_factor: Union[float, None] = 3.0,
         dt_max: float = 0.004,
         threads: int = 12,
@@ -191,6 +192,13 @@ def calculate(
         MDAnalysis selection to define the host (receptor or protein), by default 'protein and name CA'.
         This is used for Boresch restraint detection.
 
+    fix_protein : bool, optional
+        If True, `pdbfixer` will be applied with flags `--add-atoms=all --replace-nonstandard` and `gmx editconf`
+        will the `-ignh` flag. This is needed to avoid possible issues when processing the structure through
+        GROMACS. To kept an specific protonation state is advised to input the full definition of
+        the protein (.top, .gro) or a PDB with the atom-naming (mainly H-naming) consistent with your selected
+        force field. This should be used for protein mainly, by default True
+
     hmr_factor : Union[float, None], optional
         The Hydrogen Mass Factor to use, by default 3.0.
 
@@ -289,6 +297,7 @@ def calculate(
 
     _global_config["host_name"] = host_name
     _global_config["host_selection"] = host_selection
+    _global_config["fix_protein"] = fix_protein
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     _global_config["custom_ff_path"] = custom_ff_path

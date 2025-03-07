@@ -207,6 +207,7 @@ class MakeInputs:
     def __init__(self, protein: dict = None, host_name: str = "Protein", membrane: dict = None, cofactor: dict = None,
                  cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
                  custom_ff_path: Union[None, PathLike] = None, hmr_factor: Union[float, None] = None,
+                 fix_protein: bool = True,
                  builder_dir: PathLike = 'builder', load_dependencies: List[str] = None):
         """Constructor
 
@@ -316,6 +317,13 @@ class MakeInputs:
 
                 os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
 
+    fix_protein : bool, optional
+        If True, `pdbfixer` will be applied with flags `--add-atoms=all --replace-nonstandard` and `gmx editconf`
+        will the `-ignh` flag. This is needed to avoid possible issues when processing the structure through
+        GROMACS. To kept an specific protonation state is advised to input the full definition of
+        the protein (.top, .gro) or a PDB with the atom-naming (mainly H-naming) consistent with your selected
+        force field. This should be used for protein mainly, by default True
+
         builder_dir : PathLike, optional
             Where all the building files. After completion you can safely remove calling the method clean, by default builder
 
@@ -330,6 +338,7 @@ class MakeInputs:
         self.cofactor_on_protein = cofactor_on_protein
         self.hmr_factor = hmr_factor
         self.water_model = water_model
+        self.fix_protein = fix_protein
         self.load_dependencies = load_dependencies
         self.wd = Path(builder_dir).resolve()
         self.wd.mkdir(exist_ok=True, parents=True)
@@ -534,10 +543,16 @@ class MakeInputs:
             if is_membrane:
                 pdb2gmx(f=dict_to_work['conf'], ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out)
             else:
-                env_prefix = os.environ["CONDA_PREFIX"]
-                fixed_pdb = os.path.join(self.wd, f"{name}_fixed.pdb")
-                run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
-                pdb2gmx(f=fixed_pdb, merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out, ignh=True)
+                if self.fix_protein:
+                    logger.info(f"fix_protein = {self.fix_protein}; therefore pdbfixer will be used \
+                                with flags --add-atoms=all --replace-nonstandard and pdb2gmx with -ignh.\
+                                The protonation of your protien may have changed!")
+                    env_prefix = os.environ["CONDA_PREFIX"]
+                    fixed_pdb = os.path.join(self.wd, f"{name}_fixed.pdb")
+                    run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
+                    pdb2gmx(f=fixed_pdb, merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out, ignh=True)
+                else:
+                    pdb2gmx(f=dict_to_work['conf'], merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out)
         os.chdir(self.cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn

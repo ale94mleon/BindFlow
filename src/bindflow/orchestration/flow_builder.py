@@ -131,6 +131,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "inputs": global_config["inputs"],
         "water_model": global_config["water_model"],
         "host_name": global_config["host_name"],
+        "fix_protein": global_config["fix_protein"],
         "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],

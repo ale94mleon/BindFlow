@@ -51,6 +51,7 @@ rule build_ligand_system:
             water_model=config["water_model"],
             custom_ff_path=config["custom_ff_path"],
             hmr_factor=hmr_factor,
+            fix_protein=config["fix_protein"],
             builder_dir=out_ligand_path/"builder",
             load_dependencies=load_dependencies,
         ) as builder:
