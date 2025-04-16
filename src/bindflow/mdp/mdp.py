@@ -99,7 +99,7 @@ class StepMDP(MDP):
             the step, basically the name of the mdp file on templates, by default None
         step_path : PathLike, optional
             where to look for the mdp, by default None
-        
+
         Example
         -------
         .. ipython:: python

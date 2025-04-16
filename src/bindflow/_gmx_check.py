@@ -1,6 +1,7 @@
 import subprocess
 import logging
 
+
 def check_gromacs_installation():
     # Check if the logger is already configured to avoid reconfiguring it
     if not logging.getLogger().hasHandlers():
