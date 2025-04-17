@@ -85,6 +85,7 @@ bindflow = [
     "data/gmx_water_models/*/*.itp",
     "data/gmx_water_models/*/*.dat",
     "data/gmx_water_models/*.yml",
+    "data/gmx_water_models/configurations/*.gro",
     "data/ci_systems/**/*.yml",
     "data/ci_systems/**/*.tar.gz",
     "mdp/templates/**/*.mdp",
