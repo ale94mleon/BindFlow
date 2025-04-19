@@ -12,6 +12,7 @@ for logger in loggers:
 
 
 def dag_maker(input_path, out_name):
+    """Useful for DEBUG"""
     from bindflow.utils import tools
     cwd = os.getcwd()
     os.chdir(input_path)
