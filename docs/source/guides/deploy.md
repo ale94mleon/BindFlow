@@ -69,7 +69,7 @@ snakemake (...) --target-jobs run_gmx_mmpbsa:ligand_name=ligand1,replica=3,sampl
 
 The above command will execute all dependent rules for `run_gmx_mmpbsa` and specifically the instances of `run_gmx_mmpbsa` with the following wildcards:
 
-```yml
+```yaml
 ligand_name: ligand1
 replica: 3
 sample: 2

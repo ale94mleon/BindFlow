@@ -2,7 +2,7 @@
 
 ## Conda dependencies
 
-We highly recommend the latest version of [mamba](https://mamba.readthedocs.io/en/latest/index.html) for the conda environment creation and a fresh environment (as it will be demonstrated here). This is going to ease the resolution of dependencies. See the [Official Mamba Installation Instructions](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html). [Micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) could also be used.
+We highly recommend the latest version of [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) for the conda environment creation and a fresh environment (as it will be demonstrated here). This is going to ease the resolution of dependencies. See the [Official Mamba Installation Instructions](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html). [Mamba](https://mamba.readthedocs.io/en/latest/index.html) could also be used.
 
 `````{admonition} environment.yml
 :class: tip
@@ -91,8 +91,8 @@ We observed that conda must be configured with `channel_priority: flexible` inst
 `````
 
 ```python
-mamba env create -f environment.yml
-conda activate BindFlow
+micromamba env create -f environment.yml --channel-priority flexible -y
+micromamba activate BindFlow
 ```
 
 ## GROMACS
@@ -161,7 +161,7 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
 
   ````{tab} Production mode
     ```bash
-    conda activate BindFlow
+    micromamba activate BindFlow
     git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
     cd BindFlow 
     python -m pip install -e . --no-deps
@@ -170,7 +170,7 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
   ````
   ````{tab} Developer mode
     ```bash
-    conda activate BindFlow
+    micromamba activate BindFlow
     git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
     cd BindFlow 
     python -m pip install -e . --no-deps
@@ -188,7 +188,7 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
 
   ````{tab} Production mode
     ```bash
-    conda activate BindFlow
+    micromamba activate BindFlow
     git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
     cd BindFlow 
     python -m pip install -e . --no-deps
@@ -196,7 +196,7 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
   ````
   ````{tab} Developer mode
     ```bash
-    conda activate BindFlow
+    micromamba activate BindFlow
     git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
     cd BindFlow 
     python -m pip install -e . --no-deps
