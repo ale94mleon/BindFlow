@@ -346,7 +346,7 @@ mmpbsa:
 
 ## `mdp` (optional)
 
-This section is used to control all Molecular Dynamic Parameters for every simulation of single step
+This section is used to control all Molecular Dynamic Parameters for every single simulation
 
 `````{dropdown} Example of mdp section
 :color: info
@@ -485,9 +485,9 @@ The default MDP options are optimized for FEP calculations. However, for MM(PB/G
 :animate: fade-in-slide-down
 :icon: rocket
 
-Note that we are collecting 20 samples (`samples: 20`), and in the `mdp/complex/prod` step, exactly 20 frames are output (`nsteps / nstxout-compressed`). This ensures that the size of the final workflow (which strongly depends on the XTC files) remains as compact as necessary.
+Note that we are collecting 20 samples (`samples: 20`), and in the `mdp/complex/prod` step, exactly 20 frames are output (`nsteps / nstxout-compressed`) on each XTC file. This configuration ensures the final workflow requires minimal storage, as its size primarily depends on the XTC files.
 
-Additionally, note that a high amount of memory is allocated for the execution of calculations (`cluster/options/mem = 10GB`). This is necessary because [gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/) is memory-intensive, leveraging MPI to process frames in parallel. As a result, it requires a significant amount of memory. As a general rule, allocate at least 1 GB of memory per thread specified in the `{py:func}`bindflow.runners.calculate` function.
+Additionally, note that a high amount of memory is allocated for the execution of calculations (`cluster/options/mem = 10GB`). This is necessary because [gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/) is memory-intensive, as it uses MPI to process frames in parallel. As a general rule, allocate at least 1 GB of memory per thread specified in the `{py:func}`bindflow.runners.calculate` function.
 
 ````{tab} Soluble protein-ligand system
 ```yaml   

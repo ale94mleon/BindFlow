@@ -2,7 +2,7 @@
 
 ## Conda dependencies
 
-We highly recommend the latest version of [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) for the conda environment creation and a fresh environment (as it will be demonstrated here). This is going to ease the resolution of dependencies. See the [Official Mamba Installation Instructions](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html). [Mamba](https://mamba.readthedocs.io/en/latest/index.html) could also be used.
+We highly recommend the latest version of [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) for the conda environment creation and a fresh environment (as it will be demonstrated here). This is going to ease the resolution of dependencies. See the [Official Micromamba Installation Instructions](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html). [Mamba](https://mamba.readthedocs.io/en/latest/index.html) may also be used.
 
 `````{admonition} environment.yml
 :class: tip
@@ -208,7 +208,7 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
 
 This project has an [Sphinx](https://www.sphinx-doc.org/en/master/) documentation that can be built and accessed locally.
 
-````{admonition} requirements.txt
+````{admonition} requirements_doc.txt
 :class: tip
 
   ```
