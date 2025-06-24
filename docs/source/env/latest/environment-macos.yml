@@ -1,0 +1,27 @@
+name: BindFlow
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.14
+  - pip
+  - bioconda::snakemake=7.32.2
+  - ambertools
+  - openmm=8.0.0
+  - openmmforcefields
+  - pdbfixer=1.9
+  - openff-toolkit=0.14.2
+  - espaloma=0.3.2
+  - pyyaml=6.0
+  - parmed=4.1.0
+  - pandas=2.0.3
+  - numpy=1.22.4
+  - mpi4py=3.1.5
+  - pip:
+      - alchemlyb==2.0.0
+      - mdanalysis==2.5.0
+      - mdrestraintsgenerator==0.2.1
+      - pymbar==4.0.1
+      - pytraj==2.0.6
+      - rdkit==2023.3.2
+      - toff==0.2.0
+      - uncertainties==3.1.7
