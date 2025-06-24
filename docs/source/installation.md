@@ -10,77 +10,21 @@ We highly recommend the latest version of [micromamba](https://mamba.readthedocs
 We would like to work in a more relaxed environment, but we have encountered challenging situations. For now, we recommend the following pinned environment.
 
 ````{tab} Linux 🐧
-  ```yaml
-name: BindFlow
-channels:
-  - conda-forge
-dependencies:
-  - python=3.10.14
-  - pip
-  - bioconda::snakemake=7.32.2
-  - ambertools=22.5
-  - openmm=8.0.0
-  - openmmforcefields=0.11.2
-  - pdbfixer=1.9
-  - openff-toolkit=0.14.2
-  - espaloma=0.3.1
-  - dglteam::dgl=0.9.1post1
-  - pyyaml=6.0
-  - parmed=4.1.0
-  - pandas=2.0.3
-  - numpy=1.22.4
-  - mpi4py=3.1.5
-  - pip:
-      - alchemlyb==2.0.0
-      - mdanalysis==2.5.0
-      - mdrestraintsgenerator==0.2.1
-      - pymbar==4.0.1
-      - pytraj==2.0.6
-      - rdkit==2023.3.2
-      - toff==0.1.0
-      - uncertainties==3.1.7
-  ```
+
+```{eval-rst}
+.. literalinclude:: env/latest/environment-linux.yml
+   :language: yaml
+```
+
 ````
 
 ````{tab} MacOS 🍏
-  ```yaml
-name: BindFlow
-channels:
-  - conda-forge
-dependencies:
-  - python=3.10.14
-  - pip
-  - ambertools
-  - openmmforcefields
-  - bioconda::snakemake=7.32.2
-  - openmm=8.0.0
-  - pdbfixer=1.9
-  - openff-toolkit=0.14.2
-  - pyyaml=6.0
-  - parmed=4.1.0
-  - pandas=2.0.3
-  - numpy=1.22.4
-  - mpi4py=3.1.5
-  - pip:
-      - alchemlyb==2.0.0
-      - mdanalysis==2.5.0
-      - mdrestraintsgenerator==0.2.1
-      - pymbar==4.0.1
-      - pytraj==2.0.6
-      - rdkit==2023.3.2
-      - toff==0.1.0
-      - uncertainties==3.1.7
-  ```
-  
-  ```{danger}
-    
-    Some dependencies for MacOS users with Metal chips are not possible to install at the moment  (2024.07.12):
-    
-    * `espaloma =0.3.1` needs to be installed separately after installing [DGL](https://www.dgl.ai/pages/start.html) (probably from source). This is only necessary if the small molecule force field [Espaloma](https://github.com/choderalab/espaloma) is required. Its absence does not affect BindFlow's functionalities.
-    * GAFF is not accessible either at the moment. See: [# 327](https://github.com/openmm/openmmforcefields/issues/327).
-    
-    In other words, at the moment (if you can built the environment and the tests pass) only [OpenFF force fields](https://openforcefield.org/force-fields/force-fields/) for small molecules are accessible for MacOS users with Metal chips. The small molecules force field limitation is only for the automatic generation of topologies through [toff](https://toff.readthedocs.io/en/latest/index.html). User defined topologies of any kind can always be used as input for BindFlow.
-  ```
+
+```{eval-rst}
+.. literalinclude:: env/latest/environment-macos.yml
+   :language: yaml
+```
+
 ````
 
 ```{note}
@@ -165,7 +109,7 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
     git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
     cd BindFlow 
     python -m pip install -e . --no-deps
-    python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git --no-deps
+    python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010 --no-deps
     ```
   ````
   ````{tab} Developer mode
@@ -174,12 +118,12 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
     git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
     cd BindFlow 
     python -m pip install -e . --no-deps
-    python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git --no-deps
+    python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010 --no-deps
     ```
   ````
   
   ```{note}
-    Important changes on the master branch of gmx_MMPBSA are not yet released (2024.07.16) to PyPi, so we are installing directly from the GitHub repo.
+  Currently, we are using the `gmx_MMPBSA` commit [27929e0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/commit/27929e02067bc2321286809818d778a77a872010). This commit has been tested and provides flexibility in selecting the Python version.
   ```
   
 `````
