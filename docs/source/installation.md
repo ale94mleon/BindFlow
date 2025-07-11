@@ -78,10 +78,10 @@ BindFlow depends on [MDAnalysis](https://www.mdanalysis.org). Current MDAnalysis
   ```
   
   ```bash
-  VERSION=2024.6
+  VERSION=2022.4
 
   git clone --depth 1 --branch v${VERSION} https://gitlab.com/gromacs/gromacs.git gromacs-src
-  cmake -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$(pwd)/gromacs-${VERSION}" -DGMX_GPU=OpenCL -DGMX_HWLOC=ON -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -B gromacs-build -S gromacs-src
+  cmake -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$(pwd)/gromacs-${VERSION}" -DGMX_GPU=OpenCL -DGMX_HWLOC=ON -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -B gromacs-build -S gromacs-src
   cmake --build "gromacs-build" --target install -j $(sysctl -n hw.logicalcpu)
 
   rm -rf gromacs-build
