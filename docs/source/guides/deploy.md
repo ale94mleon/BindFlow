@@ -52,11 +52,24 @@ In some cases, it may be convenient to run the workflow up to a specific point a
 
 ````{tab} until
 
-You can use the `--until` option to run the workflow up to a specific rule. This is useful when you want to stop at a particular step and complete the remaining workflow later on, potentially on different resources. For example:
+The `--until` option allows you to execute the workflow up to and including a specific rule. This is particularly useful when you want to stop at an intermediate step and resume the remaining workflow later, possibly on different hardware or computational resources.
+
+For example, to stop the workflow after the `mmxbsa_sample_prod` rule:
 
 ```bash
-snakemake (...) --until run_gmx_mmpbsa (...)
+snakemake (...) --until mmxbsa_sample_prod (...)
 ```
+
+<!-- This option is also helpful when adding new ligands to an existing directory. To prevent BindFlow from rerunning steps for ligands that have already been processed, you can first run:
+
+I am not sure why this does not work :/
+
+```bash
+snakemake (...) --until make_ligand_copies (...)
+```
+
+Then, resume the workflow as usual to process only the new ligands. -->
+
 ````
 
 ````{tab} target-jobs
