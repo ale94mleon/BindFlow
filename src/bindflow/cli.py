@@ -152,13 +152,15 @@ def clean(out_root_folder_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--version',
+        '-v', '--version',
         action='version',
-        version=f"BindFlow: {__version__}✨")
+        version=f"✨ BindFlow: {__version__}")
 
-    subparsers = parser.add_subparsers(required=False, dest="command")
+    subparsers = parser.add_subparsers(required=True, dest="command")
 
-    dag = subparsers.add_parser('dag', help="Build the DAG of the workflow")
+    dag = subparsers.add_parser('dag',
+                                help="🏗️ Build the DAG of the workflow",
+                                description="🏗️ Build the DAG of the workflow")
     dag.add_argument(
         '-i',
         dest='input_path',
@@ -169,10 +171,12 @@ def main():
         dest='out_name',
         help='Name of the output image. The suffix `.png` will be added at the end',
         default='dag', type=str)
+    dag.set_defaults(func=lambda args: dag_maker(input_path=args.input_path, out_name=args.out_name))
 
     fep_check = subparsers.add_parser(
         'check_fep',
-        help="Check for completion of an FEP workflow")
+        help="🔎 Check for completion of an FEP workflow",
+        description="🔎 Check for completion of an FEP workflow")
     fep_check.add_argument(
         dest='out_root_folder_path',
         help='fep directory (`out_root_folder_path` kwarg of :func:`bindflow.runners.calculate`)',
@@ -191,10 +195,16 @@ def main():
         nargs=argparse.OPTIONAL,
         default=None,
         type=str)
+    fep_check.set_defaults(
+        func=lambda args: fep_check_results(
+            out_root_folder_path=args.out_root_folder_path,
+            out_csv_summary=args.out_csv_summary,
+            out_csv_raw=args.out_csv_raw))
 
     mmxbsa_check = subparsers.add_parser(
         'check_mmxbsa',
-        help="Check for completion of an MM(PB/GB)SA workflow")
+        help="🔎 Check for completion of an MM(PB/GB)SA workflow",
+        description="🔎 Check for completion of an MM(PB/GB)SA workflow")
     mmxbsa_check.add_argument(
         dest='out_root_folder_path',
         help='MM(P/B)BSA directory (`out_root_folder_path` kwarg of :func:`bindflow.runners.calculate`)',
@@ -213,38 +223,28 @@ def main():
         nargs=argparse.OPTIONAL,
         default=None,
         type=str)
+    mmxbsa_check.set_defaults(
+        func=lambda args: mmxbsa_check_results(
+            out_root_folder_path=args.out_root_folder_path,
+            out_csv_summary=args.out_csv_summary,
+            out_csv_raw=args.out_csv_raw))      
 
     cleaner = subparsers.add_parser(
         'clean',
-        help="⚠️ Clean the running directory for restart. It will:\n"\
-            "   1 - Kill ALL snakemake process running.\n"\
-            "   2 - Cancel ALL running jobs of an Slurm queue.\n"\
-            "   3 - Delete the .snakemake directory and the content of slurm_logs.\n")
+        help="🧹 Clean the running directory for restart",
+        description="🧹 Clean the running directory for restart. It will:\n"\
+            "   1 - ⚠️ Kill ALL snakemake process running\n"\
+            "   2 - ⚠️ Cancel ALL running jobs of an Slurm queue\n"\
+            "   3 - Delete the .snakemake directory and the content of slurm_logs\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     cleaner.add_argument(
         dest='out_root_folder_path',
         help='MM(P/B)BSA / FEP directory (`out_root_folder_path` kwarg of :func:`bindflow.runners.calculate`)',
         type=str)
+    cleaner.set_defaults(func=lambda args: clean(out_root_folder_path=args.out_root_folder_path))
 
     args = parser.parse_args()
-
-    if args.command is None:
-        print(f"You are using BindFlow: {__version__}")
-        print("Chose from the commands options: dag, check_fep, check_mmxbsa")
-    elif args.command == "dag":
-        dag_maker(input_path=args.input_path, out_name=args.out_name)
-    elif args.command == "check_fep":
-        fep_check_results(
-            out_root_folder_path=args.out_root_folder_path,
-            out_csv_summary=args.out_csv_summary,
-            out_csv_raw=args.out_csv_raw)
-    elif args.command == "check_mmxbsa":
-        mmxbsa_check_results(
-            out_root_folder_path=args.out_root_folder_path,
-            out_csv_summary=args.out_csv_summary,
-            out_csv_raw=args.out_csv_raw)
-    elif args.command == "clean":
-        clean(
-            out_root_folder_path=args.out_root_folder_path)
+    args.func(args)
 
 
 if __name__ == "__main__":
