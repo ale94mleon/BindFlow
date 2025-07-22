@@ -54,6 +54,97 @@ def mmxbsa_check_results(out_root_folder_path, out_csv_summary, out_csv_raw):
     else:
         print("🫣")
 
+def clean(out_root_folder_path):
+    import subprocess
+    import signal
+    import shutil
+    from pathlib import Path
+
+    print("🧹 Initiating lab cleanup sequence...")
+
+    # ---------- Step 1: Kill Snakemake processes ----------
+    try:
+        result = subprocess.run(
+            ["ps", "aux"], capture_output=True, text=True, check=True
+        )
+        lines = result.stdout.splitlines()
+
+        # Filter out lines with "snakemake" but not "grep"
+        matching = [line for line in lines if "snakemake" in line and "grep" not in line]
+
+        # Extract PIDs (second column)
+        pids = [int(line.split()[1]) for line in matching]
+
+        if pids:
+            print("🧹🐍 Snakes on the compute node! Initiating containment...")
+            for pid in pids:
+                os.kill(pid, signal.SIGKILL)
+            print("✅ Free of snakes!")
+        else:
+            print("✅ No Snakemake found slithering around.")
+    except subprocess.CalledProcessError:
+        print("Failed to run 'ps aux'. Is this a Unix-like system?")
+    except IndexError:
+        print("Unexpected output format from 'ps'.")
+    except ValueError:
+        print("Failed to parse PID.")
+    except ProcessLookupError:
+        print("Process no longer exists.")
+    except PermissionError:
+        print("Permission denied when trying to kill a process.")
+    except Exception as e:
+        print("❌ Snake scan failed. Something went wrong:", e)
+
+
+    # ---------- Step 2: Cancel SLURM jobs ----------
+    # Check if 'squeue' is available on the system
+    if shutil.which("squeue"):
+        print("🧹👨‍🔬 Scanning the SLURM queue...")
+        # Build and run the squeue command
+        command = 'squeue --noheader -u $USER --format="%i"'
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            executable='/bin/bash'
+        )
+        output, _ = process.communicate()
+        # Decode and filter non-empty job IDs
+        job_ids = [jid.strip() for jid in output.decode().split('\n') if jid.strip()]
+
+        if job_ids:
+            print("🧹🧪⚠️ Found SLURM jobs. Everything will be cancelled.")
+            cancel_command = "scancel " + " ".join(job_ids)
+            subprocess.run(cancel_command, shell=True, executable='/bin/bash')
+            print("✅ Lab bench cleared! SLURM jobs canceled.")
+        else:
+            print("✅ No active experiments — lab bench is clear.")
+    else:
+        print("❌ 'squeue' not found — SLURM job cleanup skipped.")
+
+    # Deleting temporal directories
+    # ---------- Step 3: Delete workflow folders ----------
+    paths_to_clean = [
+        Path(out_root_folder_path) / "slurm_logs",
+        Path(out_root_folder_path) / ".snakemake"
+    ]
+
+    for path in paths_to_clean:
+        if path.exists() and path.is_dir():
+            try:
+                shutil.rmtree(path)
+                print(f"🧽 Removed '{path}' — workflow residue eliminated.")
+            except Exception as e:
+                print(f"❌ Failed to remove '{path}':", e)
+        else:
+            print(f"✅ No '{path.name}' directory found — already clean.")
+    
+    # Restore the directory
+    (Path(out_root_folder_path) / "slurm_logs").mkdir(exist_ok=True)
+
+    print("🧼✨ Lab cleanup complete — your workspace is spotless!")
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -120,6 +211,17 @@ def main():
         default=None,
         type=str)
 
+    cleaner = subparsers.add_parser(
+        'clean',
+        help="⚠️ Clean the running directory for restart. It will:\n"\
+            "   1 - Kill ALL snakemake process running.\n"\
+            "   2 - Cancel ALL running jobs of an Slurm queue.\n"\
+            "   3 - Delete the .snakemake directory and the content of slurm_logs.\n")
+    cleaner.add_argument(
+        dest='out_root_folder_path',
+        help='MM(P/B)BSA / FEP directory (`out_root_folder_path` kwarg of :func:`bindflow.runners.calculate`)',
+        type=str)
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -137,6 +239,9 @@ def main():
             out_root_folder_path=args.out_root_folder_path,
             out_csv_summary=args.out_csv_summary,
             out_csv_raw=args.out_csv_raw)
+    elif args.command == "clean":
+        clean(
+            out_root_folder_path=args.out_root_folder_path)
 
 
 if __name__ == "__main__":
