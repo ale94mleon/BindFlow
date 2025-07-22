@@ -125,23 +125,26 @@ def clean(out_root_folder_path):
 
     # Deleting temporal directories
     # ---------- Step 3: Delete workflow folders ----------
-    paths_to_clean = [
-        Path(out_root_folder_path) / "slurm_logs",
-        Path(out_root_folder_path) / ".snakemake"
-    ]
 
-    for path in paths_to_clean:
-        if path.exists() and path.is_dir():
-            try:
-                shutil.rmtree(path)
-                print(f"🧽 Removed '{path}' — workflow residue eliminated.")
-            except Exception as e:
-                print(f"❌ Failed to remove '{path}':", e)
-        else:
-            print(f"✅ No '{path.name}' directory found — already clean.")
+    slurm_logs = Path(out_root_folder_path) / "slurm_logs"
+    snakemake =  Path(out_root_folder_path) / ".snakemake"
+
+    if snakemake.exists() and snakemake.is_dir():
+        try:
+            shutil.rmtree(snakemake)
+            print(f"🧽 Removed '{snakemake}' — workflow residue eliminated.")
+        except Exception as e:
+            print(f"❌ Failed to remove '{snakemake}':", e)
+    else:
+        print(f"✅ No '{snakemake.name}' directory found — already clean.")
     
-    # Restore the directory
-    (Path(out_root_folder_path) / "slurm_logs").mkdir(exist_ok=True)
+    if slurm_logs.exists() and slurm_logs.is_dir():
+        for item in slurm_logs.iterdir():
+            item.unlink()
+        print(f"🧽 Removed '{slurm_logs}' content  — workflow residue eliminated.")
+    else:
+        print(f"✅ No '{slurm_logs.name}' directory found — already clean.")
+
 
     print("🧼✨ Lab cleanup complete — your workspace is spotless!")
 
