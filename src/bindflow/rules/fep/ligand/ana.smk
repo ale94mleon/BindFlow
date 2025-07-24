@@ -8,8 +8,8 @@ rule fep_ana_get_dg_ligand_contributions:
         # Make sure that the simualtion ends properly
         finished_vdw_loc=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['ligand']['vdw'])), allow_missing=True),
         finished_coul_loc=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['ligand']['coul'])), allow_missing=True),
-        # To get the simulaiton temperature
-        mdp_vdw_0_prod=out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/vdw.0/prod/prod.mdp",
+        # To get the simulation temperature
+        mdp=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/{sim_type}.{state}/prod/prod.mdp", state=range(len(config['lambdas']['complex']['bonded'])), sim_type=['vdw', 'coul'], allow_missing=True)
     params:
         #  TODO finished_vdw_loc is needed to connect the rule dependencies, but xvg_vdw_loc is the thing that I need and they could also be passed as input. if finished is there xvg should also be there.
         xvg_vdw_loc=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['vdw'])), allow_missing=True),
@@ -20,9 +20,8 @@ rule fep_ana_get_dg_ligand_contributions:
     threads: threads # TODO: Sometimes the rule hang for a long time
     run:
         # Make directory
-        Path(params.ana_loc).mkdir(exist_ok=True, parents=True)
-        # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
-        mdp_params = mdp.MDP().from_file(input.mdp_vdw_0_prod).parameters
+        # Get simulation temperature from any prod.mdp file (all should have the same)
+        mdp_params = mdp.MDP().from_file(input.mdp[0]).parameters
         if 'ref-t' in mdp_params:
             temperature = float(mdp_params['ref-t'].split()[0])
         elif 'ref_t' in mdp_params:

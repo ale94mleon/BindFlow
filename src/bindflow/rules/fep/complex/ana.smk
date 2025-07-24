@@ -8,8 +8,8 @@ rule fep_ana_get_dg_complex_contributions:
         finished_bonded_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['bonded'])), allow_missing=True),
         # Boresch correction
         boresch_dat=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/dG_off.dat",
-        # To get the simulaiton temperature
-        mdp_vdw_0_prod=out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.0/prod/prod.mdp",
+        # To get the simulation temperature
+        mdp=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{sim_type}.{state}/prod/prod.mdp", state=range(len(config['lambdas']['complex']['bonded'])), sim_type=['vdw', 'coul', 'bonded'], allow_missing=True)
     params:
         xvg_vdw_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing=True),
         xvg_coul_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul'])), allow_missing=True),
@@ -21,8 +21,8 @@ rule fep_ana_get_dg_complex_contributions:
     run:
         # Make directory
         Path(params.ana_loc).mkdir(exist_ok=True, parents=True)
-        # Get the simulaiton temperature from the prod.mdp of the state 0 of vdw
-        mdp_params = mdp.MDP().from_file(input.mdp_vdw_0_prod).parameters
+        # Get simulation temperature from any prod.mdp file (all should have the same)
+        mdp_params = mdp.MDP().from_file(input.mdp[0]).parameters
         if 'ref-t' in mdp_params:
             temperature = float(mdp_params['ref-t'].split()[0])
         elif 'ref_t' in mdp_params:
