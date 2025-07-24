@@ -2,18 +2,18 @@ rule fep_setup_complex:
     input:
         complex_top_dir=out_approach_path+"/{ligand_name}/input/complex",
         boresch_top=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/BoreschRestraint.top",
-        mdp_vdw=expand(TemplatePath.complex.membrane.fep + "/vdw/{step}.mdp", step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep + "/vdw", ext='mdp')]),
-        mdp_coul=expand(TemplatePath.complex.membrane.fep + "/coul/{step}.mdp", step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep + "/coul", ext='mdp')]),
-        mdp_bonded=expand(TemplatePath.complex.membrane.fep + "/bonded/{step}.mdp", step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep + "/bonded", ext='mdp')])
+        mdp_vdw=expand(str(TemplatePath.complex.membrane.fep/"vdw/{step}.mdp"), step=[step.stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep/"vdw", ext='.mdp')]),
+        mdp_coul=expand(str(TemplatePath.complex.membrane.fep/"coul/{step}.mdp"), step=[step.stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep/"coul", ext='.mdp')]),
+        mdp_bonded=expand(str(TemplatePath.complex.membrane.fep/"bonded/{step}.mdp"), step=[step.stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep/"bonded", ext='.mdp')])
     params:
         template_dir=TemplatePath.complex.membrane.fep,
         vdw_lambdas=config['lambdas']['complex']['vdw'],
         coul_lambdas=config['lambdas']['complex']['coul'],
         bonded_lambdas=config['lambdas']['complex']['bonded'],
     output:
-        mdp_vdw=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['vdw'])), step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep + "/vdw", ext='mdp')], allow_missing=True),
-        mdp_coul=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep + "/coul", ext='mdp')], allow_missing=True),
-        mdp_bonded=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep + "/bonded", ext='mdp')], allow_missing=True),
+        mdp_vdw=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['vdw'])), step=[step.stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep/"vdw", ext='.mdp')], allow_missing=True),
+        mdp_coul=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['coul'])), step=[step.stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep/"coul", ext='.mdp')], allow_missing=True),
+        mdp_bonded=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/{step}/{step}.mdp", state=range(len(config['lambdas']['complex']['bonded'])), step=[step.stem for step in tools.list_if_file(TemplatePath.complex.membrane.fep/"bonded", ext='.mdp')], allow_missing=True),
         fep_top=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/complex_boresch.top",
         ndx=out_approach_path+"/{ligand_name}/{replica}/complex/fep/topology/index.ndx",
     run:
@@ -25,18 +25,19 @@ rule fep_setup_complex:
             mdp_extra_kwargs = {}
 
 
-        sim_dir = Path(out_approach_path)/f"{wildcards.ligand_name}/{wildcards.replica}/complex/fep"
+        sim_dir = out_approach_path/f"{wildcards.ligand_name}/{wildcards.replica}/complex/fep"
         
         # Make topology directory
-        (sim_dir/"topology").mkdir(exist_ok=True, parents=True)
+        out_top_dir = sim_dir/"topology"
+        out_top_dir.mkdir(exist_ok=True, parents=True)
         
         # Copy complex topology (only itp),
         # I can not set them as output of the rule becasue the name might change
         for itp_file in tools.list_if_file(input.complex_top_dir, ext='itp'):
-            shutil.copy(os.path.join(input.complex_top_dir, itp_file), sim_dir/"topology")
+            shutil.copy(itp_file, out_top_dir)
         # Copy complex topology (only ndx),
         for ndx_file in tools.list_if_file(input.complex_top_dir, ext='ndx'):
-            shutil.copy(os.path.join(input.complex_top_dir, ndx_file), sim_dir/"topology")
+            shutil.copy(ndx_file, out_top_dir)
 
         # Modify the main topology incorporating the boresch restraints
         with open(os.path.join(input.complex_top_dir, 'complex.top'), 'r') as original_top:

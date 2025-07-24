@@ -126,7 +126,7 @@ class StepMDP(MDP):
     def __from_archive(self, explicit_step: str = None):
         if explicit_step:
             self.step = explicit_step
-        valid_steps = [Path(step).stem for step in list_if_file(self.step_path, ext='mdp')]
+        valid_steps = [step.stem for step in list_if_file(self.step_path, ext='.mdp')]
         if self.step not in valid_steps:
             raise ValueError(f"name = {self.step} is not a valid step mdp, must be one of: {valid_steps}")
         self.from_file(self.step_path/f"{self.step}.mdp")
@@ -185,6 +185,7 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
         In case of an invalid ``sys_type``
     """
     sim_dir = Path(sim_dir)
+    template_dir = Path(template_dir)
     valid_lambda_types = ["vdw", "coul", "bonded"]
     valid_sys_types = ['ligand', 'complex']
     if lambda_type not in valid_lambda_types:
@@ -193,12 +194,12 @@ def make_fep_dir_structure(sim_dir: PathLike, template_dir: PathLike, lambda_val
         raise ValueError(f"Non valid sys_type = {sys_type}. Must be one of {valid_sys_types}")
 
     # Take from the source of the package what are the input MDP files
-    input_mdp = [Path(step).name for step in list_if_file(template_dir+f"/{lambda_type}", ext='mdp')]
+    input_mdp = [step.name for step in list_if_file(template_dir/f"{lambda_type}", ext='.mdp')]
 
     # Create the lambda string
     lambda_range_str = " ".join(map(str, lambda_values))
     # Create MDP template for fep calculations
-    mdp_template = StepMDP(step_path=Path(template_dir)/lambda_type)
+    mdp_template = StepMDP(step_path=template_dir/lambda_type)
     for mdp_file in input_mdp:
         step = Path(mdp_file).stem
 

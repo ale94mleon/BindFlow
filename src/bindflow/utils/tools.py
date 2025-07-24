@@ -224,7 +224,7 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
     run_dir = Path(run_dir)
     run_dir.mkdir(exist_ok=True, parents=True)
 
-    name = os.path.splitext(os.path.basename(mdp))[0]
+    name = Path(mdp).stem
 
     @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies)
     def grompp(**kwargs): ...
@@ -327,7 +327,7 @@ def paths_exist(paths: List, raise_error: bool = False, out: Union[str, None] = 
     """
     check = True
     for path in paths:
-        if not os.path.exists(path):
+        if not Path(path).exists():
             check = False
             msg = f"Missing path/file: {path}"
             if raise_error:
@@ -338,11 +338,11 @@ def paths_exist(paths: List, raise_error: bool = False, out: Union[str, None] = 
         open(out, "w").close()
 
 
-def list_if_dir(path: PathLike = '.'):
-    return [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item))]
+def list_if_dir(path: PathLike = '.') -> List[Path]:
+    return [p for p in Path(path).iterdir() if p.is_dir()]
 
 
-def list_if_file(path: PathLike = '.', ext: str = None) -> List[str]:
+def list_if_file(path: PathLike = '.', ext: str = None) -> List[Path]:
     """Dir all the files in path
 
     Parameters
@@ -350,16 +350,16 @@ def list_if_file(path: PathLike = '.', ext: str = None) -> List[str]:
     path : PathLike, optional
         Path to look for the file, by default '.'
     ext : str, optional
-        Th extension of the file, for example: "py", "sh", "txt", by default None
+        The extension of the file, for example: ".py", ".sh", ".txt", by default None
 
     Returns
     -------
-    List[str]
+    List[Path]
         The list of file names
     """
-    files = [item for item in os.listdir(path) if os.path.isfile(os.path.join(path, item))]
+    files = [p for p in Path(path).iterdir() if p.is_file()]
     if ext:
-        files = [file for file in files if os.path.splitext(file)[-1] == f".{ext}"]
+        files = [file for file in files if file.suffix == ext]
     return files
 
 
@@ -466,7 +466,8 @@ def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str =
     import tarfile
 
     # Ensure the provided path exists
-    if not os.path.exists(root_path):
+    root_path = Path(root_path)
+    if not root_path.exists():
         raise FileNotFoundError(f"Directory '{root_path}' does not exist.")
 
     # Define the name of the compressed file
@@ -489,7 +490,7 @@ def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str =
     with tarfile.open(f"{name}.tar", 'w:tar') as project_archive:
         if xtc_files:
             for xtc_file in xtc_files:
-                xtc_file_path = os.path.join(root_path, xtc_file)
+                xtc_file_path = root_path/xtc_file
                 print(f"Adding XTC: {xtc_file}")
                 project_archive.add(xtc_file_path, arcname=xtc_file)
 
@@ -759,7 +760,7 @@ def input_helper(arg_name: str, user_input: Union[PathLike, dict, None], default
             if internal_dict['conf']:
                 if not Path(internal_dict['conf']).exists():
                     raise FileNotFoundError(f"{internal_dict['conf'] = } is not accessible.")
-                internal_dict['conf'] = os.path.abspath(internal_dict['conf'])
+                internal_dict['conf'] = os.path.abspath(internal_dict['conf']) #  Needed the string for JSON
             else:
                 if not optional:
                     raise ValueError(f'conf must be provided on the `{arg_name}` entry when a dictionary is used')
@@ -767,7 +768,7 @@ def input_helper(arg_name: str, user_input: Union[PathLike, dict, None], default
             if internal_dict['top']:
                 if not Path(internal_dict['top']).exists():
                     raise FileNotFoundError(f"{internal_dict['top'] = } is not accessible.")
-                internal_dict['top'] = os.path.abspath(internal_dict['top'])
+                internal_dict['top'] = os.path.abspath(internal_dict['top']) #  Needed the string for JSON
 
             # set to None unused variables:
             if internal_dict['conf'] and internal_dict['top']:
@@ -779,7 +780,7 @@ def input_helper(arg_name: str, user_input: Union[PathLike, dict, None], default
         else:
             if not Path(user_input).exists():
                 raise FileNotFoundError(f"On {arg_name} entry; {user_input = } is not accessible")
-            internal_dict['conf'] = os.path.abspath(user_input)
+            internal_dict['conf'] = os.path.abspath(user_input) #  Needed the string for JSON
         return copy.deepcopy(internal_dict)
 
 

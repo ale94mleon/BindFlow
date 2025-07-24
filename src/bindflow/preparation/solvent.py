@@ -3,7 +3,6 @@ import logging
 import os
 from pathlib import Path
 import shutil
-import tarfile
 import tempfile
 from typing import Iterable, Union, Tuple, List
 
@@ -190,7 +189,7 @@ def make_posres(input_topology: tools.PathLike, molecules: Iterable[str], out_di
             top_lines = f.readlines()
 
         posres_filename = f"posres_{molecule}.itp"
-        with open(os.path.join(out_dir, posres_filename), "w") as posres_file:
+        with open(Path(out_dir)/posres_filename, "w") as posres_file:
             posres_file.write("[ position_restraints ]\n")
 
             for i in range(len(top_lines)):

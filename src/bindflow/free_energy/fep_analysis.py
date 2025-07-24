@@ -1,6 +1,6 @@
 import json
 import math
-import os
+from pathlib import Path
 import warnings
 
 import numpy as np
@@ -186,7 +186,7 @@ def get_dG_contributions(
     for lambda_type in kwargs:
         for xvg_file in kwargs[lambda_type]:
             # Check that all xvg files exist
-            if not os.path.isfile(xvg_file):
+            if not Path(xvg_file).is_file():
                 raise FileNotFoundError(f"Provided xvg file: {xvg_file} for lambda_type = {lambda_type} ")
         if convergency_plots_prefix:
             convergency_plots_prefix_to_use = f"{convergency_plots_prefix}{lambda_type}_"

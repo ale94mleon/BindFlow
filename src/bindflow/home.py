@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import bindflow
-import os
+from pathlib import Path
 import sys
 import inspect
 import platform
 
 
-def home(dataDir=None, libDir=False):
+def home(dataDir=None, libDir=False) -> Path:
     """Return the pathname of the bindflow root directory (or a data subdirectory).
     Parameters
     ----------
@@ -18,31 +18,30 @@ def home(dataDir=None, libDir=False):
         If True, return path to the lib directory
     Returns
     -------
-    dir : str
+    dir : pathlib.Path
         The directory
     Example
     -------
     .. ipython:: python
 
         from bindflow.home import home
-        import os
         print(home())
         print(home(dataDir="gmx_ff"))
-        os.path.join(home(dataDir="gmx_ff"),"amber99sb-star-ildn.ff.tar.gz")
+        print(home(dataDir="gmx_ff")/"amber99sb-star-ildn.ff.tar.gz")
     """
 
-    homeDir = os.path.dirname(inspect.getfile(bindflow))
+    homeDir = Path(inspect.getfile(bindflow)).parent
     try:
         if sys._MEIPASS:
-            homeDir = sys._MEIPASS
+            homeDir = Path(sys._MEIPASS)
     except Exception:
         pass
 
     if dataDir:
-        return os.path.join(homeDir, "data", dataDir)
+        return homeDir/f"data/{dataDir}"
     elif libDir:
-        libdir = os.path.join(homeDir, "lib", platform.system())
-        if not os.path.exists(libdir):
+        libdir = homeDir/f"lib{platform.system()}"
+        if not libdir.exists():
             raise FileNotFoundError("Could not find libs.")
         return libdir
     else:

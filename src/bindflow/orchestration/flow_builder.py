@@ -82,9 +82,9 @@ def generate_approach_snake_file(out_file_path: str, conf_file_path: str, calcul
         "rule RuleThemAll:\n"
 
     if calculation_type == 'fep':
-        file_str += "    input: Path(config[\"out_approach_path\"]) / \"fep_results.csv\""
+        file_str += "    input: Path(config[\"out_approach_path\"])/\"fep_results.csv\""
     elif calculation_type == 'mmpbsa':
-        file_str += "    input: Path(config[\"out_approach_path\"]) / \"mmxbsa_results.csv\""
+        file_str += "    input: Path(config[\"out_approach_path\"])/\"mmxbsa_results.csv\""
 
     with open(out_file_path, 'w') as out:
         out.write(file_str)
@@ -127,7 +127,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
 
     approach_config = {
         "calculation_type": global_config["calculation_type"],
-        "out_approach_path": global_config["out_approach_path"],
+        "out_approach_path": str(global_config["out_approach_path"]),
         "inputs": global_config["inputs"],
         "water_model": global_config["water_model"],
         "host_name": global_config["host_name"],

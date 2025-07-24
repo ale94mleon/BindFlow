@@ -10,9 +10,9 @@ rule gather_receptor_results:
     run:
         gather_results.get_all_fep_dgs(
             root_folder_path=out_approach_path,
-            out_csv=os.path.join(output.out_dg_file)
+            out_csv=output.out_dg_file
         )
         gather_results.get_raw_fep_data(
             root_folder_path=out_approach_path,
-            out_csv=os.path.join(output.out_raw_file)
+            out_csv=output.out_raw_file
         )

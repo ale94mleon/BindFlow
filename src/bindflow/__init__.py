@@ -1,5 +1,5 @@
-import os
+from pathlib import Path
 
 from bindflow._version import __version__
 
-root_path = os.path.dirname(__file__)
+pkg_root_path = Path(__file__).resolve().parent

@@ -1,8 +1,8 @@
-import os
+from pathlib import Path
 
-root_path = os.path.dirname(__file__)
+root_path = Path(__file__).resolve().parent
 
 # Path of Snakefile
-equi = os.path.join(root_path, 'equi')
-fep = os.path.join(root_path, 'fep')
-super_flow = os.path.join(root_path, 'super_flow')
+equi = root_path/'equi'
+fep = root_path/'fep'
+super_flow = root_path/'super_flow'

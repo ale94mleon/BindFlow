@@ -1,15 +1,15 @@
 rule equil_setup_complex:
     input:
-        mdp=expand(TemplatePath.complex.soluble.equi + "/{step}.mdp", step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.soluble.equi, ext='mdp')])
+        mdp=expand(str(TemplatePath.complex.soluble.equi/"{step}.mdp"), step=[step.stem for step in tools.list_if_file(TemplatePath.complex.soluble.equi, ext='.mdp')])
     params:
         template_dir=TemplatePath.complex.soluble.equi,
         # Dynamically access the simulation steps based on the name of the mdp files inside template_dir.
         # Must be defined in this way, outside of the rule is overwrite it.
-        steps=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.soluble.equi, ext='mdp')],
+        steps=[step.stem for step in tools.list_if_file(TemplatePath.complex.soluble.equi, ext='.mdp')],
         ligand_names=config['ligand_names'],
         replicas=range(1,1 + config['replicas']),
     output:
-        mdp=expand(out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/{step}/{step}.mdp", step=[Path(step).stem for step in tools.list_if_file(TemplatePath.complex.soluble.equi, ext='mdp')], ligand_name=config['ligand_names'], replica=list(map(str, range(1,1 + config['replicas']))))
+        mdp=expand(out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/{step}/{step}.mdp", step=[step.stem for step in tools.list_if_file(TemplatePath.complex.soluble.equi, ext='.mdp')], ligand_name=config['ligand_names'], replica=list(map(str, range(1,1 + config['replicas']))))
     run:
        for ligand_name in params.ligand_names:
             for replica in params.replicas:

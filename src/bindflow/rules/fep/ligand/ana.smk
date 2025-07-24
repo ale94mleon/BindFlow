@@ -38,6 +38,6 @@ rule fep_ana_get_dg_ligand_contributions:
             # convergency_plots_prefix = params.ana_loc + "/ligand_",
             convergency_plots_prefix=None,
             # Sort the paths
-            vdw=sorted(params.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            coul=sorted(params.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            vdw=sorted(params.xvg_vdw_loc, key=lambda x: int(Path(x).parts[-3].split('.')[-1])),
+            coul=sorted(params.xvg_coul_loc, key=lambda x: int(Path(x).parts[-3].split('.')[-1])),
         )

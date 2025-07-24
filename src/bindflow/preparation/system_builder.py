@@ -74,7 +74,7 @@ def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:
     out_dir : PathLike, optional
         Where the file will be decompress, by default '.'
     """
-    out_dir = os.path.abspath(out_dir)
+    out_dir = Path(out_dir).resolve()
     supported_ff = [
         'Slipids_2020',
         'amber99sb-star-ildn',
@@ -82,11 +82,11 @@ def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:
     if ff_code not in supported_ff:
         raise ValueError(f"ff_code = {ff_code} is not valid. Chose between: {supported_ff}")
     else:
-        fname = os.path.join(home(dataDir='gmx_ff'), f'{ff_code}.ff.tar.gz')
+        fname = home(dataDir='gmx_ff')/f'{ff_code}.ff.tar.gz'
     tar = tarfile.open(fname, "r:gz")
     tar.extractall(out_dir)
     tar.close()
-    return os.path.join(out_dir,  f'{ff_code}.ff')
+    return out_dir/f'{ff_code}.ff'
 
 
 def system_combiner(**md_elements):
@@ -450,11 +450,11 @@ class MakeInputs:
         # Set flag to False by default
         provided_top_flag = False
         if dict_to_work['top']:
-            top_file = os.path.abspath(dict_to_work['top'])
+            top_file = Path(dict_to_work['top']).resolve()
             # In case the user provided a top, set the flag to True
             provided_top_flag = True
-            if os.path.splitext(dict_to_work['conf'])[-1] == '.gro':
-                gro_file = os.path.abspath(dict_to_work['conf'])
+            if Path(dict_to_work['conf']).suffix == 'gro':
+                gro_file = Path(dict_to_work['conf']).resolve()
             else:
                 raise ValueError("For safety reasons, if top is provided for small molecule; "
                                  f"the gro file must be provided. Provided: {dict_to_work['conf']}.")
@@ -528,7 +528,7 @@ class MakeInputs:
             if dict_to_work['ff']['code'] == 'Slipids_2020':
                 # Retrieve internal Slipids_2020 only if the user did not provided this force field
                 if self.custom_ff_path:
-                    if 'Slipids_2020' not in os.listdir(self.custom_ff_path):
+                    if 'Slipids_2020' not in list(self.custom_ff_path.iterdir()):
                         get_gmx_ff('Slipids_2020', out_dir=self.wd)
                 else:
                     get_gmx_ff('Slipids_2020', out_dir=self.wd)
@@ -560,7 +560,7 @@ class MakeInputs:
                                 with flags --add-atoms=all --replace-nonstandard and pdb2gmx with -ignh.\
                                 The protonation of your protien may have changed!")
                     env_prefix = os.environ["CONDA_PREFIX"]
-                    fixed_pdb = os.path.join(self.wd, f"{name}_fixed.pdb")
+                    fixed_pdb = self.wd/f"{name}_fixed.pdb"
                     run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
                     pdb2gmx(f=fixed_pdb, merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out, ignh=True)
                 else:

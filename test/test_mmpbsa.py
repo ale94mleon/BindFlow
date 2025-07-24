@@ -18,8 +18,8 @@ def test_mmpbsa():
     from bindflow.runners import calculate
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_mmpbsa_') as tmp:
-        home_path = Path(home(dataDir='ci_systems'))
-        fname = Path(home(dataDir='ci_systems')) / 'WP6.tar.gz'
+        home_path = home(dataDir='ci_systems')
+        fname = home_path / 'WP6.tar.gz'
         tar = tarfile.open(fname, "r:gz")
         tar.extractall(tmp)
         tar.close()

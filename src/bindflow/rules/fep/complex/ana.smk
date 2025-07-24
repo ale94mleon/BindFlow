@@ -2,7 +2,7 @@ from bindflow.free_energy import fep_analysis
 # Ana
 rule fep_ana_get_dg_complex_contributions:
     input:
-        # Make sure that the simualtion ends properly
+        # Make sure that the simulation ends properly
         finished_vdw_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing=True),
         finished_coul_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['coul'])), allow_missing=True),
         finished_bonded_loc=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/bonded.{state}/prod/prod.finished", state=range(len(config['lambdas']['complex']['bonded'])), allow_missing=True),
@@ -38,8 +38,8 @@ rule fep_ana_get_dg_complex_contributions:
             # convergency_plots_prefix = params.ana_loc + "/complex_",
             convergency_plots_prefix=None,
             # Sort the paths
-            vdw=sorted(params.xvg_vdw_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            coul=sorted(params.xvg_coul_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
-            bonded=sorted(params.xvg_bonded_loc, key=lambda x: int(os.path.normpath(x).split(os.path.sep)[-3].split('.')[-1])),
+            vdw=sorted(params.xvg_vdw_loc, key=lambda x: int(Path(x).parts[-3].split('.')[-1])),
+            coul=sorted(params.xvg_coul_loc, key=lambda x: int(Path(x).parts[-3].split('.')[-1])),
+            bonded=sorted(params.xvg_bonded_loc, key=lambda x: int(Path(x).parts[-3].split('.')[-1])),
         )
 

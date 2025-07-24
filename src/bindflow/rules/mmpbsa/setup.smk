@@ -23,7 +23,7 @@ rule mmxbsa_setup:
             template_dir = TemplatePath.complex.soluble.mmpbsa
         elif config["complex_type"] == 'membrane':
             template_dir = TemplatePath.complex.membrane.mmpbsa
-        mdp_template = mdp.MDP().from_file(template_dir + '/prod.mdp')
+        mdp_template = mdp.MDP().from_file(template_dir/'prod.mdp')
         # In case of user defined MDP keywords, take those from the config
         try:
             # TODO sanity check on the passed MDP options

@@ -48,7 +48,7 @@ class Scheduler(ABC):
         if self.prefix_name:
             self.prefix_name += '.'
         if snake_executor_file:
-            self.snake_executor_file = os.path.join(self.out_dir, snake_executor_file)
+            self.snake_executor_file = self.out_dir/snake_executor_file
         else:
             self.snake_executor_file = snake_executor_file
 
@@ -153,8 +153,8 @@ class SlurmScheduler(Scheduler):
                 "cpus-per-task": "1",
                 # Clear naming
                 "job-name": f"{self.prefix_name}{{rule}}.{{jobid}}",
-                "output": os.path.join(cluster_log_path, f"{self.prefix_name}{{rule}}.{{jobid}}.out"),
-                "error": os.path.join(cluster_log_path, f"{self.prefix_name}{{rule}}.{{jobid}}.err"),
+                "output": cluster_log_path/f"{self.prefix_name}{{rule}}.{{jobid}}.out",
+                "error": cluster_log_path/f"{self.prefix_name}{{rule}}.{{jobid}}.err",
             }
         )
 
@@ -223,9 +223,9 @@ class SlurmScheduler(Scheduler):
         self._snakemake_str_cmd = command
 
         if self.snake_executor_file:
-            with open(os.path.join(self.out_dir, self.snake_executor_file), 'w') as f:
+            with open(self.out_dir/self.snake_executor_file, 'w') as f:
                 f.write(command)
-            os.chmod(os.path.join(self.out_dir, self.snake_executor_file), stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
+            os.chmod(self.out_dir/self.snake_executor_file, stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
         return command
 
     def submit(self, new_cluster_config: dict = None, only_build: bool = False, job_prefix: str = "") -> str:
@@ -399,9 +399,9 @@ class FrontEnd(Scheduler):
         self._snakemake_str_cmd = command
 
         if self.snake_executor_file:
-            with open(os.path.join(self.out_dir, self.snake_executor_file), 'w') as f:
+            with open(self.out_dir/self.snake_executor_file, 'w') as f:
                 f.write(command)
-            os.chmod(os.path.join(self.out_dir, self.snake_executor_file), stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
+            os.chmod(self.out_dir/self.snake_executor_file, stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
         return command
 
     def submit(self, only_build: bool = False, **kwargs) -> str:
