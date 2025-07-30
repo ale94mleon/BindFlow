@@ -417,7 +417,7 @@ class MakeInputs:
             top_file = Path(dict_to_work['top']).resolve()
             # In case the user provided a top, set the flag to True
             provided_top_flag = True
-            if Path(dict_to_work['conf']).suffix == 'gro':
+            if Path(dict_to_work['conf']).suffix == '.gro':
                 gro_file = Path(dict_to_work['conf']).resolve()
             else:
                 raise ValueError("For safety reasons, if top is provided for small molecule; "
