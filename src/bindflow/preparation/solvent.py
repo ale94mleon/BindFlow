@@ -1,44 +1,19 @@
 #!/usr/bin/env python
 import logging
 import os
-from pathlib import Path
 import shutil
 import tempfile
-from typing import Iterable, Union, Tuple, List
+from pathlib import Path
+from typing import Iterable, List, Tuple, Union
 
-import parmed
 import yaml
+from parmed import Structure
 
 from bindflow.home import home
 from bindflow.utils import tools
 
 logger = logging.getLogger(__name__)
 
-
-def readParmEDMolecule(top_file: tools.PathLike, gro_file: tools.PathLike) -> parmed.Structure:
-    """Read a gro and top GROMACS file and return
-    a topology Structure
-
-    Parameters
-    ----------
-    top_file : PathLike
-        Path of the top file
-    gro_file : PathLike
-        Path of the gro file
-
-    Returns
-    -------
-    Structure
-        Structure with topologies, coordinates and box information
-    """
-    gmx_top = parmed.gromacs.GromacsTopologyFile(str(top_file))
-    gmx_gro = parmed.gromacs.GromacsGroFile.parse(str(gro_file))
-
-    # Add positions
-    gmx_top.positions = gmx_gro.positions
-    # Needed because .prmtop contains box info
-    gmx_top.box = gmx_gro.box
-    return gmx_top
 
 
 def get_atom_types(top: tools.PathLike) -> dict:
@@ -526,7 +501,7 @@ class Solvate:
         # Just to clean the topology. In this way only the used atom types are written.
         # And the include statements are removed
         # It builds a monolithic topology
-        struc = readParmEDMolecule(top_file=top, gro_file=gro)
+        struc = tools.readParmEDMolecule(top_file=top, gro_file=gro)
         struc.save(str(top), overwrite=True)
         struc.save(str(gro), overwrite=True)
 
@@ -564,7 +539,7 @@ class Solvate:
 
     def __call__(
             self,
-            structure: parmed.Structure,
+            structure: Structure,
             bt: str = "triclinic",
             box: list[float] = None,
             angles: list[float] = None,

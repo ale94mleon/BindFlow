@@ -7,6 +7,9 @@ import tempfile
 from pathlib import Path
 from typing import Iterable, List, Tuple, Union
 
+from parmed import Structure
+from parmed.gromacs import GromacsGroFile, GromacsTopologyFile
+
 PathLike = Union[os.PathLike, str, bytes]
 
 # Because of how snakemake handles environmental variables that
@@ -175,6 +178,44 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
                     return run(cmd)
         return wrapper
     return decorator
+
+
+def readParmEDMolecule(top_file: PathLike, gro_file: PathLike) -> Structure:
+    """Read a gro and top GROMACS file and return
+    a topology Structure
+
+    Parameters
+    ----------
+    top_file : PathLike
+        Path of the top file
+    gro_file : PathLike
+        Path of the gro file
+
+    Returns
+    -------
+    Structure
+        Structure with topologies, coordinates and box information
+    """
+    gmx_top = GromacsTopologyFile(str(top_file))
+    gmx_gro = GromacsGroFile.parse(str(gro_file), skip_bonds=True)
+
+    # Despite top_file might have different chains
+    # defined as different molecules, it looks like
+    # this is interpreted by parmed as a continuation
+    # of the chain when the gro of this system is
+    # written, the current residue numeration is not
+    # respect and a continues numeration is set
+    # this makes that in the topology you may have
+    # two chains but in the gro you have a continue chain.
+    # This means that post-processing of the gro file
+    # is needed in case of multiple chains and the residue
+    # numeration is important for the analysis
+
+    # Add positions
+    gmx_top.positions = gmx_gro.positions
+    # Needed because .prmtop contains box info
+    gmx_top.box = gmx_gro.box
+    return gmx_top
 
 
 def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoint: PathLike = None, index: PathLike = None,

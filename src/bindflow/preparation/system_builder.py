@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import copy
+from json import tool
 import logging
 import os
 import shutil
@@ -9,7 +10,6 @@ from itertools import chain
 from pathlib import Path
 from typing import List, Union
 
-from parmed.gromacs import GromacsGroFile, GromacsTopologyFile
 from parmed.structure import Structure
 from parmed.tools.actions import HMassRepartition
 from toff import Parameterize
@@ -23,43 +23,6 @@ from bindflow.utils.tools import PathLike, recursive_update_dict, run
 # from
 logger = logging.getLogger(__name__)
 
-
-def readParmEDMolecule(top_file: PathLike, gro_file: PathLike) -> Structure:
-    """Read a gro and top GROMACS file and return
-    a topology Structure
-
-    Parameters
-    ----------
-    top_file : PathLike
-        Path of the top file
-    gro_file : PathLike
-        Path of the gro file
-
-    Returns
-    -------
-    Structure
-        Structure with topologies, coordinates and box information
-    """
-    gmx_top = GromacsTopologyFile(str(top_file))
-    gmx_gro = GromacsGroFile.parse(str(gro_file), skip_bonds=True)
-
-    # Despite top_file might have different chains
-    # defined as different molecules, it looks like
-    # this is interpreted by parmed as a continuation
-    # of the chain when the gro of this system is
-    # written, the current residue numeration is not
-    # respect and a continues numeration is set
-    # this makes that in the topology you may have
-    # two chains but in the gro you have a continue chain.
-    # This means that post-processing of the gro file
-    # is needed in case of multiple chains and the residue
-    # numeration is important for the analysis
-
-    # Add positions
-    gmx_top.positions = gmx_gro.positions
-    # Needed because .prmtop contains box info
-    gmx_top.box = gmx_gro.box
-    return gmx_top
 
 
 def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:
@@ -448,6 +411,7 @@ class MakeInputs:
         else:
             raise ValueError(f"Molecule {mol_definition} has a wrong configuration")
         # Set flag to False by default
+        print(dict_to_work, 77777)
         provided_top_flag = False
         if dict_to_work['top']:
             top_file = Path(dict_to_work['top']).resolve()
@@ -474,7 +438,7 @@ class MakeInputs:
             top_file = self.wd/f"{name}.top"
             gro_file = self.wd/f"{name}.gro"
 
-        parmed_system = readParmEDMolecule(top_file=top_file, gro_file=gro_file)
+        parmed_system = tools.readParmEDMolecule(top_file=top_file, gro_file=gro_file)
         if provided_top_flag and self.hmr_factor:
             HMassRepartition(parmed_system, self.hmr_factor).execute()
         return parmed_system
@@ -568,7 +532,7 @@ class MakeInputs:
         os.chdir(self.cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn
-        system = readParmEDMolecule(top_file=top_out, gro_file=gro_out)
+        system = tools.readParmEDMolecule(top_file=top_out, gro_file=gro_out)
         if self.hmr_factor:
             HMassRepartition(system, self.hmr_factor).execute()
         system.write(str(self.wd/f'{name}_final.top'))
