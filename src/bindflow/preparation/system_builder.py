@@ -445,7 +445,7 @@ class MakeInputs:
     def gmx_process(self, mol_definition: dict, is_membrane: bool = False) -> Structure:
         """Used to process the compatibles biomolecules.
         By default it will use amber99sb-ildn (protein, DNA, ..) Slipids_2020 (membrane).
-        However, these setups are overwrite by the definitions on `mol_definition`
+        However, these setups are overwritten by the definitions on `mol_definition`
 
         Parameters
         ----------

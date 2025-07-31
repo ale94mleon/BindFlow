@@ -194,7 +194,7 @@ def make_posres(input_topology: tools.PathLike, molecules: Iterable[str], out_di
 
 def _tip3p_settles_to_constraints(top: tools.PathLike, molecule: str, out_top: Union[tools.PathLike, None] = None) -> None:
     """Temporal solution to TODO (put the GitHub Issue).
-    Basicallyt it will change the settles entrance of `molecule`
+    Basically it will change the settles entrance of `molecule`
     by:
     ; https://gromacs.bioexcel.eu/t/how-to-treat-specific-water-molecules-as-ligand/3470/9
     '[ constraints ]'
@@ -206,7 +206,7 @@ def _tip3p_settles_to_constraints(top: tools.PathLike, molecule: str, out_top: U
     Warning
     -------
     This is only useful for replacing the settle section of a tip3p-like molecule.
-    This funciton its just a workaroud and will probably bve removed on the future
+    This function its just a workaround and will probably bve removed on the future
 
     Parameters
     ----------
