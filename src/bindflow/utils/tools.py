@@ -180,7 +180,7 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     return decorator
 
 
-def readParmEDMolecule(top_file: PathLike, gro_file: PathLike) -> Structure:
+def readParmEDMolecule(top_file: PathLike, gro_file: PathLike, check_box:bool = False) -> Structure:
     """Read a gro and top GROMACS file and return
     a topology Structure
 
@@ -190,6 +190,8 @@ def readParmEDMolecule(top_file: PathLike, gro_file: PathLike) -> Structure:
         Path of the top file
     gro_file : PathLike
         Path of the gro file
+    check_box : bool
+        If True and sum(gmx_gro.box[:3]) == 0, gmx_gro.box[:3] = [10, 10, 10]
 
     Returns
     -------
@@ -212,6 +214,12 @@ def readParmEDMolecule(top_file: PathLike, gro_file: PathLike) -> Structure:
     # numeration is important for the analysis
 
     # Add positions
+    if sum(gmx_gro.box[:3]) == 0 and check_box:
+        # Place holder in case no box info on the reader file
+        # THIS MAY CAUSE ISSUES WHEN IS COMBINED WITH THE LIGAND
+        # I AM NOT SURE, MAYBE IT IS NT A PROBLEM AS THE COORDINATES
+        # DO NOT CHANGE.
+        gmx_gro.box[:3] = [10, 10, 10]
     gmx_top.positions = gmx_gro.positions
     # Needed because .prmtop contains box info
     gmx_top.box = gmx_gro.box

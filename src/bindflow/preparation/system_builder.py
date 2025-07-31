@@ -411,7 +411,6 @@ class MakeInputs:
         else:
             raise ValueError(f"Molecule {mol_definition} has a wrong configuration")
         # Set flag to False by default
-        print(dict_to_work, 77777)
         provided_top_flag = False
         if dict_to_work['top']:
             top_file = Path(dict_to_work['top']).resolve()
@@ -446,7 +445,7 @@ class MakeInputs:
     def gmx_process(self, mol_definition: dict, is_membrane: bool = False) -> Structure:
         """Used to process the compatibles biomolecules.
         By default it will use amber99sb-ildn (protein, DNA, ..) Slipids_2020 (membrane).
-        However, these setups are overwrite by the definitions on `mol_definition` 
+        However, these setups are overwrite by the definitions on `mol_definition`
 
         Parameters
         ----------
@@ -460,6 +459,7 @@ class MakeInputs:
         Structure
             A parameterize Structure object
         """
+        check_box = False
         # Setting default parameters
         dict_to_work = {
             'top': None,
@@ -504,9 +504,14 @@ class MakeInputs:
         if dict_to_work['top']:
             shutil.copy(dict_to_work['top'], top_out)
             if ext == '.pdb':
+                # This is needed as PDB have a tendency to do not have the box informaiton (CRYST1)
+                # In such case, problems during solvation happens at parmed level when writing.
+                # pdb2gmx adds by defualt some box info (most outer else)
+                # GRO files ussully have non-zero boxes
+                check_box = True
                 @tools.gmx_command(load_dependencies=self.load_dependencies)
                 def editconf(**kwargs): ...
-
+                # If the PDB does not have CRYST1, it will generated as vecotr 0 0 0 on the gro file
                 editconf(f=dict_to_work['conf'], o=gro_out)
             elif ext == '.gro':
                 shutil.copy(dict_to_work['conf'], gro_out)
@@ -532,7 +537,7 @@ class MakeInputs:
         os.chdir(self.cwd)
 
         # TODO and readParmEDMolecule fails with amber99sb-start-ildn
-        system = tools.readParmEDMolecule(top_file=top_out, gro_file=gro_out)
+        system = tools.readParmEDMolecule(top_file=top_out, gro_file=gro_out, check_box=check_box)
         if self.hmr_factor:
             HMassRepartition(system, self.hmr_factor).execute()
         system.write(str(self.wd/f'{name}_final.top'))
