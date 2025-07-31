@@ -15,7 +15,6 @@ from bindflow.utils import tools
 logger = logging.getLogger(__name__)
 
 
-
 def get_atom_types(top: tools.PathLike) -> dict:
     """
     Return the atomtypes section as a dict with key atom type and values the
