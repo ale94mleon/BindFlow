@@ -108,9 +108,9 @@ class StepMDP(MDP):
             from bindflow.mdp.templates import TemplatePath
             from pathlib import Path
             my_mdp = mdp.StepMDP(step='00_min', step_path=Path(TemplatePath.ligand.fep)/'coul')
-            my_mdp.set_parameters(**{"init-lambda-state": "0", "coul-lambdas": "0 0.5 1",})
+            my_mdp.set_parameters(**{"init-lambda-state": "0", "coul-lambdas": "0 0.5 1"})
             print(my_mdp)
-            my_mdp.set_new_step(step='02_npt')
+            my_mdp.set_new_step(step='01_nvt')
             print(my_mdp.to_string())
         """
         super().__init__(**kwargs)
