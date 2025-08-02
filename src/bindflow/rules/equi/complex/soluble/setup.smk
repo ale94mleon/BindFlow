@@ -19,11 +19,11 @@ rule equil_setup_complex:
                 mdp_template = mdp.StepMDP(step_path = params.template_dir)
 
                 # Not sure if the sorted is needed, just for safety
-                for step, input_mdp in zip(sorted(params.steps), sorted(input.mdp)):
+                for step in params.steps:
                     (sim_dir/step).mkdir(exist_ok=True, parents=True)
                     output_mdp = sim_dir/step/f"{step}.mdp"
                     
-                    # Update MDP step
+                    # Change to new MDP step
                     mdp_template.set_new_step(step)
                     
                     # Check dt and set dt_max if needed, this will be overwrite by the parameters provided in the mdp section of the config
