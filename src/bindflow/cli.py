@@ -54,6 +54,7 @@ def mmxbsa_check_results(out_root_folder_path, out_csv_summary, out_csv_raw):
     else:
         print("🫣")
 
+
 def clean(out_root_folder_path):
     import subprocess
     import signal
@@ -137,14 +138,13 @@ def clean(out_root_folder_path):
             print(f"❌ Failed to remove '{snakemake}':", e)
     else:
         print(f"✅ No '{snakemake.name}' directory found — already clean.")
-    
+
     if slurm_logs.exists() and slurm_logs.is_dir():
         for item in slurm_logs.iterdir():
             item.unlink()
         print(f"🧽 Removed '{slurm_logs}' content  — workflow residue eliminated.")
     else:
         print(f"✅ No '{slurm_logs.name}' directory found — already clean.")
-
 
     print("🧼✨ Lab cleanup complete — your workspace is spotless!")
 
@@ -232,10 +232,10 @@ def main():
     cleaner = subparsers.add_parser(
         'clean',
         help="🧹 Clean the running directory for restart",
-        description="🧹 Clean the running directory for restart. It will:\n"\
-            "   1 - ⚠️ Kill ALL snakemake process running\n"\
-            "   2 - ⚠️ Cancel ALL running jobs of an Slurm queue\n"\
-            "   3 - Delete the .snakemake directory and the content of slurm_logs\n",
+        description="🧹 Clean the running directory for restart. It will:\n"
+        "   1 - ⚠️ Kill ALL snakemake process running\n"
+        "   2 - ⚠️ Cancel ALL running jobs of an Slurm queue\n"
+        "   3 - Delete the .snakemake directory and the content of slurm_logs\n",
         formatter_class=argparse.RawDescriptionHelpFormatter)
     cleaner.add_argument(
         dest='out_root_folder_path',
