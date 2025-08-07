@@ -11,6 +11,9 @@ rule fep_ligand_00_min:
     threads: threads
     retries: retries
     run:
+        update_mdrun_extra = mdrun_extra["ligand"].copy()
+        if "update" in update_mdrun_extra:
+            del update_mdrun_extra["update"]
         tools.gmx_runner(
             mdp=input.mdp,
             topology=input.top,
@@ -18,7 +21,7 @@ rule fep_ligand_00_min:
             nthreads=threads,
             load_dependencies=load_dependencies,
             run_dir=params.run_dir,
-            **mdrun_extra['ligand']
+            **update_mdrun_extra
         )
 
 rule fep_ligand_01_nvt:

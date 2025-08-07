@@ -11,6 +11,9 @@ rule fep_complex_00_min:
     threads: threads
     retries: retries
     run:
+        update_mdrun_extra = mdrun_extra["complex"].copy()
+        if "update" in update_mdrun_extra:
+            del update_mdrun_extra["update"]
         tools.gmx_runner(
             mdp=input.mdp,
             topology=input.top,
@@ -19,7 +22,7 @@ rule fep_complex_00_min:
             nthreads=threads,
             load_dependencies=load_dependencies,
             run_dir=params.run_dir,
-            **mdrun_extra['complex']
+            **update_mdrun_extra
         )
 
 rule fep_complex_01_nvt:
