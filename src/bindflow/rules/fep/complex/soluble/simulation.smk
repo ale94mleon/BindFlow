@@ -11,8 +11,9 @@ rule fep_complex_00_min:
     retries: retries
     run:
         update_mdrun_extra = mdrun_extra["complex"].copy()
-        if "update" in update_mdrun_extra:
-            del update_mdrun_extra["update"]
+        for invalid_flag in ["update", "bonded"]:
+            if invalid_flag in update_mdrun_extra:
+                del update_mdrun_extra[invalid_flag]
         tools.gmx_runner(
             mdp=input.mdp,
             topology=input.top,
