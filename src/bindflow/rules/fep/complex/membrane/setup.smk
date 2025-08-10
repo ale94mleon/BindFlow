@@ -33,10 +33,10 @@ rule fep_setup_complex:
         
         # Copy complex topology (only itp),
         # I can not set them as output of the rule becasue the name might change
-        for itp_file in tools.list_if_file(input.complex_top_dir, ext='itp'):
+        for itp_file in tools.list_if_file(input.complex_top_dir, ext='.itp'):
             shutil.copy(itp_file, out_top_dir)
         # Copy complex topology (only ndx),
-        for ndx_file in tools.list_if_file(input.complex_top_dir, ext='ndx'):
+        for ndx_file in tools.list_if_file(input.complex_top_dir, ext='.ndx'):
             shutil.copy(ndx_file, out_top_dir)
 
         # Modify the main topology incorporating the boresch restraints
