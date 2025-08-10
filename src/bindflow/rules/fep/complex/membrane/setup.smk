@@ -25,7 +25,7 @@ rule fep_setup_complex:
             mdp_extra_kwargs = {}
 
 
-        sim_dir = out_approach_path/f"{wildcards.ligand_name}/{wildcards.replica}/complex/fep"
+        sim_dir = Path(out_approach_path)/f"{wildcards.ligand_name}/{wildcards.replica}/complex/fep"
         
         # Make topology directory
         out_top_dir = sim_dir/"topology"
