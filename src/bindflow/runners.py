@@ -27,7 +27,7 @@ def calculate(
         host_name: str = 'Protein',
         host_selection: str = 'protein and name CA',
         fix_protein: bool = True,
-        hmr_factor: Union[float, None] = 3.0,
+        hmr_factor: Union[float, None] = 2.5,
         dt_max: float = 0.004,
         threads: int = 12,
         num_jobs: int = 10000,
@@ -200,7 +200,7 @@ def calculate(
         force field. This should be used for protein mainly, by default True
 
     hmr_factor : Union[float, None], optional
-        The Hydrogen Mass Factor to use, by default 3.0.
+        The Hydrogen Mass Factor to use, by default 2.5.
 
         .. warning::
             For provided topologies if hmr_factor is set, it will pass any way.
