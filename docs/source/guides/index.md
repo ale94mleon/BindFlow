@@ -6,4 +6,5 @@
 force-fields
 deploy
 customizing
+debugging
 ```

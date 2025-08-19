@@ -134,4 +134,76 @@ nohup nice -19 ./job.sh > RuleThemAll.out 2>&1 &
 
 Now, even if you close your terminal, the process will continue running in the background because of the use of `nohup`. This process is mainly idle, but by using `nice -19`, we lower its priority, so it does not interfere with any main processes running on your front end. You can also use other persistent terminals like [screen](https://www.gnu.org/software/screen/manual/screen.html) or [byobu](https://www.byobu.org/).
 
-## Cancelling running jobs in a Slurm HPC cluster
+## Error on fep_ana_get_dg_complex_contributions
+
+Check {ref}`debugging-bindflow-runs` runs section.
+
+If, in the `.err` file under `slurm_logs`, you find an error such as:
+
+
+```{error}
+Duplicate time values found; it's generally advised to use slicing on DataFrames with unique time values for each row. Use `force=True` to ignore this error.
+```
+
+This usually means that BindFlow was restarted and the GROMACS simulation did not handle the restart correctly.
+
+### Step 1 — Identify the problematic window
+
+From the error log, determine which `ligand` and `replica` failed. For example, assume the error points to ligand3 and replica 1
+
+### Step 2 — Detect duplicate time values in XVG files or corrupted XVG files
+
+```python
+import numpy as np
+from glob import glob 
+
+root_path = "fep/openff_unconstrained-2.0.0/ligand3/1/complex/fep/simulation/"
+for xvg in glob(root_path+"/*/prod/prod.xvg"):
+    try:
+        data = np.loadtxt(xvg, comments=["#", "@"])[:, 0]
+    except ValueError:
+        print(xvg)
+    uniques, counts = np.unique(data, return_counts=True)
+    duplicates = uniques[counts > 1]
+    if len(duplicates) > 0:
+        print(xvg, duplicates)
+```
+
+Suppose this identifies:
+
+```bash
+fep/openff_unconstrained-2.0.0/ligand3/1/complex/fep/simulation/vdw.0/prod/prod.xvg
+```
+
+### Step 3 — Clean the problematic window
+
+Delete all files in that window **except prod.mdp**:
+
+```bash
+! find fep/openff_unconstrained-2.0.0/ligand3/1/complex/fep/simulation/vdw.0/prod -maxdepth 1 ! -name 'prod.mdp' -type f -delete
+```
+
+### Step 4 — Reset and rerun
+
+1. Clean the working directory:
+
+```bash
+bindflow clean fep/openff_unconstrained-2.0.0
+```
+
+2. Rerun the pipeline.
+
+The affected window (e.g., vdw.0) will be repeated.
+
+### TL;DR
+
+```{mermaid}
+flowchart TD
+    A[Error detected in slurm_logs .err file] --> B[Identify ligand and replica from error log]
+    B --> C[Run Python script to scan XVG files]
+    C --> D{Duplicates or corrupted found?}
+    D -- Yes --> E[Delete all files except prod.mdp in problematic window]
+    E --> F[Run 'bindflow clean']
+    F --> G[Rerun pipeline]
+    D -- No --> H[Check main BindFlow log for other causes]
+```
