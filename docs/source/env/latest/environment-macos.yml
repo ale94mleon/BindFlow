@@ -24,4 +24,3 @@ dependencies:
       - pytraj==2.0.6
       - rdkit==2023.3.2
       - toff==0.2.0
-      - uncertainties==3.1.7

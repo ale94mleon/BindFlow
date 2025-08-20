@@ -6,9 +6,8 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
-from uncertainties import ufloat
 
-from bindflow.utils.tools import PathLike
+from bindflow.utils.tools import PathLike, sum_uncertainty_propagation
 
 
 def get_fep_stats(replica_paths: List[PathLike]) -> dict:
@@ -27,7 +26,7 @@ def get_fep_stats(replica_paths: List[PathLike]) -> dict:
             #. <estimator>: the average value of the estimator
             #. <estimator>_sem: Standard error of the mean
             #. <estimator>_uncertainty_propagation: Propagate the uncertainties after the average.
-            This use the estimated uncertainties from alchemy (Check :func:`bindflow.free_energy.fep_analysis.run_alchemlyb`)
+            This use the estimated uncertainties from alchemlyb (Check :func:`bindflow.free_energy.fep_analysis.run_alchemlyb`)
             #. <estimator>_num_replicas: The number of replicas employed.
 
     """
@@ -37,18 +36,22 @@ def get_fep_stats(replica_paths: List[PathLike]) -> dict:
         df = pd.read_csv(replica_path, index_col=0)
         for estimator in df.columns:
             if estimator in estimator_result:
-                estimator_result[estimator].append(ufloat(df.loc['value', estimator], df.loc['std_dev', estimator]))
+                estimator_result[estimator].append((df.loc['value', estimator], df.loc['std_dev', estimator]))
             else:
-                estimator_result[estimator] = [ufloat(df.loc['value', estimator], df.loc['std_dev', estimator])]
+                estimator_result[estimator] = [(df.loc['value', estimator], df.loc['std_dev', estimator])]
 
     # Build the final result
     final_result = dict()
     for estimator in estimator_result:
-        mean = np.mean(estimator_result[estimator])
+        mean_value = np.mean([value_error[0] for value_error in estimator_result[estimator]])
+        mean_std_dev = sum_uncertainty_propagation(
+            errors=[value_error[1] for value_error in estimator_result[estimator]],
+            coefficients=len(estimator_result[estimator]) * [1/len(estimator_result[estimator])]
+        )
         # Save results
-        final_result[estimator] = mean.nominal_value
-        final_result[f"{estimator}_sem"] = pd.Series([value.nominal_value for value in estimator_result[estimator]]).sem(ddof=1)
-        final_result[f"{estimator}_uncertainty_propagation"] = mean.std_dev
+        final_result[estimator] = mean_value
+        final_result[f"{estimator}_sem"] = pd.Series([value_error[0] for value_error in estimator_result[estimator]]).sem(ddof=1)
+        final_result[f"{estimator}_uncertainty_propagation"] = mean_std_dev
         final_result[f"{estimator}_num_replicas"] = len(estimator_result[estimator])
 
     return final_result

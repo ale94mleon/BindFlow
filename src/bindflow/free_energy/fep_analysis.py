@@ -12,9 +12,8 @@ from alchemlyb.parsing.gmx import extract_dHdl, extract_u_nk
 # from alchemlyb.convergence import forward_backward_convergence
 from alchemlyb.postprocessors import units
 from alchemlyb.preprocessing import slicing, statistical_inefficiency
-from uncertainties import ufloat
 
-from bindflow.utils.tools import PathLike
+from bindflow.utils.tools import PathLike, sum_uncertainty_propagation
 
 
 def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None,
@@ -211,23 +210,6 @@ def get_dG_contributions(
         json.dump(system_results, out, indent=4)
 
 
-def get_ufloat(value_error: dict) -> ufloat:
-    """Simple function to get the ufloat class
-    form a dict with keywords value and error
-
-    Parameters
-    ----------
-    value_error : dict
-        The dict with keywords: value and error
-
-    Returns
-    -------
-    ufloat
-        The ufloat class ready to propagate uncertainties.
-    """
-    return ufloat(value_error['value'], value_error['error'])
-
-
 # TODO, check what is going on here calculate_FEP_ligand_dG
 def get_dg_cycle(ligand_contributions: PathLike = 'dg_ligand_contributions.json',
                  complex_contributions: PathLike = 'dg_complex_contributions.json', out_csv: PathLike = 'dG_results.csv'):
@@ -261,20 +243,40 @@ def get_dg_cycle(ligand_contributions: PathLike = 'dg_ligand_contributions.json'
     except KeyError:
         boresch_off = ligand_dict["boresch"]
 
-    dG_MBAR = get_ufloat(ligand_dict["coul"]["MBAR"]) + get_ufloat(ligand_dict["vdw"]["MBAR"]) - boresch_off + \
-        get_ufloat(complex_dict["vdw"]["MBAR"]) + get_ufloat(complex_dict["coul"]["MBAR"]) - get_ufloat(complex_dict["bonded"]["MBAR"])
+    dG_MBAR_value = ligand_dict["coul"]["MBAR"]["value"] + ligand_dict["vdw"]["MBAR"]["value"] - boresch_off + \
+        complex_dict["vdw"]["MBAR"]["value"] + complex_dict["coul"]["MBAR"]["value"] - complex_dict["bonded"]["MBAR"]["value"]
+    dG_MBAR_std_dev = sum_uncertainty_propagation(
+        [
+            ligand_dict["coul"]["MBAR"]["error"],
+            ligand_dict["vdw"]["MBAR"]["error"],
+            complex_dict["vdw"]["MBAR"]["error"],
+            complex_dict["coul"]["MBAR"]["error"],
+            complex_dict["bonded"]["MBAR"]["error"]
+        ]
 
-    dG_TI = get_ufloat(ligand_dict["coul"]["TI"]) + get_ufloat(ligand_dict["vdw"]["TI"]) - boresch_off + \
-        get_ufloat(complex_dict["vdw"]["TI"]) + get_ufloat(complex_dict["coul"]["TI"]) - get_ufloat(complex_dict["bonded"]["TI"])
+    )
+
+    dG_TI_value = ligand_dict["coul"]["TI"]["value"] + ligand_dict["vdw"]["TI"]["value"] - boresch_off + \
+        complex_dict["vdw"]["TI"]["value"] + complex_dict["coul"]["TI"]["value"] - complex_dict["bonded"]["TI"]["value"]
+    dG_TI_std_dev = sum_uncertainty_propagation(
+        [
+            ligand_dict["coul"]["TI"]["error"],
+            ligand_dict["vdw"]["TI"]["error"],
+            complex_dict["vdw"]["TI"]["error"],
+            complex_dict["coul"]["TI"]["error"],
+            complex_dict["bonded"]["TI"]["error"]
+        ]
+
+    )
 
     deltaG = {
         'MBAR': {
-            'value': dG_MBAR.nominal_value,
-            'std_dev': dG_MBAR.std_dev
+            'value': dG_MBAR_value,
+            'std_dev': dG_MBAR_std_dev
         },
         'TI': {
-            'value': dG_TI.nominal_value,
-            'std_dev': dG_TI.std_dev
+            'value': dG_TI_value,
+            'std_dev': dG_TI_std_dev
         }
     }
     pd.DataFrame(deltaG).to_csv(out_csv)

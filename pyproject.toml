@@ -50,7 +50,6 @@ dependencies = [
     "mdanalysis",
     "TOFF >= 0.1.0",
     "pyyaml",
-    "uncertainties",
     "parmed",
 ]
 

@@ -4,8 +4,9 @@ import os
 import re
 import subprocess
 import tempfile
+from math import sqrt
 from pathlib import Path
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 from parmed import Structure
 from parmed.gromacs import GromacsGroFile, GromacsTopologyFile
@@ -864,6 +865,57 @@ def natsort(iterable: List) -> Iterable:
         return int(element) if element.isdigit() else element.lower()
     return sorted(iterable, key=lambda k: [conversion(c) for c in re.split('([0-9]+)', str(k))])
 
+
+def sum_uncertainty_propagation(
+    errors: Iterable[float],
+    coefficients: Optional[Iterable[float]] = None,
+) -> float:
+    """
+    Compute the combined uncertainty using standard uncertainty propagation rules 
+    for a sum of terms with optional scaling coefficients.
+
+    The formula applied is:
+        sigma_total = sqrt( Σ (c_i * sigma_i)^2 )
+
+    where:
+        - sigma_i is the uncertainty (error) of the i-th term
+        - sigma_i is the coefficient (default = 1 for all terms)
+
+    Parameters
+    ----------
+    errors : Sequence[float]
+        A list or sequence of uncertainty values (standard deviations).
+    coefficients : Optional[Iterable[float]], default=None
+        Coefficients corresponding to each error term. If not provided,
+        all coefficients are assumed to be 1.
+
+    Returns
+    -------
+    float
+        The propagated uncertainty.
+
+    Raises
+    ------
+    ValueError
+        If the length of `coefficients` does not match the length of `errors`.
+
+    Examples
+    --------
+    >>> sum_uncertainty_propagation([0.1, 0.2, 0.15])
+    0.2692582403567252
+
+    >>> sum_uncertainty_propagation([0.1, 0.2, 0.15], coefficients=[2, 1, 0.5])
+    0.3301517104052358
+    """
+    if coefficients is None:
+        coefficients = [1.0] * len(errors)
+    else:
+        coefficients = list(coefficients)
+
+    if len(coefficients) != len(errors):
+        raise ValueError("`coefficients` must have the same length as `errors`.")
+
+    return sqrt(sum((c * e) ** 2 for c, e in zip(coefficients, errors)))
 
 if __name__ == "__main__":
     pass

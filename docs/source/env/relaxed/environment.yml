@@ -19,7 +19,6 @@ dependencies:
   - alchemlyb
   - mdanalysis
   - pymbar
-  - uncertainties
   - pip:
       - mdrestraintsgenerator>=0.2.1
       - rdkit
