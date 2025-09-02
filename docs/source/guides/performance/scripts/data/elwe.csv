@@ -1,0 +1,49 @@
+,system_name,system_type,num_atoms,simu_id,equi_time_seconds,cpu,gpu,performace_ns_day
+0,SAMPL6-OA,complex,9207,gpu:A4000:1,9.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,816.224
+1,SAMPL6-OA,complex,9207,gpu:RTX1070Ti:1,21.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,496.609
+2,SAMPL6-OA,complex,9207,gpu:RTX1070:1,22.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,528.914
+3,SAMPL6-OA,ligand,3630,gpu:A4000:1,4.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,1230.121
+4,SAMPL6-OA,ligand,3630,gpu:RTX1070Ti:1,8.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,745.502
+5,SAMPL6-OA,ligand,3630,gpu:RTX1070:1,8.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,757.81
+6,tyk2,complex,66425,gpu:A4000:1,86.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,204.839
+7,tyk2,complex,66425,gpu:RTX1070Ti:1,163.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,93.155
+8,tyk2,complex,66425,gpu:RTX1070:1,169.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,83.54
+9,tyk2,ligand,5817,gpu:A4000:1,7.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,953.909
+10,tyk2,ligand,5817,gpu:RTX1070Ti:1,18.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,530.531
+11,tyk2,ligand,5817,gpu:RTX1070:1,16.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,561.313
+12,mcl1,complex,34827,gpu:A4000:1,45.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,383.528
+13,mcl1,complex,34827,gpu:RTX1070Ti:1,91.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,183.355
+14,mcl1,complex,34827,gpu:RTX1070:1,117.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,174.318
+15,mcl1,ligand,5389,gpu:A4000:1,9.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,897.676
+16,mcl1,ligand,5389,gpu:RTX1070Ti:1,24.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,537.855
+17,mcl1,ligand,5389,gpu:RTX1070:1,24.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,513.174
+18,ptp1b,complex,74246,gpu:A4000:1,107.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,181.975
+19,ptp1b,complex,74246,gpu:RTX1070Ti:1,167.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,81.587
+20,ptp1b,complex,74246,gpu:RTX1070:1,176.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,74.733
+21,ptp1b,ligand,9647,gpu:A4000:1,17.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,633.266
+22,ptp1b,ligand,9647,gpu:RTX1070Ti:1,37.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,377.015
+23,ptp1b,ligand,9647,gpu:RTX1070:1,35.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,387.036
+24,thrombin,complex,49471,gpu:A4000:1,87.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,269.929
+25,thrombin,complex,49471,gpu:RTX1070Ti:1,170.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,120.716
+26,thrombin,complex,49471,gpu:RTX1070:1,165.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,113.458
+27,thrombin,ligand,5980,gpu:A4000:1,9.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,806.119
+28,thrombin,ligand,5980,gpu:RTX1070Ti:1,24.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,469.636
+29,thrombin,ligand,5980,gpu:RTX1070:1,22.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,466.656
+30,A2A,complex,84996,gpu:A4000:1,172.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,133.38
+31,A2A,complex,84996,gpu:RTX1070Ti:1,342.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,61.854
+32,A2A,complex,84996,gpu:RTX1070:1,391.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,60.001
+33,A2A,ligand,5005,gpu:A4000:1,8.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,970.316
+34,A2A,ligand,5005,gpu:RTX1070Ti:1,19.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,564.568
+35,A2A,ligand,5005,gpu:RTX1070:1,20.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,560.34
+36,CyclophilinD,complex,31857,gpu:A4000:1,42.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,402.948
+37,CyclophilinD,complex,31857,gpu:RTX1070Ti:1,79.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,195.47
+38,CyclophilinD,complex,31857,gpu:RTX1070:1,105.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,180.321
+39,CyclophilinD,ligand,7304,gpu:A4000:1,10.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,759.492
+40,CyclophilinD,ligand,7304,gpu:RTX1070Ti:1,28.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,421.925
+41,CyclophilinD,ligand,7304,gpu:RTX1070:1,27.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,430.275
+42,p38,complex,86364,gpu:A4000:1,118.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,157.781
+43,p38,complex,86364,gpu:RTX1070Ti:1,245.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,67.924
+44,p38,complex,86364,gpu:RTX1070:1,204.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,62.827
+45,p38,ligand,6802,gpu:A4000:1,10.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A4000,870.327
+46,p38,ligand,6802,gpu:RTX1070Ti:1,21.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070 Ti,501.999
+47,p38,ligand,6802,gpu:RTX1070:1,23.0,Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz,NVIDIA GeForce GTX 1070,491.267

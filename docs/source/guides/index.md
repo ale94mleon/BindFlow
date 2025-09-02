@@ -7,4 +7,5 @@ force-fields
 deploy
 customizing
 debugging
+performance/index
 ```

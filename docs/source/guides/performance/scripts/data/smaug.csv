@@ -1,0 +1,55 @@
+,system_name,system_type,num_atoms,simu_id,equi_time_seconds,cpu,gpu,performace_ns_day
+0,SAMPL6-OA,complex,9207,rtx4070ti,10.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,934.324
+1,SAMPL6-OA,complex,9207,rtx4000,13.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,894.667
+2,SAMPL6-OA,complex,9207,rtxa4000,9.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,932.075
+3,SAMPL6-OA,ligand,3630,rtx4070ti,5.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,1246.916
+4,SAMPL6-OA,ligand,3630,rtxa6000,17.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A6000,1189.786
+5,SAMPL6-OA,ligand,3630,rtx4000,4.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,1312.631
+6,SAMPL6-OA,ligand,3630,rtxa4000,4.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,1243.569
+7,tyk2,complex,66425,rtx4070ti,75.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,306.704
+8,tyk2,complex,66425,rtx4000,115.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,225.23
+9,tyk2,complex,66425,rtxa4000,115.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,179.118
+10,tyk2,ligand,5817,rtx4070ti,8.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,1064.549
+11,tyk2,ligand,5817,rtxa6000,21.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A6000,959.943
+12,tyk2,ligand,5817,rtx4000,7.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,1027.516
+13,tyk2,ligand,5817,rtxa4000,7.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,1041.056
+14,mcl1,complex,34827,rtx4070ti,39.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,466.232
+15,mcl1,complex,34827,rtx4000,59.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,395.049
+16,mcl1,complex,34827,rtxa4000,53.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,333.29
+17,mcl1,ligand,5389,rtx4070ti,10.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,1031.496
+18,mcl1,ligand,5389,rtxa6000,23.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A6000,881.703
+19,mcl1,ligand,5389,rtx4000,10.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,942.175
+20,mcl1,ligand,5389,rtxa4000,10.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,978.768
+21,ptp1b,complex,74246,rtx4070ti,93.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,273.92
+22,ptp1b,complex,74246,rtx4000,128.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,199.724
+23,ptp1b,complex,74246,rtxa4000,148.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,160.853
+24,ptp1b,ligand,9647,rtx4070ti,13.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,731.572
+25,ptp1b,ligand,9647,rtxa6000,26.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A6000,619.159
+26,ptp1b,ligand,9647,rtx4000,20.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,660.807
+27,ptp1b,ligand,9647,rtxa4000,16.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,664.4
+28,thrombin,complex,49471,rtx4070ti,57.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,348.978
+29,thrombin,complex,49471,rtxa6000,66.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A6000,298.093
+30,thrombin,complex,49471,rtx4000,103.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,271.3
+31,thrombin,complex,49471,rtxa4000,116.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,233.383
+32,thrombin,ligand,5980,rtx4070ti,12.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,908.425
+33,thrombin,ligand,5980,rtx4000,9.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,851.298
+34,thrombin,ligand,5980,rtxa4000,10.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,851.053
+35,A2A,complex,84996,rtx4070ti,153.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,165.284
+36,A2A,complex,84996,rtx4000,210.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,128.871
+37,A2A,complex,84996,rtxa4000,215.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,110.889
+38,A2A,ligand,5005,rtx4070ti,9.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,1041.001
+39,A2A,ligand,5005,rtx4000,9.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,1043.132
+40,A2A,ligand,5005,rtxa4000,9.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,992.308
+41,CyclophilinD,complex,31857,rtx4070ti,35.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,470.263
+42,CyclophilinD,complex,31857,rtxa6000,51.0,AMD Ryzen Threadripper PRO 3975WX 32-Cores,NVIDIA RTX A6000,413.937
+43,CyclophilinD,complex,31857,rtx4000,47.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,410.612
+44,CyclophilinD,complex,31857,rtxa4000,52.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,349.146
+45,CyclophilinD,ligand,7304,rtx4070ti,10.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,788.93
+46,CyclophilinD,ligand,7304,rtx4000,12.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,832.918
+47,CyclophilinD,ligand,7304,rtxa4000,12.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,791.455
+48,p38,complex,86364,rtx4070ti,93.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,224.401
+49,p38,complex,86364,rtx4000,175.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,178.027
+50,p38,complex,86364,rtxa4000,160.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,139.327
+51,p38,ligand,6802,rtx4070ti,9.0,AMD EPYC 7443 24-Core Processor,NVIDIA GeForce RTX 4070 Ti SUPER,948.461
+52,p38,ligand,6802,rtx4000,12.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX 4000 Ada Generation,834.211
+53,p38,ligand,6802,rtxa4000,10.0,Intel(R) Xeon(R) E-2136 CPU @ 3.30GHz,NVIDIA RTX A4000,899.299
