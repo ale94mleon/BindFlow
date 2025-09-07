@@ -1,0 +1,67 @@
+/* === Base Styles === */
+#installer-config {
+  font-family: system-ui, sans-serif;
+  margin: 1em 0;
+}
+
+#installer-config button {
+  margin: 4px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid;
+  transition: background 0.2s, color 0.2s;
+}
+
+#installer-config pre {
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.9em;
+}
+
+#download-env {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #2b6cb0;
+  color: white;
+  text-decoration: none;
+}
+#download-env:hover {
+  background: #2c5282;
+}
+
+/* === Light Mode === */
+html[data-theme="light"] #installer-config button {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  color: #1a202c;
+}
+
+html[data-theme="light"] #installer-config button:hover {
+  background: #e2e8f0;
+}
+
+html[data-theme="light"] #installer-config button.active {
+  background: #2b6cb0;
+  border-color: #2b6cb0;
+  color: white;
+}
+
+/* === Dark Mode === */
+html[data-theme="dark"] #installer-config button {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] #installer-config button:hover {
+  background: #4a5568;
+}
+
+html[data-theme="dark"] #installer-config button.active {
+  background: #63b3ed;
+  border-color: #63b3ed;
+  color: #1a202c;
+}
