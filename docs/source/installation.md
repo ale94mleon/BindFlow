@@ -33,13 +33,13 @@ We would like to work in a more relaxed environment, but we have encountered cha
 ````{note}
 We observed that conda must be configured with `channel_priority: flexible` instead of `strict`.
 
-You may get the following error after the environment is created:
+<!-- You may get the following error after the environment is created:
 
 ```text
 ERROR: pip’s dependency resolver does not currently take into account all the packages that are installed. This behavior is the source of the following dependency conflicts.
 mdtraj 1.10.1 requires numpy<2.0.0a0,>=1.23, but you have numpy 1.22.4 which is incompatible.
 ```
-You can **safely** ignore it. We are currently working to get rid of this error.
+You can **safely** ignore it. We are currently working to get rid of this error. -->
 
 ````
 

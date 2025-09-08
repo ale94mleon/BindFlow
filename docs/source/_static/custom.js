@@ -48,20 +48,21 @@ document.addEventListener("DOMContentLoaded", function () {
       "pip",
       "bioconda::snakemake=7.32.2",
       "openmm=8.0.0",
-      "openmmforcefields=0.11.2",
+      "openmmforcefields>=0.11.2",
+      "ambertools>=22.5",
       "pdbfixer=1.9",
       "openff-toolkit=0.14.2",
       "pyyaml=6.0",
       "parmed=4.1.0",
       "pandas=2.0.3",
-      "numpy=1.22.4",
+      "numpy=1.26.4",
     ],
     pip_dependencies: [
       "alchemlyb==2.0.0",
       "mdanalysis==2.5.0",
-      "mdrestraintsgenerator==0.2.1",
+      // "mdrestraintsgenerator>=0.2.1",
+      "git+https://github.com/ale94mleon/MDRestraintsGenerator@51a543afc8ee2b0b14188995412b7865103203a6",
       "pymbar==4.0.1",
-      "pytraj==2.0.6",
       "rdkit==2023.3.2",
       "toff==0.2.0"
     ],
@@ -71,11 +72,13 @@ document.addEventListener("DOMContentLoaded", function () {
     name: "BindFlow",
     channels: ["conda-forge"],
     conda_dependencies: [
-      "python=3.10.*",
+      // Need this python version for the current MDRestraintsGenerator
+      "python >=3.8,<3.12",
       "pip",
       "bioconda::snakemake",
       "openmm",
       "openmmforcefields",
+      "ambertools",
       "pdbfixer",
       "openff-toolkit",
       "pyyaml",
@@ -86,9 +89,9 @@ document.addEventListener("DOMContentLoaded", function () {
     pip_dependencies: [
       "alchemlyb",
       "mdanalysis",
-      "mdrestraintsgenerator>=0.2.1",
+      // "mdrestraintsgenerator>=0.2.1",
+      "git+https://github.com/ale94mleon/MDRestraintsGenerator@51a543afc8ee2b0b14188995412b7865103203a6",
       "pymbar",
-      "pytraj",
       "rdkit",
       "toff>=0.2.0"
     ],
@@ -97,13 +100,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // === Feature dependencies ===
   // Pinned features (exact versions)
   const featureDepsPinned = {
-    mmpbsa: { conda: ["ambertools=22.5", "mpi4py=3.1.5"], pip: [] },
+    mmpbsa: { conda: ["mpi4py=3.1.5"], pip: [] },
     espaloma: { conda: ["espaloma=0.3.2"], pip: [] },
   };
 
   // Relaxed features (looser versions)
   const featureDepsRelaxed = {
-    mmpbsa: { conda: ["ambertools", "mpi4py=3.1.5"], pip: [] },
+    mmpbsa: { conda: ["mpi4py=3.1.5"], pip: [] },
     espaloma: { conda: ["espaloma>=0.3.2"], pip: [] }, // same version can be relaxed if desired
   };
 

@@ -16,6 +16,7 @@ name = "bindflow"
 dynamic = ["version"]
 description = "A snakemake-based workflow for binding free energy calculations using GROMACS."
 readme = "README.rst"
+license-files = ["LICENSE"]
 
 authors=[
     {name="Alejandro Martínez León", email="ale94mleon@gmail.com"},
@@ -25,11 +26,7 @@ classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GPL-3.0",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Chemistry"
 ]
@@ -42,13 +39,13 @@ keywords = [
 
 requires-python = ">= 3.8 , < 3.11"
 dependencies = [
-    "alchemlyb == 2.0.0", # TODO update to new
-    "pymbar == 4.0.1", #TODO  update to new
+    "alchemlyb >= 2.0.0", # TODO update to new
+    "pymbar >= 4.0.1", #TODO  update to new
     "MDRestraintsGenerator >= 0.2.1",
     "numpy",
     "pandas",
     "mdanalysis",
-    "TOFF >= 0.1.0",
+    "TOFF >= 0.2.0",
     "pyyaml",
     "parmed",
 ]
@@ -80,7 +77,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 bindflow = [
-    "LICENSE",
     "data/gmx_ff/*.tar.gz",
     "data/gmx_water_models/*/*.itp",
     "data/gmx_water_models/*/*.dat",
