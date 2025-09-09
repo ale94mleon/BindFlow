@@ -19,6 +19,8 @@ Six keywords control the type of force field used for each specific component in
 
 For a straightforward setup, you can provide the path to the corresponding file(s), which we will call the _partial definition_. However, you also have the option to fine-tune the definition of force fields for each component, referred to as the _full definition_.
 
+The quality of the initial structure is critical for accurate results, whether using FEP or MM(PB/GB)SA [Behera et al, 2025](https://pubs.acs.org/doi/10.1021/acs.jcim.5c00947). Proper definitions of tautomeric, isomeric, and protonation states for both proteins and ligands are essential as well the conformation state of the protein-ligand complex. BindFlow does not aim to solve this issue directly, as specialized tools excel in this domain. However, BindFlow offers basic functionality to "fix" proteins (e.g., resolving missing atoms or correcting atom naming) using pdbfixer from [OpenMM](https://openmm.org/) and [pdb2gmx](https://manual.gromacs.org/current/onlinehelp/gmx-pdb2gmx.html) from GROMACS. For complex receptors, users are advised to provide fully defined structures (e.g., GRO and TOP files) or preprocessed, compatible PDB files.
+
 In the following examples, we will use the runner {py:func}`bindflow.runners.calculate`.
 
 ````````{tab} Partial definition
