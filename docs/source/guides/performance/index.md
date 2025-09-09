@@ -360,3 +360,19 @@ Computational performance and scalability of BindFlow on the Thrombin system. (U
 For instance, with **200** nodes running for a week, up to **580** or **39,961** binding free energy calculations could be theoretically performed at FEP or MMGBSA levels, respectively. These estimates assume **ideal conditions** and should be interpreted as preliminary projections of BindFlow’s computational cost.
 
 By using one computer (serial run) we can get an overall estimate of the expensiveness of the pipeline. We found that FEP is **~180** more expensive than MMGBSA.
+
+## Disk use
+
+BindFlow aims to minimize the disk usage during FEP and MM(PB/GB)SA calculations. In addition, after finishing the simulations, BindFlow provides post-processing archiving and unarchiving functionalities to reduce the required medium-term storage.
+
+As a numerical example, for the P38 system that comprised 86376 atoms, calculations with 29 ligands (triplicated calculations) required 320 GB disk space for FEP and 40 GB for MMGBSA during runtime, respectively.
+
+By excluding log files (`.snakemake` directory and `*.log` and `*.err` files) and irrelevant GROMACS files (`.edr`, `mdout.mdp` and `*.tpr`) during archive and compressing all non-trajectory files, the disk space was reduced to 137 GB for FEP and 19 GB for MMGBSA. However, owing to BindFlow full automation, to reproduce the simulations, only the BindFlow version, input structures, run script, and configuration file are required; involving typically only few megabytes for long-term archive.
+
+```{figure} fep-mmxbsa-simu-size.svg
+:alt: Example plot
+:width: 80%
+:name: fep-mmxbsa-simu-size
+
+Disk space used by BindFlow for all simulation sets of this study. Top: for FEP. Bottom: for MM(PB/GB)SA. Red bars: disk space used during simulations. Blue bars: after compression of raw simulation data. Yielding  compression factors of 2.6 and 2.3 for FEP and MM(PB/GB)SA, respectively.
+```
