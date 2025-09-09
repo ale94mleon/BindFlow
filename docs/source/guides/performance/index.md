@@ -347,8 +347,7 @@ RTX A6000/Ryzen Threadripper PRO 3975WX hardware. MMGBSA is approximatly x76 tim
 
 To estimate the completion time, we selected the thrombin system, which achieved a mid-range performance of 270 ns/day for the protein--ligand complex using an Nvidia RTX A4000 GPU and 10 CPU cores of and Ryzen Threadripper PRO 3975WX (second row of previous fgure).
 
-
-Figure \ref{fig:fep-mmxbsa-avg-time-per-lig} illustrates the average completion time per ligand as a function of the number of computers (or computing nodes). MMGBSA was approximately 76 times faster than FEP, completing each ligand in under 0.10 hours on average with just 10 computing nodes, demonstrating its computational efficiency. While FEP was more resource-intensive, it scaled efficiently with the number of available computing nodes, achieving an average ligand completion time below the hour with 60 nodes and just 0.29 hours with 200 nodes on the described architecture.
+The following figure illustrates the average completion time per ligand as a function of the number of computers (or computing nodes). MMGBSA was approximately 76 times faster than FEP, completing each ligand in under 0.10 hours on average with just 10 computing nodes, demonstrating its computational efficiency. While FEP was more resource-intensive, it scaled efficiently with the number of available computing nodes, achieving an average ligand completion time below the hour with 60 nodes and just 0.29 hours with 200 nodes on the described architecture.
 
 ```{figure} fep-mmxbsa-avg-time-per-lig.svg
 :alt: Example plot
@@ -359,3 +358,5 @@ Computational performance and scalability of BindFlow on the Thrombin system. (U
 ```
 
 For instance, with **200** nodes running for a week, up to **580** or **39,961** binding free energy calculations could be theoretically performed at FEP or MMGBSA levels, respectively. These estimates assume **ideal conditions** and should be interpreted as preliminary projections of BindFlow’s computational cost.
+
+By using one computer (serial run) we can get an overall estimate of the expensiveness of the pipeline. We found that FEP is **~180** more expensive than MMGBSA.
