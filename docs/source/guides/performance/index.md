@@ -2,10 +2,88 @@
 
 To estimate the execution time of our pipeline, we computed the total time required to complete all tasks from the directed acyclic graph (DAG) representation of the workflow. Each task correspond to a simulation step, with dependencies defining execution order.
 
-``````{dropdown} Methodological details
+The detailed results are presented in the following chapters. As a rule of thumb, you can estimate the total number of days required using:
+
+`````{tab} FEP
+
+```{math}
+:label: fep_estimation
+\frac{(\lambda + 1) \times R \times L \times T}{24 \times C}
+```
+
+- {math}`\lambda=` total number of lambda points for the complex simulations; + 1 for the initial equilibration phase (non-FEP)
+- {math}`R=` number of replicas
+- {math}`L=` number of ligands
+- {math}`C=` number of available compute nodes
+- {math}`T=` average time (in hours) to complete one FEP production simulation
+
+This formula provides a lower bound for the execution time. In practice, you should account for an additional ± 1 days to accommodate for the remaining tasks, scheduling overheads and runtime variations. Nevertheless, this estimation is usually reliable, as the total time is dominated by the FEP complex simulations. The value of {math}`T` can be determined either from preliminary test runs or by monitoring ongoing simulations
+
+````{dropdown} Example Calculation
 :color: info
 :animate: fade-in-slide-down
-:icon: book
+:icon: plus-circle
+
+Suppose you plan to run the following:
+
+- {math}`\lambda = 43` (default)
+- {math}`R = 3` (default)
+- {math}`L = 100`
+- {math}`C = 100`
+- {math}`T = 1`
+
+Plugging into Eq. {eq}`fep_estimation`:
+
+```{math}
+\frac{(43+1) \times 3 \times 100}{100} \times \frac{1}{24} = 5.5 \pm 1 \,\text{days}
+```
+````
+`````
+
+`````{tab} MMMGBSA
+
+```{math}
+:label: mmgbsa_estimation
+\frac{(T_E + S \times T_S) \times R \times L}{24 \times C}
+```
+
+- {math}`S=` number of samples
+- {math}`R=` number of replicas
+- {math}`L=` number of ligands
+- {math}`C=` number of available compute nodes
+- {math}`T_E=` average time (in hours) to complete the production equilibration simulation
+- {math}`T_S=` average time (in hours) to complete the sample simulation
+
+This formula provides a lower bound for the execution time. In practice, you should account for an additional ± 0.2 days to accommodate for the remaining tasks, scheduling overheads and runtime variations. Nevertheless, this estimation is usually reliable, as the total time is dominated by the FEP complex simulations. The value of {math}`T_E` and {math}`T_S` can be determined either from preliminary test runs or by monitoring ongoing simulations
+
+````{dropdown} Example Calculation
+:color: info
+:animate: fade-in-slide-down
+:icon: plus-circle
+
+Suppose you plan to run the following:
+
+- {math}`S = 20` (default)
+- {math}`R = 3` (default)
+- {math}`L = 100`
+- {math}`C = 100`
+- {math}`T_E = 0.1`
+- {math}`T_S = 0.01`
+
+Plugging into Eq. {eq}`mmgbsa_estimation`:
+
+```{math}
+\frac{(0.1 + 20 \times 0.01) \times 3 \times 100}{24 \times 100} = 0.04 \pm  0.2 \,\text{days}
+```
+````
+`````
+
+## Methodology followed for the estimation of ligand completion time
+
+``````{dropdown} Method
+:color: info
+:animate: fade-in-slide-down
+:icon: gear
 
 Task durations were determined based on the estimated GROMACS performance, obtained from a short simulation of the equilibrated structure on an isolated computing node. To avoid startup overhead and performance instability (e.g., due to load balancing), performance counters were restarted after 2000 steps. For non-GROMACS tasks and queuing delays, empirical durations were assigned based on prior experience.
 
