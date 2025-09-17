@@ -16,7 +16,7 @@ def check_gromacs_installation():
                 raise RuntimeError("⚠️ GROMACS was found, but the version could not be determined. "
                                    "Please run `gmx --version` manually and verify your installation.")
 
-            if not is_gromacs_version_leq("2023"):
+            if is_gromacs_version_geq("2023"):
                 raise RuntimeError(
                     f"🚫 Unsupported GROMACS version detected: {installed_version}. "
                     "BinFlow only supports GROMACS versions earlier than 2023 for now."
@@ -57,10 +57,10 @@ def get_gromacs_version():
         return None
 
 
-def is_gromacs_version_leq(target_version: str) -> bool:
+def is_gromacs_version_geq(target_version: str) -> bool:
     """
-    Check if the installed GROMACS version is <= target_version.
-    target_version should be a string like '2023' or '2023.1'.
+    Check if the installed GROMACS version is >= target_version.
+    target_version should be a string like '2022' or '2022.6'.
     """
     installed_version = get_gromacs_version()
     if installed_version is None:
@@ -70,7 +70,7 @@ def is_gromacs_version_leq(target_version: str) -> bool:
         return tuple(map(int, v.split('.')))
 
     try:
-        return parse_version(installed_version) <= parse_version(target_version)
+        return parse_version(installed_version) >= parse_version(target_version)
     except ValueError:
         logging.warning(f"⚠️ Could not compare versions (installed: {installed_version}, target: {target_version})")
         return False

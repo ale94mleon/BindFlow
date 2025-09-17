@@ -254,6 +254,8 @@ def calculate(
         In case the ligand paths are not found
     ValueError
         In case wrong calculation_type
+    RuntimeError
+        For incompatible GROMACS version
     """
 
     print(f"You are using BindFlow: {__version__}✨")
