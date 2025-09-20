@@ -180,7 +180,7 @@ fep/openff_unconstrained-2.0.0/ligand3/1/complex/fep/simulation/vdw.0/prod/prod.
 Delete all files in that window **except prod.mdp**:
 
 ```bash
-! find fep/openff_unconstrained-2.0.0/ligand3/1/complex/fep/simulation/vdw.0/prod -maxdepth 1 ! -name 'prod.mdp' -type f -delete
+find fep/openff_unconstrained-2.0.0/ligand3/1/complex/fep/simulation/vdw.0/prod -maxdepth 1 ! -name 'prod.mdp' -type f -delete
 ```
 
 ### Step 4 — Reset and rerun
