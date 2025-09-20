@@ -1,6 +1,8 @@
 # ❓FAQ
 
-## Atom X in residue XXX was not found in rtp entry XX with X atoms while sorting atoms
+````{dropdown} Atom X in residue Y was not found in rtp entry Y with x atoms while sorting atoms
+:color: info
+:animate: fade-in-slide-down
 
 BindFlow uses [PDBFixer](https://github.com/openmm/pdbfixer) for the standardization of PDB files. However, [PDBFixer](https://github.com/openmm/pdbfixer) is not bulletproof. For such cases where [pdb2gmx](https://manual.gromacs.org/current/onlinehelp/gmx-pdb2gmx.html) fails with the generated PDB file from PDBFixer; the user may fix the PDB by hand.
 
@@ -92,8 +94,11 @@ protein = {
     'top': 'inputs/protein/protein-amber14-all/protein.top',
 }
 ```
+````
 
-## Intramolecular Interactions: To Couple or Not to Couple
+````{dropdown} Intramolecular Interactions: To Couple or Not to Couple
+:color: info
+:animate: fade-in-slide-down
 
 The thermodynamic cycle employed by BindFlow involves the parameter `couple-intramol = yes`, indicating that the intramolecular interactions of the ligand change alongside the λ parameter. For instance, upon removing Coulomb and van der Waals interactions in the water box, the ligand ceases to interact with the solvent while also disengaging from self-interactions via non-bonded interactions.
 
@@ -133,8 +138,11 @@ nohup nice -19 ./job.sh > RuleThemAll.out 2>&1 &
 ```
 
 Now, even if you close your terminal, the process will continue running in the background because of the use of `nohup`. This process is mainly idle, but by using `nice -19`, we lower its priority, so it does not interfere with any main processes running on your front end. You can also use other persistent terminals like [screen](https://www.gnu.org/software/screen/manual/screen.html) or [byobu](https://www.byobu.org/).
+````
 
-## Error on fep_ana_get_dg_complex_contributions
+````{dropdown} Error on fep_ana_get_dg_complex_contributions
+:color: info
+:animate: fade-in-slide-down
 
 Check {ref}`debugging-bindflow-runs` runs section.
 
@@ -207,3 +215,4 @@ flowchart TD
     F --> G[Rerun pipeline]
     D -- No --> H[Check main BindFlow log for other causes]
 ```
+````
