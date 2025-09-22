@@ -12,6 +12,10 @@ from bindflow.orchestration.flow_builder import approach_flow
 from bindflow.orchestration.generate_scheduler import Scheduler, SlurmScheduler
 from bindflow.utils import tools
 
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
 PathLike = Union[os.PathLike, str, bytes]
 
 
@@ -258,7 +262,7 @@ def calculate(
         For incompatible GROMACS version
     """
 
-    print(f"You are using BindFlow: {__version__}✨")
+    logging.info(f"✨ You are using BindFlow: {__version__}")
 
     if calculation_type.lower() not in ['fep', 'mmpbsa']:
         raise ValueError(f"calculation_type must be one of: [fep, mmpbsa] (case-insensitive).\nProvided: {calculation_type}")
@@ -335,8 +339,7 @@ def calculate(
             _global_config['samples'] = 20
             samples = 20
 
-    print("Prepare")
-    print(f"\tPreparing {calculation_type}-approach file structure: {out_root_folder_path}")
+    logging.info(f"🏗️  Building file structure for {calculation_type}: {out_root_folder_path}")
 
     if not _global_config["ligand_names"]:
         raise ValueError("No ligands found")
@@ -350,16 +353,15 @@ def calculate(
 
     # Only if there is something missing
     if (len(result_paths) != expected_out_paths):
-        print("\tBuild approach struct")
         job_id = approach_flow(global_config=_global_config, submit=submit)
+        if job_id:
+            logging.info(f"🚀 Submit Job - ID: {job_id}")
+        else:
+            logging.info("🛰️  BindFlow tasks are not yet submitted")
     else:
-        job_id = None
-    print("Do")
-    print("\tSubmit Job - ID: ", job_id)
-    # Final gathering
-    print("\tAlready got results?: " + str(len(result_paths)))
+        logging.info("✅ All gathering CSV files were generated, nothing to do.")
     if (len(result_paths) > 0):
-        print("Trying to gather ready results", out_root_folder_path)
+        print(f"🗃️ Trying to gather {len(result_paths)} ready results on: {out_root_folder_path}")
         if calculation_type == 'fep':
             gather_results.get_all_fep_dgs(root_folder_path=out_root_folder_path,
                                            out_csv=out_root_folder_path/'fep_partial_results.csv')

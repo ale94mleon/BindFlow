@@ -54,7 +54,7 @@ In some cases, it may be convenient to run the workflow up to a specific point a
 
 The `--until` option allows you to execute the workflow up to and including a specific rule. This is particularly useful when you want to stop at an intermediate step and resume the remaining workflow later, possibly on different hardware or computational resources.
 
-For example, to stop the workflow after the `mmxbsa_sample_prod` rule:
+For example, to stop the workflow after the `mmxbsa_sample_prod` rule finish:
 
 ```bash
 snakemake (...) --until mmxbsa_sample_prod (...)
