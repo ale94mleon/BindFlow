@@ -39,8 +39,8 @@ keywords = [
 
 requires-python = ">= 3.8 , < 3.11"
 dependencies = [
-    "alchemlyb >= 2.0.0", # TODO update to new
-    "pymbar >= 4.0.1", #TODO  update to new
+    "alchemlyb >= 2.0.0",
+    "pymbar >= 4.0.1",
     "MDRestraintsGenerator >= 0.2.1",
     "numpy",
     "pandas",
