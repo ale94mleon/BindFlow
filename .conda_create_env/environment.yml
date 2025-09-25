@@ -17,5 +17,6 @@ dependencies:
     - sphinx==7.2.6
     - sphinx_design
     - sphinxcontrib-katex
+    - sphinxcontrib-mermaid
     - sphinx-inline-tabs
     - sphinx_copybutton
