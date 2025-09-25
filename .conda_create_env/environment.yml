@@ -2,14 +2,15 @@ name: bindflow
 channels:
   - conda-forge
 dependencies:
-  - python >=3.8,<3.11
+  - python==3.9.*
   - pip
   - conda-build
   - ipykernel
   - ipython
   - ipywidgets
-  #- nvidia::cuda-toolkit=11.4.2
   - pip:
+    - numpy<2
+    - scipy
     - myst-nb
     - myst-parser
     - sphinx_book_theme
