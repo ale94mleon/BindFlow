@@ -7,6 +7,9 @@ Welcome to BindFlow's documentation!
 ====================================
 .. include:: ../README.rst
 
+Index
+-----
+
 .. toctree::
    :maxdepth: 1
 

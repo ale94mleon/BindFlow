@@ -21,19 +21,15 @@ Description
 **BindFlow** is a a snakemake-based workflow for ABFE calculations using GROMACS.
 
 
-You can try it out before any installation on `Binder <https://mybinder.org/v2/gh/ale94mleon/BindFlow/HEAD?labpath=%2Fdocs%2Fnotebooks%2F>`__.
-
-You can use `BindFlow-Dashboard <https://BindFlow-dashboard.streamlit.app/>`__ to process the results.
-
 Documentation
 -------------
 
-The installation instructions, documentation and tutorials can be found online on `ReadTheDocs <https://BindFlow.readthedocs.io/en/latest/>`_.
+The installation instructions, documentation and tutorials can be found online on `ReadTheDocs <https://bindflow.readthedocs.io/en/latest/>`_.
 
 Issues
 ------
 
-If you have found a bug, please open an issue on the `GitHub Issues <https://github.com/ale94mleon/BindFlow/issues>`_.
+If you have found a bug, please open an issue on the `GitHub Issues <https://github.com/ale94mleon/bindlfow/issues>`_.
 
 Discussion
 ----------
@@ -50,6 +46,12 @@ Funding
 
 This project received funding from `Marie Skłodowska-Curie Actions <https://cordis.europa.eu/project/id/860592>`__. It was developed in the 
 `Computational Biophysics Group <https://biophys.uni-saarland.de/>`__ of `Saarland University <https://www.uni-saarland.de/en/home.html>`__.
+
+
+Acknowledgment
+--------------
+
+This project was forked from `ABFE_workflow <https://github.com/bigginlab/ABFE_workflow>`__.
 
 ..  |logo|  image:: https://github.com/ale94mleon/BindFlow/blob/main/docs/source/_static/BindFlow-logo-full.svg?raw=true
     :target: https://github.com/ale94mleon/BindFlow/
