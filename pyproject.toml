@@ -47,7 +47,6 @@ dependencies = [
     "mdanalysis",
     # "TOFF >= 0.2.0",
     "pyyaml",
-    # "parmed",
 ]
 
 [project.optional-dependencies]
