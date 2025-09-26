@@ -41,13 +41,13 @@ requires-python = ">= 3.8 , < 3.11"
 dependencies = [
     "alchemlyb >= 2.0.0",
     "pymbar >= 4.0.1",
-    "MDRestraintsGenerator >= 0.2.1",
+    "MDRestraintsGenerator @ git+https://github.com/ale94mleon/MDRestraintsGenerator.git@dev", # Waiting for merge
     "numpy",
     "pandas",
     "mdanalysis",
-    "TOFF >= 0.2.0",
+    # "TOFF >= 0.2.0",
     "pyyaml",
-    "parmed",
+    # "parmed",
 ]
 
 [project.optional-dependencies]
