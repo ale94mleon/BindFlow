@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import copy
-from json import tool
 import logging
 import os
 import shutil
@@ -20,9 +19,7 @@ from bindflow.utils import tools
 from bindflow.utils.tools import PathLike, recursive_update_dict, run
 
 # from pdbfixer import PDBFixer
-# from
 logger = logging.getLogger(__name__)
-
 
 
 def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:

@@ -3,10 +3,10 @@ import logging
 import re
 
 
+logger = logging.getLogger(__name__)
+
+
 def check_gromacs_installation():
-    # Check if the logger is already configured to avoid reconfiguring it
-    if not logging.getLogger().hasHandlers():
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     try:
         result = subprocess.run(['gmx', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
@@ -24,15 +24,15 @@ def check_gromacs_installation():
                     "or check BindFlow documentation for compatibility details."
                 )
             else:
-                logging.info(f"✅ Compatible GROMACS version detected: {installed_version}")
+                logger.info(f"✅ Compatible GROMACS version detected: {installed_version}")
         else:
-            logging.warning(
+            logger.warning(
                 "🤔 Oops! It seems that GROMACS is in the system PATH but failed to run properly. "
                 "I really hope that you source GROMACS in the global_config[extra_directives][dependencies]. "
                 "If not, this will get awkward. 🤞"
             )
     except FileNotFoundError:
-        logging.warning(
+        logger.warning(
             "😅 Oops! It seems that GROMACS is not installed or not found in the system PATH. "
             "I really hope that you source GROMACS in the global_config[extra_directives][dependencies]. "
             "If not, this will get awkward. 🤞"
@@ -49,7 +49,7 @@ def get_gromacs_version():
             if match:
                 return match.group(1)
             else:
-                logging.warning("⚠️ Could not parse GROMACS version from output.")
+                logger.warning("⚠️ Could not parse GROMACS version from output.")
                 return None
         else:
             return None
@@ -72,5 +72,5 @@ def is_gromacs_version_geq(target_version: str) -> bool:
     try:
         return parse_version(installed_version) >= parse_version(target_version)
     except ValueError:
-        logging.warning(f"⚠️ Could not compare versions (installed: {installed_version}, target: {target_version})")
+        logger.warning(f"⚠️ Could not compare versions (installed: {installed_version}, target: {target_version})")
         return False

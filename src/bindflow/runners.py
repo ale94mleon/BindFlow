@@ -13,8 +13,10 @@ from bindflow.orchestration.generate_scheduler import Scheduler, SlurmScheduler
 from bindflow.utils import tools
 
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+logger = logging.getLogger(__name__)
+# Next line consider to remove and let the users set it up if they need it.
+# As it is now it blocks in INFO level.
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s') 
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -262,7 +264,7 @@ def calculate(
         For incompatible GROMACS version
     """
 
-    logging.info(f"✨ You are using BindFlow: {__version__}")
+    logger.info(f"✨ You are using BindFlow: {__version__}")
 
     if calculation_type.lower() not in ['fep', 'mmpbsa']:
         raise ValueError(f"calculation_type must be one of: [fep, mmpbsa] (case-insensitive).\nProvided: {calculation_type}")
@@ -339,7 +341,7 @@ def calculate(
             _global_config['samples'] = 20
             samples = 20
 
-    logging.info(f"🏗️  Building file structure for {calculation_type}: {out_root_folder_path}")
+    logger.info(f"🏗️  Building file structure for {calculation_type}: {out_root_folder_path}")
 
     if not _global_config["ligand_names"]:
         raise ValueError("No ligands found")
@@ -355,11 +357,11 @@ def calculate(
     if (len(result_paths) != expected_out_paths):
         job_id = approach_flow(global_config=_global_config, submit=submit)
         if job_id:
-            logging.info(f"🚀 Submit Job - ID: {job_id}")
+            logger.info(f"🚀 Submit Job - ID: {job_id}")
         else:
-            logging.info("🛰️  BindFlow tasks are not yet submitted")
+            logger.info("🛰️  BindFlow tasks are not yet submitted")
     else:
-        logging.info("✅ All gathering CSV files were generated, nothing to do.")
+        logger.info("✅ All gathering CSV files were generated, nothing to do.")
     if (len(result_paths) > 0):
         print(f"🗃️ Trying to gather {len(result_paths)} ready results on: {out_root_folder_path}")
         if calculation_type == 'fep':

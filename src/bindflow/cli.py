@@ -128,7 +128,7 @@ def clean(out_root_folder_path):
     # ---------- Step 3: Delete workflow folders ----------
 
     slurm_logs = Path(out_root_folder_path) / "slurm_logs"
-    snakemake =  Path(out_root_folder_path) / ".snakemake"
+    snakemake = Path(out_root_folder_path) / ".snakemake"
 
     if snakemake.exists() and snakemake.is_dir():
         try:
