@@ -179,6 +179,7 @@ This project has an [Sphinx](https://www.sphinx-doc.org/en/master/) documentatio
   sphinx-inline-tabs
   sphinx_copybutton
   sphinx-autobuild
+  roman
   ```
 ````
 

@@ -18,7 +18,7 @@ BindFlow
 Description
 -----------
 
-**BindFlow** is a a snakemake-based workflow for ABFE calculations using GROMACS.
+**BindFlow** is a snakemake-based workflow for ABFE calculations using GROMACS.
 
 
 Documentation
