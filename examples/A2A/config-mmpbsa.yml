@@ -6,7 +6,7 @@ cluster:
       time: 0-20:00:00
       gpus: 1
       gres: gpu:1
-      mem: 5G
+      mem: 10G
     job: # optional
       # partition: deflt
       partition: uds-hub
@@ -34,16 +34,22 @@ mdp:
       00_min:
         nsteps: 100000
       01_nvt:
-          dt: 0.002
+          dt: 0.001
           nsteps: 5000
       02_nvt:
-          dt: 0.003
+          dt: 0.001
           nsteps: 5000
       03_npt:
-        dt: 0.003
-        nsteps: 7500
+        dt: 0.001
+        nsteps: 5000
       04_npt:
-        dt: 0.004
+        dt: 0.002
+        nsteps: 7500
+      05_npt:
+        dt: 0.002
+        nsteps: 7500
+      06_npt:
+        dt: 0.003
         nsteps: 15000
       prod:
         dt: 0.004

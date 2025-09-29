@@ -1,0 +1,30 @@
+cluster:
+  options:
+    calculation:
+      partition: deflt
+      # partition: uds-hub
+      time: "0-20:00:00"
+      gpus: 1
+      gres: "gpu:1"
+      mem: '10G'
+      exclude: fang[51-54]
+    job: # optional
+      partition: deflt
+      # partition: uds-hub
+      time: "2-00:00:00"
+      mem: '10G'
+      cpus-per-task: 1
+      exclude: fang[51-54]
+extra_directives: # Optional
+  dependencies:
+    - MODULEPATH="/data/shared/spack/0.22.1+240909/modules:${MODULEPATH}"
+    - module add gromacs/2022.4
+    
+    # - MODULEPATH="/groups/CBG/opt/spack-0.21.0/modules:${MODULEPATH}"
+    # - module add gromacs/2022.4
+    - 'export GMX_MAXBACKUP=-1'
+  mdrun:
+    all:
+      cpi: True
+      stepout: 5000
+      v: True

@@ -1,0 +1,430 @@
+cluster:
+  type: SLURM
+  options:
+    calculation:
+      partition: uds-hub
+      time: "2-00:00:00"
+      gpus: 1
+      gres: "gpu:1"
+      mem: '10G'
+    job: # optional
+      partition: uds-hub
+      time: "2-00:00:00"
+      mem: '1G'
+      cpus-per-task: 1
+extra_directives: # Optional
+  dependencies:
+    - 'source /groups/CBG/opt/spack-0.18.1/shared.bash'
+    - 'module load gromacs/2022.4'
+    - 'export GMX_MAXBACKUP=-1'
+  mdrun:
+    all:
+      cpi: False
+      stepout: 5000
+      v: True
+mdp: # optional
+  ligand:
+    equi:
+      00_min:
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      01_nvt:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      02_nvt:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      03_npt:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      prod:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+    fep:
+      vdw:
+        00_min:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        01_nvt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        02_npt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        03_npt_norest:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        prod:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+      coul:
+        00_min:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        01_nvt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        02_npt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        03_npt_norest:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        prod:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+  complex:
+    equi: # This is for soluble complex, there are different steeps for membrane complexes
+      00_min:
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      01_nvt:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      02_nvt:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      03_npt:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      04_npt:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+      prod:
+        constraints: h-bonds
+        cutoff-scheme: Verlet
+        vdwtype: cutoff
+        vdw-modifier: force-switch
+        rlist: 1.2
+        rvdw: 1.2
+        rvdw-switch: 1.0
+        coulombtype: PME
+        rcoulomb: 1.2
+        DispCorr: no
+    fep:
+      vdw:
+        00_min:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        01_nvt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        02_npt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        03_npt_norest:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        prod:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+      coul:
+        00_min:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        01_nvt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        02_npt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        03_npt_norest:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        prod:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+      bonded:
+        00_min:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        01_nvt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        02_npt:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        03_npt_norest:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no
+        prod:
+          constraints: h-bonds
+          cutoff-scheme: Verlet
+          vdwtype: cutoff
+          vdw-modifier: force-switch
+          rlist: 1.2
+          rvdw: 1.2
+          rvdw-switch: 1.0
+          coulombtype: PME
+          rcoulomb: 1.2
+          DispCorr: no

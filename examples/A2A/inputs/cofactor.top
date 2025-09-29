@@ -1,0 +1,27 @@
+[ defaults ]
+; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+1               2               no              1            0.833333    
+
+[ atomtypes ]
+; name    at.num    mass    charge ptype  sigma      epsilon
+yNa           11  22.990000  0.00000000  A        0.33284      0.0115897
+
+
+[ moleculetype ]
+; Name            nrexcl
+COF          3
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr    charge       mass  typeB    chargeB      massB
+; residue    1 NA rtp NA q 1.0
+    1         yNa      1    COF     yNA      1 1.00000000  22.990000   ; qtot 1.000000
+
+
+[ system ]
+; Name
+Generic title
+
+[ molecules ]
+; Compound       #mols
+COF                  1
+
