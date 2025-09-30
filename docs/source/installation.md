@@ -55,9 +55,7 @@ micromamba activate BindFlow
   ````{tab} Production mode
     ```bash
     micromamba activate BindFlow
-    git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
-    cd BindFlow 
-    python -m pip install -e . --no-deps
+    python -m pip install bindflow --no-deps
     python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010 --no-deps
     ```
   ````
@@ -82,9 +80,7 @@ micromamba activate BindFlow
   ````{tab} Production mode
     ```bash
     micromamba activate BindFlow
-    git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
-    cd BindFlow 
-    python -m pip install -e . --no-deps
+    python -m pip install bindflow --no-deps
     ```
   ````
   ````{tab} Developer mode
