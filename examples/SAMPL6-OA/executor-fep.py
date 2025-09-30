@@ -13,7 +13,7 @@ force_fields = {
     },
 }
 
-ligand_files = glob.glob("inputs/guests2/*.sdf")
+ligand_files = glob.glob("inputs/guests/*.sdf")
 
 with open(f"config-{calculation_type}.yml", "r") as c:
     global_config = yaml.safe_load(c)

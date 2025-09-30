@@ -46,7 +46,7 @@ for ff_id, info in force_fields.items():
         out_root_folder_path=f"test-test-{calculation_type}/{ff_id}",
         threads=10,  # Configure it based on your cluster
         num_jobs=100000,
-        replicas=5,
+        replicas=3,
         scheduler_class=SlurmScheduler,
         debug=False,
         job_prefix=f'cycloD.{ff_id}',
