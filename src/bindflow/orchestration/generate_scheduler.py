@@ -58,7 +58,7 @@ class Scheduler(ABC):
     def __cluster_validation__(self):
         """Each scheduler should validate if the necessary options, as partition, CPUs, etc are in cluster_config.
         """
-        pass
+        ...
 
     @abstractmethod
     def build_snakemake(self, jobs: int):
@@ -69,22 +69,26 @@ class Scheduler(ABC):
         jobs : int
             Number of snakemake jobs. Passed to the flag `--jobs`
         """
-        pass
+        ...
 
     @abstractmethod
-    def submit(self, new_cluster_config: dict, only_build: bool, job_prefix: str):
-        """Command to submit the jobs
+    def submit(self, only_build: bool, **kwargs):
+        """Command to update and
+        execute the snake_executor_file.
+
+        Check the example implementations:
+
+            - :meth:`bindflow.orchestration.generate_scheduler.SlurmScheduler.submit`
+            - :meth:`bindflow.orchestration.generate_scheduler.FrontEnd.submit`
 
         Parameters
         ----------
-        new_cluster_config : dict
-            If an specific cluster configuration is wanted for the
-            man Snakemake job (this is mainly hanging and waiting
-            for rules completion)
-        only_build : bool
-            Only build the files but do not execute the command
-        job_prefix : str
-            A job prefix identification for the cluster
+        only_build : bool, optional
+            Only create the file to submit but it will not be executed, by default False
+        **kwargs : Extra keyword arguments specific to the schedular. Accepted are:
+            `only_build`, `new_cluster_config` and/or `job_prefix`, so it is compatible with the current
+            submission of :func:`bindflow.orchestration.flow_builder.approach_flow`
+
         """
 
     def __get_full_data(self) -> dict:
@@ -225,22 +229,22 @@ class SlurmScheduler(Scheduler):
         if self.snake_executor_file:
             with open(self.out_dir/self.snake_executor_file, 'w') as f:
                 f.write(command)
-            os.chmod(self.out_dir/self.snake_executor_file, stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
         return command
 
-    def submit(self, new_cluster_config: dict = None, only_build: bool = False, job_prefix: str = "") -> str:
-        """Used to submit to the cluster the created job
+    def submit(self,  only_build: bool = False, new_cluster_config: dict = None, job_prefix: str = "") -> str:
+        """Submit to the cluster the snake_executor_file
 
         Parameters
         ----------
+        only_build : bool, optional
+            Only create the file to submit to the cluster but it will not be executed, by default False
         new_cluster_config : dict, optional
             New definition of the cluster. It could be useful to run the snakemake command with different resources
             as the one used on the workflow. For example, if the cluster has two partition deflt and long with 2 and 5 days as
             maximum time, we could run in the long partition the snakemake job and only ask for 1 CPU and in deflt
             the computational expensive calculations. If nothing is provided, cluster_config (passed during initialization)
             will be used, by default None
-        only_build : bool, optional
-            Only create the file to submit to the cluster but it will not be executed, by default False
+
         job_prefix : bool, optional
             It will be added as {job_prefix}.RuleThemAll , by default False
         Returns
@@ -405,16 +409,17 @@ class FrontEnd(Scheduler):
         return command
 
     def submit(self, only_build: bool = False, **kwargs) -> str:
-        """Used to submit to the cluster the created job
+        """Submit to the workstation the snake_executor_file
 
         Parameters
         ----------
         only_build : bool, optional
             Only create the file to submit to the Frontend but it will not be executed, by default False
         **kwargs : object, optional
-            This is only added for compatibility. t is like this in order that the snakemake rules can pass arguments irrespective if is
-            SLURM FrontEnd without to check for configuration.
-            In reality it will not be used at all on this method.
+            This is only added for compatibility. This allows
+            the current signature used on:
+            :func:`bindflow.orchestration.flow_builder.approach_flow` during submission
+            In reality it will not be used at all for this class
         Returns
         -------
         str

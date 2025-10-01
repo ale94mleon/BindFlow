@@ -917,5 +917,3 @@ def sum_uncertainty_propagation(
 
     return sqrt(sum((c * e) ** 2 for c, e in zip(coefficients, errors)))
 
-if __name__ == "__main__":
-    pass

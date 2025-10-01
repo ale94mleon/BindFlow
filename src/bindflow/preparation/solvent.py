@@ -166,7 +166,7 @@ def make_posres(input_topology: tools.PathLike, molecules: Iterable[str], out_di
         with open(Path(out_dir)/posres_filename, "w") as posres_file:
             posres_file.write("[ position_restraints ]\n")
 
-            for i in range(len(top_lines)):
+            for i, _ in enumerate(top_lines):
 
                 if f"{molecule}  " in (top_lines[i]) and " 3\n" in (top_lines[i]):
                     j = i + 1
@@ -548,11 +548,14 @@ class Solvate:
             nname: str = "CL",
             ion_conc: float = 150E-3,
             rmin: float = 1.0,
-            exclusion_list: list = ["SOL", "NA", "CL",],  # "MG", "ZN"],
+            exclusion_list: list = None,
             out_dir: tools.PathLike = '.',
             out_name: str = 'solvated',
             f_xyz: tuple = (2500, 2500, 2500),
             settles_to_constraints_on: Union[tools.PathLike, str] = None) -> None:
+
+        if exclusion_list is None:
+            exclusion_list = ["SOL", "NA", "CL"]  # "MG", "ZN"]
 
         # Clean any possible generated files during previous calls
         out_dir = Path(out_dir)

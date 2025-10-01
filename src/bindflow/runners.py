@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 # Next line consider to remove and let the users set it up if they need it.
 # As it is now it blocks in INFO level.
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s') 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
 PathLike = Union[os.PathLike, str, bytes]
 
@@ -43,7 +43,7 @@ def calculate(
         job_prefix: Union[None, str] = None,
         out_root_folder_path: tools.PathLike = 'bindflow-out',
         submit: bool = False,
-        global_config: dict = {}
+        global_config: dict = None
         ) -> None:
     """Main function of BindFlow to execute the workflow
 
@@ -265,6 +265,9 @@ def calculate(
     """
 
     logger.info(f"✨ You are using BindFlow: {__version__}")
+
+    if global_config is None:
+        global_config = dict()
 
     if calculation_type.lower() not in ['fep', 'mmpbsa']:
         raise ValueError(f"calculation_type must be one of: [fep, mmpbsa] (case-insensitive).\nProvided: {calculation_type}")

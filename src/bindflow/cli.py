@@ -227,7 +227,7 @@ def main():
         func=lambda args: mmxbsa_check_results(
             out_root_folder_path=args.out_root_folder_path,
             out_csv_summary=args.out_csv_summary,
-            out_csv_raw=args.out_csv_raw))      
+            out_csv_raw=args.out_csv_raw))
 
     cleaner = subparsers.add_parser(
         'clean',

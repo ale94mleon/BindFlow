@@ -19,15 +19,18 @@ def update_nwindows_config(config: dict) -> dict:
     config : dict
         The configuration file with or without the nwindows keyword.
         In case it is present, must be in the shape of:
-        'nwindows':{
-            'ligand':{
-                'vdw': <int>[11],
-                'coul': <int>[11],
+
+        .. code-block:: python
+
+            'nwindows': {
+                'ligand': {
+                    'vdw': <int>[11],
+                    'coul': <int>[11],
                 },
-            'complex':{
-                'vdw': <int>[21],
-                'coul': <int>[11],
-                'bonded': <int>[11]
+                'complex': {
+                    'vdw': <int>[21],
+                    'coul': <int>[11],
+                    'bonded': <int>[11]
                 },
             }
 
@@ -123,7 +126,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     """
     out_path = Path(global_config["out_approach_path"])
     snake_path = out_path/"Snakefile"
-    approach_conf_path = out_path/"snake_conf.json"       
+    approach_conf_path = out_path/"snake_conf.json"
 
     approach_config = {
         "calculation_type": global_config["calculation_type"],
@@ -231,6 +234,6 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
     # Execute the pipeline in out_approach_path
     cwd = os.getcwd()
     os.chdir(global_config["out_approach_path"])
-    job_id = scheduler.submit(new_cluster_config=job_cluster_config, only_build=not submit, job_prefix=global_config["job_prefix"])
+    job_id = scheduler.submit(only_build=not submit, new_cluster_config=job_cluster_config, job_prefix=global_config["job_prefix"])
     os.chdir(cwd)
     return job_id
