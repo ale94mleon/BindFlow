@@ -196,7 +196,7 @@ Finally, it is advised to check if everything is alright. Be patient and go for 
 ````{tab} BindFlow is already cloned
   ```bash
   cd BindFlow # The path to your local copy of the repository
-  python -m pytest test
+  python -m pytest tests
   ```
 ````
 
@@ -204,7 +204,7 @@ Finally, it is advised to check if everything is alright. Be patient and go for 
   ```bash
   git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
   cd BindFlow
-  python -m pytest test
+  python -m pytest tests
   ```
 ````
 
