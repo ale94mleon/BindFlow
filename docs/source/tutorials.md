@@ -8,7 +8,7 @@ Get started quickly with **ready-to-simulate** examples provided in the [example
 2. **Adjust configurations** - Update the configuration files to match your cluster resources and environment. This ensures simulations run smoothly.
 3. **Reference configuration files** - Several files are provided for illustration in the [config](https://github.com/ale94mleon/BindFlow/tree/main/examples/configs) directory. Use them as a guide to create or customize your own simulation setups.
 4. **Run your simulations** - Once configured, execute the examples to see BindFlow in action. For deployment instructions, see the [Deploy guide](./guides/deploy.md).
-5. **Troubleshooting** - Check common issues and solutions in the [FAQ](./faq.md). If your problem is not listed, or you have a feature request, feel free to open an issue on [BindFlow's issue tracker](https://github.com/ale94mleon/BindFlow/issues).
+5. **Troubleshooting** - Check common issues and solutions in the [FAQ](./faq.md). If your problem is not listed, questions on how to use BindFlow, or if you want to give feedback or share ideas and new features, please head to the [BindFlow's discussions](https://github.com/ale94mleon/BindFlow/discussions).
 
 ```{admonition} Friendly reminder
 :class: info
