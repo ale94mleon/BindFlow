@@ -43,7 +43,7 @@ for ff_id, info in force_fields.items():
         ligands=ligands,
         water_model='amber/tip3p',
         hmr_factor=2.5,
-        out_root_folder_path=f"test-test-{calculation_type}/{ff_id}",
+        out_root_folder_path=f"{calculation_type}/{ff_id}",
         threads=10,  # Configure it based on your cluster
         num_jobs=100000,
         replicas=3,
