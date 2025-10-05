@@ -1,6 +1,5 @@
 import json
 import os
-import stat
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -72,7 +71,7 @@ class Scheduler(ABC):
         ...
 
     @abstractmethod
-    def submit(self, only_build: bool, **kwargs):
+    def submit(self, only_build: bool, new_cluster_config: dict, job_prefix: str):
         """Command to update and
         execute the snake_executor_file.
 
@@ -85,10 +84,9 @@ class Scheduler(ABC):
         ----------
         only_build : bool, optional
             Only create the file to submit but it will not be executed, by default False
-        **kwargs : Extra keyword arguments specific to the schedular. Accepted are:
-            `only_build`, `new_cluster_config` and/or `job_prefix`, so it is compatible with the current
+        new_cluster_config and job_prefix: Extra keyword arguments specific to the schedular.
+            This makes it compatible with the current
             submission of :func:`bindflow.orchestration.flow_builder.approach_flow`
-
         """
 
     def __get_full_data(self) -> dict:
@@ -231,7 +229,7 @@ class SlurmScheduler(Scheduler):
                 f.write(command)
         return command
 
-    def submit(self,  only_build: bool = False, new_cluster_config: dict = None, job_prefix: str = "") -> str:
+    def submit(self, only_build: bool = False, new_cluster_config: dict = None, job_prefix: str = "") -> str:
         """Submit to the cluster the snake_executor_file
 
         Parameters
@@ -405,19 +403,18 @@ class FrontEnd(Scheduler):
         if self.snake_executor_file:
             with open(self.out_dir/self.snake_executor_file, 'w') as f:
                 f.write(command)
-            os.chmod(self.out_dir/self.snake_executor_file, stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
         return command
 
-    def submit(self, only_build: bool = False, **kwargs) -> str:
+    def submit(self, only_build: bool = False, new_cluster_config=None, job_prefix=None) -> str:
         """Submit to the workstation the snake_executor_file
 
         Parameters
         ----------
         only_build : bool, optional
             Only create the file to submit to the Frontend but it will not be executed, by default False
-        **kwargs : object, optional
-            This is only added for compatibility. This allows
-            the current signature used on:
+        new_cluster_config  and job_prefix : Are
+            only added for compatibility and readability.
+            This allows the current signature used on:
             :func:`bindflow.orchestration.flow_builder.approach_flow` during submission
             In reality it will not be used at all for this class
         Returns

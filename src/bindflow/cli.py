@@ -96,7 +96,6 @@ def clean(out_root_folder_path):
     except Exception as e:
         print("❌ Snake scan failed. Something went wrong:", e)
 
-
     # ---------- Step 2: Cancel SLURM jobs ----------
     # Check if 'squeue' is available on the system
     if shutil.which("squeue"):

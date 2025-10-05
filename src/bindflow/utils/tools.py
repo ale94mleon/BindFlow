@@ -916,4 +916,3 @@ def sum_uncertainty_propagation(
         raise ValueError("`coefficients` must have the same length as `errors`.")
 
     return sqrt(sum((c * e) ** 2 for c, e in zip(coefficients, errors)))
-
