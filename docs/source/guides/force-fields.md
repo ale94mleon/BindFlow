@@ -65,7 +65,7 @@ Processing on [CHARMM-GUI](https://www.charmm-gui.org):
 * Hexagonal box
 * Water thickness: 15
 * Length of X and Y: 90 (initial guess)
-* Only POPC for a simple membrane
+* Only POPC for a simple membrane or any other lipid composition you would like to use
 * Do not include ions
 * force field:
     - AMBER:
@@ -236,7 +236,7 @@ Processing on [CHARMM-GUI](https://www.charmm-gui.org):
 * Hexagonal box
 * Water thickness: 15
 * Length of X and Y: 90 (initial guess)
-* Only POPC for a simple membrane
+* Only POPC for a simple membrane or any other lipid composition you would like to use
 * Do not include ions
 * force field:
     - AMBER:
