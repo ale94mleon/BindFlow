@@ -18,7 +18,7 @@ We would like to work in a more relaxed environment, but we have encountered cha
 
   <div>
     <strong>Features:</strong><br>
-    <label><input type="checkbox" data-feature="mmpbsa"> MM(P/G)BSA capabilities</label>
+    <label><input type="checkbox" data-feature="mmpbsa"> MM(PB/GB)SA capabilities</label>
     <label><input type="checkbox" data-feature="espaloma"> Espaloma force field</label>
   </div>
 
@@ -159,7 +159,7 @@ If `GROMACS >= 2023`, BindFlow throws a clean error at the very beginning of the
 
 ## Documentation dependencies
 
-This project has an [Sphinx](https://www.sphinx-doc.org/en/master/) documentation that can be built and accessed locally.
+This online [Sphinx](https://www.sphinx-doc.org/en/master/) documentation can also be built and accessed locally.
 
 ````{admonition} requirements_doc.txt
 :class: tip

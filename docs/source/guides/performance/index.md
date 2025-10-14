@@ -54,7 +54,7 @@ Plugging into Eq. {eq}`fep_estimation`:
 - {math}`T_E=` average time (in hours) to complete the production equilibration simulation
 - {math}`T_S=` average time (in hours) to complete the sample simulation
 
-This formula provides a lower bound for the execution time. In practice, you should account for an additional ± 0.2 days to accommodate for the remaining tasks, scheduling overheads and runtime variations. Nevertheless, this estimation is usually reliable, as the total time is dominated by the FEP complex simulations. The value of {math}`T_E` and {math}`T_S` can be determined either from preliminary test runs or by monitoring ongoing simulations
+This formula provides a lower bound for the execution time. In practice, you should account for an additional ± 0.2 days to accommodate for the remaining tasks, scheduling overheads and runtime variations. Nevertheless, this estimation is usually reliable, as the total time is dominated by the production MD steps. The value of {math}`T_E` and {math}`T_S` can be determined either from preliminary test runs or by monitoring ongoing simulations
 
 ````{dropdown} Example Calculation
 :color: info

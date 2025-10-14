@@ -7,5 +7,9 @@ sphinxcontrib-katex
 sphinxcontrib-mermaid
 sphinx-inline-tabs
 sphinx_copybutton
-sphinx-autobuild
 roman
+
+# 🔧 Live-reload server (pin stable versions to avoid asyncio crash)
+sphinx-autobuild==2021.3.14
+uvicorn<0.30
+watchfiles<0.20

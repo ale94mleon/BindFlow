@@ -1,4 +1,4 @@
-name: bindflow
+name: bindflow-docs
 channels:
   - conda-forge
 dependencies:

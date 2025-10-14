@@ -124,6 +124,15 @@ html_js_files = [
     "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js",
 ]
 
+
+# -- Mock heavy or optional dependencies to avoid import errors --
+
+autodoc_mock_imports = [
+    "pandas",
+    "toff",
+    "parmed"
+]
+
 intersphinx_mapping = {'Python': ('https://docs.python.org/3/', None),
                        'numpy': ('https://numpy.org/doc/stable/', None),
                        'rdkit': ('https://www.rdkit.org/docs/', None),

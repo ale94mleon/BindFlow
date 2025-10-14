@@ -48,7 +48,6 @@ dependencies = [
     "numpy",
     "pandas",
     "mdanalysis",
-    # "TOFF >= 0.2.0",
     "pyyaml",
 ]
 

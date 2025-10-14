@@ -1,3 +1,3 @@
 # Data
 
-This is sub-packege for testing.
+This is sub-package for testing.
