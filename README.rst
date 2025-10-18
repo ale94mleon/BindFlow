@@ -36,7 +36,7 @@ The installation instructions, documentation and tutorials can be found online o
 Issues
 ------
 
-If you have found a bug, please open an issue on the `GitHub Issues <https://github.com/ale94mleon/bindlfow/issues>`_.
+If you have found a bug, please open an issue on the `GitHub Issues <https://github.com/ale94mleon/BindFlow/issues>`_.
 
 Discussion
 ----------
