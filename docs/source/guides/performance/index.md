@@ -95,7 +95,7 @@ The initial time needed for Snakemake to resolve the Direct Acyclic Graph (DAG) 
 
 GROMACS performance was calculated for several systems listed in the next section.
 
-All the scripts to reproduce these results are on [GitHub](https://github.com/ale94mleon/bindflow/docs/source/guides/performance/scripts).
+All the scripts to reproduce these results are on [GitHub](https://github.com/ale94mleon/bindflow/tree/main/docs/source/guides/performance/scripts).
 
 ### Running details
 
