@@ -25,7 +25,7 @@ In the following examples, we will use the runner {py:func}`bindflow.runners.cal
 
 ````````{tab} Partial definition
 ``````{tab} protein
-The protein will be processed with [amber99sb-ildn](https://ambermd.org/#ff) force field after been fixed with [PDBFixer](https://github.com/openmm/pdbfixer).
+The protein will be processed with [amber99sb-ildn](https://ambermd.org/#ff) force field after been fixed (if `fix_protein = True`) with [PDBFixer](https://github.com/openmm/pdbfixer).
 
 ```{hint}
 It is advised to spend some time on the processing of the protein beforehand (better a minute than repeat the whole campaign):
@@ -123,7 +123,7 @@ calculate(
 `````{tab} by code
 ````{tab} on GROMACS distribution
 
-You can access all the [GROMACS force fields](https://manual.gromacs.org/current/user-guide/force-fields.html) by their code, they will be pass to [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) through the flag `-ff` after been fixed with [PDBFixer](https://github.com/openmm/pdbfixer).
+You can access all the [GROMACS force fields](https://manual.gromacs.org/current/user-guide/force-fields.html) by their code, they will be pass to [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) through the flag `-ff` after been fixed (if `fix_protein = True`) with [PDBFixer](https://github.com/openmm/pdbfixer).
 
 ```{hint}
 It is advised to spend some time on the processing of the protein beforehand (better a minute than repeat the whole campaign):
@@ -161,7 +161,7 @@ os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
 See how the force field directory ends in `.ff`; e.g. `charmm36-jul2022.ff`. This is needed.
 ```
 
-The force field code (e.g. for `charmm36-jul2022.ff`, the code is `charmm36-jul2022`) will be pass to [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) through the flag `-ff` after been fixed with [PDBFixer](https://github.com/openmm/pdbfixer).
+The force field code (e.g. for `charmm36-jul2022.ff`, the code is `charmm36-jul2022`) will be pass to [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) through the flag `-ff` after been fixed (if `fix_protein = True`) with [PDBFixer](https://github.com/openmm/pdbfixer).
 
 ```{hint}
 It is advised to spend some time on the processing of the protein beforehand (better a minute than repeat the whole campaign):
