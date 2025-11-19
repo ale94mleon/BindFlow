@@ -12,8 +12,6 @@ BindFlow
       - |github|
     * - **Build**
       - |pypi-version|
-    * - **Source Code**
-      - |github|
     * - **Python Versions**
       - |pyversions|
     * - **Dependencies**
