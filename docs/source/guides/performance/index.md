@@ -402,13 +402,13 @@ couple-intramol          = yes
 
 Reported values are in ns/day (first row of next figure). The node was isolated (SLURM keyword: `exclusive=True`) for the calculation removing the possibility of sharing resources across process. Each job used 10 CPUs and 1 GPU.
 
-```{figure} fep-mmxbsa-cluster-bench.svg
+```{figure} scripts/fep-mmxbsa-cluster-bench.svg
 :alt: Example plot
 :width: 80%
 :name: fep-mmxbsa-cluster-bench
 
 BinFlow computational performance. (First row) shows the GROMACS performance in ns/day for (left) ligand simulations and (right) protien--ligand complex simulations. (Second row) BindFlow completion time as a function of the number of ligands and computers for (left) FEP and (right) MMGBSA in the thrombin system with 
-RTX A6000/Ryzen Threadripper PRO 3975WX hardware. MMGBSA is approximatly x76 times faster than FEP.
+RTX A6000/Ryzen Threadripper PRO 3975WX hardware. MMGBSA is approximatly x75 times faster than FEP.
 ```
 
 | Hardware ID | GPU               |  CPU                          |
@@ -425,9 +425,9 @@ RTX A6000/Ryzen Threadripper PRO 3975WX hardware. MMGBSA is approximatly x76 tim
 
 To estimate the completion time, we selected the thrombin system, which achieved a mid-range performance of 270 ns/day for the protein--ligand complex using an Nvidia RTX A4000 GPU and 10 CPU cores of and Ryzen Threadripper PRO 3975WX (second row of previous fgure).
 
-The following figure illustrates the average completion time per ligand as a function of the number of computers (or computing nodes). MMGBSA was approximately 76 times faster than FEP, completing each ligand in under 0.10 hours on average with just 10 computing nodes, demonstrating its computational efficiency. While FEP was more resource-intensive, it scaled efficiently with the number of available computing nodes, achieving an average ligand completion time below the hour with 60 nodes and just 0.29 hours with 200 nodes on the described architecture.
+The following figure illustrates the average completion time per ligand as a function of the number of computers (or computing nodes). MMGBSA was approximately 75 times faster than FEP, completing each ligand in under 0.10 hours on average with just 10 computing nodes, demonstrating its computational efficiency. While FEP was more resource-intensive, it scaled efficiently with the number of available computing nodes, achieving an average ligand completion time below the hour with 60 nodes and just 0.29 hours with 200 nodes on the described architecture.
 
-```{figure} fep-mmxbsa-avg-time-per-lig.svg
+```{figure} scripts/fep-mmxbsa-avg-time-per-lig.svg
 :alt: Example plot
 :width: 80%
 :name: fep-mmxbsa-avg-time-per-lig
@@ -447,7 +447,7 @@ As a numerical example, for the P38 system that comprised 86376 atoms, calculati
 
 By excluding log files (`.snakemake` directory and `*.log` and `*.err` files) and irrelevant GROMACS files (`.edr`, `mdout.mdp` and `*.tpr`) during archive and compressing all non-trajectory files, the disk space was reduced to 137 GB for FEP and 19 GB for MMGBSA. However, owing to BindFlow full automation, to reproduce the simulations, only the BindFlow version, input structures, run script, and configuration file are required; involving typically only few megabytes for long-term archive.
 
-```{figure} fep-mmxbsa-simu-size.svg
+```{figure} scripts/fep-mmxbsa-simu-size.svg
 :alt: Example plot
 :width: 80%
 :name: fep-mmxbsa-simu-size
