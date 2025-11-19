@@ -435,9 +435,7 @@ The following figure illustrates the average completion time per ligand as a fun
 Computational performance and scalability of BindFlow on the Thrombin system. (Upper panel): Estimated average ligand completion time under ideal conditions. Standard deviation is reported (very small). (Lower panel): Estimated rate of ligand completion time between FEP and MMGBSA. Error bars were calculated after uncertainty propagation.
 ```
 
-For instance, with **200** nodes running for a week, up to **580** or **39,961** binding free energy calculations could be theoretically performed at FEP or MMGBSA levels, respectively. These estimates assume **ideal conditions** and should be interpreted as preliminary projections of BindFlow’s computational cost.
-
-By using one computer (serial run) we can get an overall estimate of the expensiveness of the pipeline. We found that FEP is **~180** more expensive than MMGBSA.
+For instance, with **200** nodes running for a week, up to **580** or **39,965** binding free energy calculations could be theoretically performed at FEP or MMGBSA levels, respectively. These estimates assume **ideal conditions** and should be interpreted as preliminary projections of BindFlow’s computational cost.
 
 ## Disk use
 
