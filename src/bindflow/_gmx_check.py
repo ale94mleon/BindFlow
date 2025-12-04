@@ -15,11 +15,11 @@ def check_gromacs_installation():
             if installed_version is None:
                 raise RuntimeError("⚠️ GROMACS was found, but the version could not be determined. "
                                    "Please run `gmx --version` manually and verify your installation.")
-
-            if is_gromacs_version_geq("2023"):
+            target_version = "2026"
+            if is_gromacs_version_geq(target_version):
                 raise RuntimeError(
                     f"🚫 Unsupported GROMACS version detected: {installed_version}. "
-                    "BinFlow only supports GROMACS versions earlier than 2023 for now."
+                    f"BinFlow only supports GROMACS versions earlier than {target_version} for now."
                     "👉 Please install an older release (e.g., 2021.x or 2022.x) "
                     "or check BindFlow documentation for compatibility details."
                 )
