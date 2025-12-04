@@ -59,9 +59,8 @@ document.addEventListener("DOMContentLoaded", function () {
     ],
     pip_dependencies: [
       "alchemlyb==2.0.0",
-      "mdanalysis==2.5.0",
-      // "mdrestraintsgenerator>=0.2.1",
-      "git+https://github.com/ale94mleon/MDRestraintsGenerator@51a543afc8ee2b0b14188995412b7865103203a6",
+      "mdanalysis==2.9.0",
+      "git+https://github.com/ale94mleon/MDRestraintsGenerator@54ca2484801fef4f572c78639de100bf572a2581",
       "pymbar==4.0.1",
       "rdkit==2023.3.2",
       "toff==0.2.0"
@@ -89,8 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
     pip_dependencies: [
       "alchemlyb",
       "mdanalysis",
-      // "mdrestraintsgenerator>=0.2.1",
-      "git+https://github.com/ale94mleon/MDRestraintsGenerator@51a543afc8ee2b0b14188995412b7865103203a6",
+      "git+https://github.com/ale94mleon/MDRestraintsGenerator@54ca2484801fef4f572c78639de100bf572a2581",
       "pymbar",
       "rdkit",
       "toff>=0.2.0"
@@ -101,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Pinned features (exact versions)
   const featureDepsPinned = {
     mmpbsa: { conda: ["mpi4py=3.1.5"], pip: [] },
-    espaloma: { conda: ["espaloma=0.3.2"], pip: [] },
+    espaloma: { conda: ["espaloma=0.4.0"], pip: [] },
   };
 
   // Relaxed features (looser versions)
