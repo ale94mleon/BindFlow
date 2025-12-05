@@ -2,7 +2,7 @@ name: bindflow-docs
 channels:
   - conda-forge
 dependencies:
-  - python==3.9.*
+  - python==3.10.*
   - pip
   - conda-build
   - ipykernel
