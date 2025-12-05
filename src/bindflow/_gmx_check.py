@@ -1,3 +1,4 @@
+from ast import parse
 import subprocess
 import logging
 import re
@@ -15,16 +16,16 @@ def check_gromacs_installation():
             if installed_version is None:
                 raise RuntimeError("⚠️ GROMACS was found, but the version could not be determined. "
                                    "Please run `gmx --version` manually and verify your installation.")
-            target_version = "2026"
-            if is_gromacs_version_geq(target_version):
+            min_supported = "2022"
+            max_supported = "2026"
+            if is_version_in_range(min_version=min_supported, max_version=max_supported):
+                logger.info(f"✅ Compatible GROMACS version detected: {installed_version}")
+            else:
                 raise RuntimeError(
                     f"🚫 Unsupported GROMACS version detected: {installed_version}. "
-                    f"BinFlow only supports GROMACS versions earlier than {target_version} for now."
-                    "👉 Please install an older release (e.g., 2021.x or 2022.x) "
-                    "or check BindFlow documentation for compatibility details."
-                )
-            else:
-                logger.info(f"✅ Compatible GROMACS version detected: {installed_version}")
+                    f"Supported versions are >= {min_supported} and < {max_supported}. "
+                    "👉 Please install a compatible GROMACS release."
+                    )
         else:
             logger.warning(
                 "🤔 Oops! It seems that GROMACS is in the system PATH but failed to run properly. "
@@ -57,20 +58,38 @@ def get_gromacs_version():
         return None
 
 
-def is_gromacs_version_geq(target_version: str) -> bool:
-    """
-    Check if the installed GROMACS version is >= target_version.
+def is_version_in_range(min_version: str | None = None, max_version: str | None = None) -> bool:
+    """    Check if the installed GROMACS version lies within
+    an optional [min_version, max_version) range.
     target_version should be a string like '2022' or '2022.6'.
+
+    Parameters
+    ----------
+    min_version : str | None, optional
+        inclusive lower bound (>=), by default None
+    max_version : str | None, optional
+        exclusive upper bound (<), by default None
+
+    Returns
+    -------
+    bool
+        True if installed version is in range
     """
+    def parse(v):
+        return tuple(map(int, v.split(".")))
+
     installed_version = get_gromacs_version()
     if installed_version is None:
         return False  # GROMACS not installed or version not detected
 
-    def parse_version(v):
-        return tuple(map(int, v.split('.')))
-
     try:
-        return parse_version(installed_version) >= parse_version(target_version)
+        inst = parse(installed_version)
+        if min_version is not None and inst < parse(min_version):
+            return False
+        if max_version is not None and inst >= parse(max_version):
+            return False
+        return True
     except ValueError:
-        logger.warning(f"⚠️ Could not compare versions (installed: {installed_version}, target: {target_version})")
+        logger.warning(f"⚠️ Could not compare versions (installed: {installed_version}, "
+                       f"min={min_version}, max={max_version}")
         return False
