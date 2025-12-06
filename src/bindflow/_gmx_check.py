@@ -1,4 +1,3 @@
-from ast import parse
 import subprocess
 import logging
 import re
