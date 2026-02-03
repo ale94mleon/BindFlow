@@ -5,6 +5,7 @@ import os
 import shutil
 import tarfile
 import warnings
+import socket
 from itertools import chain
 from pathlib import Path
 from typing import List, Union
@@ -632,6 +633,7 @@ class MakeInputs:
             Where you would like to export the generated files, by default 'fep'
         """
         logger.info(39*"-")
+        logger.info(f"Running on compute host: {socket.gethostname()}")
         if not isinstance(ligand_definition, dict):
             ligand_definition = {
                 'conf': ligand_definition
