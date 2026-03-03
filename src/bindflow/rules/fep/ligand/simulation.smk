@@ -12,7 +12,7 @@ rule fep_ligand_00_min:
     retries: retries
     run:
         update_mdrun_extra = mdrun_extra["ligand"].copy()
-        for invalid_flag in ["update", "bonded"]:
+        for invalid_flag in ["update", "bonded", "pme"]:
             if invalid_flag in update_mdrun_extra:
                 del update_mdrun_extra[invalid_flag]
         tools.gmx_runner(
