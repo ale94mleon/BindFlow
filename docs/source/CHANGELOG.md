@@ -37,5 +37,7 @@ sc-power                 = 1
 sc-sigma                 = 0.3
 ```
 
+- `"MDRestraintsGenerator @ git+https://github.com/ale94mleon/MDRestraintsGenerator.git@dev"` dependency from `pyproject.toml` as it is not accepted by PyPi. This dependency is built during the conda environment step anyway.
+
 [unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.15.1...HEAD
 [0.15.1]: https://github.com/ale94mleon/bindflow/compare/v0.13.0...v0.15.1
