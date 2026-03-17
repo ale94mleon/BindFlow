@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.15.1]
+
 ### Added
 
 - CI/CD for PyPI deployment
@@ -35,4 +37,5 @@ sc-power                 = 1
 sc-sigma                 = 0.3
 ```
 
-[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.13.0...HEAD
+[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.15.1...HEAD
+[0.15.1]: https://github.com/ale94mleon/bindflow/compare/v0.13.0...v0.15.1
