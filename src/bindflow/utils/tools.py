@@ -181,7 +181,7 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     return decorator
 
 
-def readParmEDMolecule(top_file: PathLike, gro_file: PathLike, check_box:bool = False) -> Structure:
+def readParmEDMolecule(top_file: PathLike, gro_file: PathLike, check_box: bool = False) -> Structure:
     """Read a gro and top GROMACS file and return
     a topology Structure
 
