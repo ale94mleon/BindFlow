@@ -106,6 +106,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         The global configuration. It should contain:
         out_approach_path[PathLike], inputs[dict[dict]], water_model[str],
         host_name[str], host_selection[str] (no needed for mmpbsa),
+        fix_protein[bool], solv_d[float],  solv_bt[str], solv_rmin[float], solv_ion_conc[float]
         cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
         ligand_names[list[str]], replicas[float], threads[int], samples[int] (no needed for fep)
         hmr_factor[float, None], custom_ff_path[str, None], cluster/type[str], cluster/options/calculation[dict]
@@ -135,6 +136,10 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "water_model": global_config["water_model"],
         "host_name": global_config["host_name"],
         "fix_protein": global_config["fix_protein"],
+        "solv_d": global_config["solv_d"],
+        "solv_bt": global_config["solv_bt"],
+        "solv_rmin": global_config["solv_rmin"],
+        "solv_ion_conc": global_config["solv_ion_conc"],
         "cofactor_on_protein": global_config["cofactor_on_protein"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],

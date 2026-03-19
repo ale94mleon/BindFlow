@@ -52,6 +52,10 @@ rule build_ligand_system:
             custom_ff_path=config["custom_ff_path"],
             hmr_factor=hmr_factor,
             fix_protein=config["fix_protein"],
+            solv_d=config["solv_d"],
+            solv_bt=config["solv_bt"],
+            solv_rmin=config["solv_rmin"],
+            solv_ion_conc=config["solv_ion_conc"],
             builder_dir=out_ligand_path/"builder",
             load_dependencies=load_dependencies,
         ) as builder:

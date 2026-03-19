@@ -181,6 +181,10 @@ class MakeInputs:
                  cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
                  custom_ff_path: Union[None, PathLike] = None, hmr_factor: Union[float, None] = None,
                  fix_protein: bool = True,
+                 solv_d: float = 1.5,
+                 solv_bt: str = "dodecahedron",
+                 solv_rmin: float = 1,
+                 solv_ion_conc: float = 150E-3,
                  builder_dir: PathLike = 'builder', load_dependencies: List[str] = None):
         """Constructor
 
@@ -290,13 +294,28 @@ class MakeInputs:
 
                 os.environ["GMXLIB"] = os.path.abspath(custom_ff_path)
 
-    fix_protein : bool, optional
-        If True, `pdbfixer` will be applied with flags `--add-atoms=all --replace-nonstandard` and `gmx editconf`
-        will the `-ignh` flag. This is needed to avoid possible issues when processing the structure through
-        GROMACS. To kept an specific protonation state is advised to input the full definition of
-        the protein (.top, .gro) or a PDB with the atom-naming (mainly H-naming) consistent with your selected
-        force field. This should be used for protein mainly, by default True
+        fix_protein : bool, optional
+            If True, `pdbfixer` will be applied with flags `--add-atoms=all --replace-nonstandard` and `gmx editconf`
+            will the `-ignh` flag. This is needed to avoid possible issues when processing the structure through
+            GROMACS. To kept an specific protonation state is advised to input the full definition of
+            the protein (.top, .gro) or a PDB with the atom-naming (mainly H-naming) consistent with your selected
+            force field. This should be used for protein mainly, by default True
 
+        solv_d : float, optional
+            This is the `d` flag of `gmx editconf`, it is used during solvation of
+            soluble complex and ligands. Membrane protein-ligand complex are
+            not affected by this keyword, by default 1.5
+        solv_bt : str, optional
+            This is the `bt` flag of `gmx editconf`, it is used during solvation of
+            soluble complex and ligands. Membrane protein-ligand complex are
+            not affected by this keyword, by default "dodecahedron".
+            bindflow <= 0.15.1 used "octahedron" internally.
+        solv_rmin : float, optional
+            This is the `rmin` flag of `gmx genion`, it is used during solvation.
+            If the number id too small ions might get trap in the protein, by default 1.
+        solv_ion_conc : float, optional
+            This is the `conc` flag of `gmx genion`, it is used during solvation.
+            If 0, only counter ions are added, by default 150E-3 (physiological concentration).
         builder_dir : PathLike, optional
             Where all the building files. After completion you can safely remove calling the method clean, by default builder
 
@@ -312,6 +331,10 @@ class MakeInputs:
         self.hmr_factor = hmr_factor
         self.water_model = water_model
         self.fix_protein = fix_protein
+        self.solv_d = solv_d
+        self.solv_bt = solv_bt
+        self.solv_rmin = solv_rmin
+        self.solv_ion_conc = solv_ion_conc
         self.load_dependencies = load_dependencies
         self.wd = Path(builder_dir).resolve()
         self.wd.mkdir(exist_ok=True, parents=True)
@@ -660,7 +683,9 @@ class MakeInputs:
         with solvent.Solvate(self.water_model, builder_dir=self.wd/'.solvating', load_dependencies=self.load_dependencies) as SolObj:
 
             logger.info(f"Ligand in: {ligand_dir}")
-            SolObj(structure=self.sys_ligand, bt='octahedron', d=1.5, out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
+            SolObj(structure=self.sys_ligand,
+                   bt=self.solv_bt, d=self.solv_d, rmin=self.solv_rmin, ion_conc=self.solv_ion_conc,
+                   out_dir=ligand_dir, out_name='solvated', f_xyz=3*[2500])
 
             logger.info(f"Complex in: {system_dir}")
             settles_to_constraints_on = None
@@ -674,10 +699,14 @@ class MakeInputs:
                         settles_to_constraints_on = 'COF'
 
             if self.membrane:
-                SolObj(structure=self.md_system, bt='triclinic', box=self.vectors, angles=self.angles,
-                       out_dir=system_dir, out_name='solvated', f_xyz=f_xyz_complex, settles_to_constraints_on=settles_to_constraints_on)
+                SolObj(structure=self.md_system,
+                       bt='triclinic', box=self.vectors, angles=self.angles, rmin=self.solv_rmin, ion_conc=self.solv_ion_conc,
+                       out_dir=system_dir, out_name='solvated',
+                       f_xyz=f_xyz_complex, settles_to_constraints_on=settles_to_constraints_on)
             else:
-                SolObj(structure=self.md_system, bt='octahedron', d=1.5, out_dir=system_dir, out_name='solvated',
+                SolObj(structure=self.md_system,
+                       bt=self.solv_bt, d=self.solv_d, rmin=self.solv_rmin, ion_conc=self.solv_ion_conc,
+                       out_dir=system_dir, out_name='solvated',
                        f_xyz=f_xyz_complex, settles_to_constraints_on=settles_to_constraints_on)
 
         # Make index file in case of membrane systems

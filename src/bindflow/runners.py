@@ -33,6 +33,10 @@ def calculate(
         host_name: str = 'Protein',
         host_selection: str = 'protein and name CA',
         fix_protein: bool = True,
+        solv_d: float = 1.5,
+        solv_bt: str = "dodecahedron",
+        solv_rmin: float = 1,
+        solv_ion_conc: float = 150E-3,
         hmr_factor: Union[float, None] = 2.5,
         dt_max: float = 0.004,
         threads: int = 12,
@@ -204,7 +208,21 @@ def calculate(
         GROMACS. To kept an specific protonation state is advised to input the full definition of
         the protein (.top, .gro) or a PDB with the atom-naming (mainly H-naming) consistent with your selected
         force field. This should be used for protein mainly, by default True
-
+    solv_d : float, optional
+            This is the `d` flag of `gmx editconf`, it is used during solvation of
+            soluble complex and ligands. Membrane protein-ligand complex are
+            not affected by this keyword, by default 1.5
+    solv_bt : str, optional
+            This is the `bt` flag of `gmx editconf`, it is used during solvation of
+            soluble complex and ligands. Membrane protein-ligand complex are
+            not affected by this keyword, by default "dodecahedron".
+            bindflow <= 0.15.1 used "octahedron" internally.
+    solv_rmin : float, optional
+            This is the `rmin` flag of `gmx genion`, it is used during solvation.
+            If the number is too small ions might get trap in the protein, by default 1.
+    solv_ion_conc : float, optional
+            This is the `conc` flag of `gmx genion`, it is used during solvation.
+            If 0, only counter ions are added, by default 150E-3 (physiological concentration).
     hmr_factor : Union[float, None], optional
         The Hydrogen Mass Factor to use, by default 2.5.
 
@@ -309,6 +327,10 @@ def calculate(
     _global_config["host_name"] = host_name
     _global_config["host_selection"] = host_selection
     _global_config["fix_protein"] = fix_protein
+    _global_config["solv_d"] = solv_d
+    _global_config["solv_bt"] = solv_bt
+    _global_config["solv_rmin"] = solv_rmin
+    _global_config["solv_ion_conc"] = solv_ion_conc
     _global_config["cofactor_on_protein"] = cofactor_on_protein
     _global_config["hmr_factor"] = hmr_factor
     _global_config["custom_ff_path"] = custom_ff_path
