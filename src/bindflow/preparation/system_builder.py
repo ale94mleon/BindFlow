@@ -66,18 +66,25 @@ def system_combiner(**md_elements):
     RuntimeError
         In case all the elements evaluate as False
     """
-    if any(md_elements.values()):
-        # md_system = sum(element for element in md_elements.values() if element) # it does not work with sum
-        # Use copy to avoid inplace modifications
-        for element in md_elements:
-            if md_elements[element]:
-                try:
-                    md_system += copy.copy(md_elements[element])
-                except NameError:
-                    md_system = copy.copy(md_elements[element])
-    else:
-        raise RuntimeError(f"\t* system_combiner failed with the inputs: {md_elements}")
-    logger.info(f" The system was constructed as follows: {' + '.join([key for key in md_elements if md_elements[key]])}")
+    md_system = None
+    for _, element in md_elements.items():
+        if element:
+            # Slicing [:] or pmd.Structure.from_structure(element)is
+            # the most robust way to clone in ParmEd.
+            # It returns a generic Structure and preserves your
+            # manual residue name changes (like 'yMG').
+            # And also initialize the strucure, avoiding the:
+            # AttributeError: 'GromacsTopologyFile' object has no attribute 'symmetry'
+            element_copy = element[:]
+            if md_system is None:
+                md_system = element_copy
+            else:
+                md_system += element_copy
+    if md_system is None:
+        raise RuntimeError(f"system_combiner failed with the inputs: {md_elements}")
+
+    logger.info(f"The system was constructed as follows: "
+                f"{' + '.join([k for k, v in md_elements.items() if v])}")
     return md_system
 
 
