@@ -1,5 +1,33 @@
 # ❓FAQ
 
+
+````{dropdown} Running Additional Ligands and/or Replicas
+:color: info
+:animate: fade-in-slide-down
+
+If you want to add new ligands or replicas **without rerunning existing simulations**, navigate to your working directory and execute:
+
+```bash
+snakemake --until make_ligand_copies build_ligand_system equil_setup_complex equil_setup_ligand fep_setup_ligand --cores 12
+```
+
+This command prepares only the required intermediate steps and avoids recomputing completed simulations. While `gmx mdrun` simulations are capable of resuming from previous states, it is preferable to avoid invoking these rules unnecessarily.
+
+```{warning}
+If you add a large number of ligands, the `build_ligand_system` rule may take a significant amount of time to complete.
+```
+
+Once the command finishes, it’s recommended to perform a dry run to verify the planned workflow:
+
+```bash
+snakemake -n
+```
+
+This will show which steps will be executed without actually running them.
+
+After confirming everything looks correct, you can proceed with BidnFlow as usual.
+````
+
 ````{dropdown} Atom X in residue Y was not found in rtp entry Y with x atoms while sorting atoms
 :color: info
 :animate: fade-in-slide-down
