@@ -107,7 +107,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         out_approach_path[PathLike], inputs[dict[dict]], water_model[str],
         host_name[str], host_selection[str] (no needed for mmpbsa),
         fix_protein[bool], solv_d[float],  solv_bt[str], solv_rmin[float], solv_ion_conc[float]
-        cofactor_on_protein[bool], extra_directives[dict], dt_max[float]
+        cofactor_on_protein[bool], cofactor_selection[str], extra_directives[dict], dt_max[float]
         ligand_names[list[str]], replicas[float], threads[int], samples[int] (no needed for fep)
         hmr_factor[float, None], custom_ff_path[str, None], cluster/type[str], cluster/options/calculation[dict]
         num_max_thread: int, The maximum number of threads to be used on each simulation.
@@ -141,6 +141,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "solv_rmin": global_config["solv_rmin"],
         "solv_ion_conc": global_config["solv_ion_conc"],
         "cofactor_on_protein": global_config["cofactor_on_protein"],
+        "cofactor_selection": global_config["cofactor_selection"],
         "ligand_names": global_config["ligand_names"],
         "replicas": global_config["replicas"],
         "hmr_factor": global_config["hmr_factor"],

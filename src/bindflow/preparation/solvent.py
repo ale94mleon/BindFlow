@@ -610,11 +610,11 @@ def index_for_membrane_system(
         ndxout: tools.PathLike = "index.ndx",
         ligand_name: str = "LIG",
         host_name: str = "Protein",
-        cofactor_name: str = None,
+        cofactor_selection: str = None,
         cofactor_on_protein: bool = True,
         load_dependencies: List[str] = None):
     """Make the index file for membrane systems with SOLU, MEMB and SOLV. It uses gmx make_ndx and select internally.
-    One examples selection that can be created with ligand_name = LIG; cofactor_name = COF and cofactor_on_protein = True is:
+    One examples selection that can be created with ligand_name = LIG; cofactor_selection = resname COF and cofactor_on_protein = True is:
         #. "RECEPTOR" group {host_name};
         #. "LIGAND" resname {ligand_name};
         #. "SOLU" group {host_name} or resname {ligand_name} or resname COF;
@@ -632,8 +632,8 @@ def index_for_membrane_system(
         The residue name for the ligand in the configuration file, by default "LIG".
     host_name : str
         The group name for the host in the configuration file, by default "Protein".
-    cofactor_name : str
-        The residue name for the cofactor in the configuration file, bt default None
+    cofactor_selection : str
+        The selection for the cofactor in the configuration file, by default None
     cofactor_on_protein : bool
         It only works if cofactor_name is provided. If True, the cofactor will be part of the protein and the lignad
         if False will be part of the solvent and ions, bt default True
@@ -649,12 +649,12 @@ def index_for_membrane_system(
     sele_MEMB = f"\"MEMB\" ((group System and ! group Water_and_ions) and ! group {host_name}) and ! (resname {ligand_name})"
     sele_SOLU = f"\"SOLU\" group {host_name} or resname {ligand_name}"
     sele_SOLV = "\"SOLV\" group Water_and_ions"
-    if cofactor_name:
-        sele_MEMB += f" and ! (resname {cofactor_name})"
+    if cofactor_selection:
+        sele_MEMB += f" and ! ({cofactor_selection})"
         if cofactor_on_protein:
-            sele_SOLU += f" or resname {cofactor_name}"
+            sele_SOLU += f" or {cofactor_selection}"
         else:
-            sele_SOLV += f" or resname {cofactor_name}"
+            sele_SOLV += f" or {cofactor_selection}"
 
     logger.info("Groups in the index.ndx file:")
     logger.info(f"\t{sele_RECEPTOR}")

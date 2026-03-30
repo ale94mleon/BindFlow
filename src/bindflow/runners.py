@@ -28,10 +28,11 @@ def calculate(
         membrane: Union[tools.PathLike, dict, None] = None,
         cofactor: Union[tools.PathLike, dict, None] = None,
         cofactor_on_protein: bool = True,
-        water_model: str = 'amber/tip3p',
+        cofactor_selection: str = "resname COF",
+        water_model: str = "amber/tip3p",
         custom_ff_path: Union[None, PathLike] = None,
-        host_name: str = 'Protein',
-        host_selection: str = 'protein and name CA',
+        host_name: str = "Protein",
+        host_selection: str = "protein and name CA",
         fix_protein: bool = True,
         solv_d: float = 1.5,
         solv_bt: str = "dodecahedron",
@@ -45,7 +46,7 @@ def calculate(
         scheduler_class: Scheduler = SlurmScheduler,
         debug: bool = False,
         job_prefix: Union[None, str] = None,
-        out_root_folder_path: tools.PathLike = 'bindflow-out',
+        out_root_folder_path: tools.PathLike = "bindflow-out",
         submit: bool = False,
         global_config: dict = None
         ) -> None:
@@ -183,6 +184,12 @@ def calculate(
         It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
         If True, the cofactor will be part of the protein and the ligand
         if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
+
+     cofactor_selection : str, optional
+        GMX selection. This is useful when a complex topology is provided via .top/.gro files.
+        For example, when two molecules are cofactors: "resname GDP or resname GTP or resname MG".
+        If the cofactor is provided as a .mol file, internally a new residue "COF" will be generated
+        By default "resname COF".
 
     water_model : str, optional
         The water force field to use, by default amber/tip3p.
@@ -332,6 +339,7 @@ def calculate(
     _global_config["solv_rmin"] = solv_rmin
     _global_config["solv_ion_conc"] = solv_ion_conc
     _global_config["cofactor_on_protein"] = cofactor_on_protein
+    _global_config["cofactor_selection"] = cofactor_selection
     _global_config["hmr_factor"] = hmr_factor
     _global_config["custom_ff_path"] = custom_ff_path
     # TODO, for now I will hard code this section becasue I am modifying the topology with some parameters for the water in preparation.gmx_topology

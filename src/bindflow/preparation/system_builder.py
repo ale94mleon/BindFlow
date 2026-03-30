@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-import copy
 import logging
 import os
 import shutil
+import socket
 import tarfile
 import warnings
-import socket
 from itertools import chain
 from pathlib import Path
 from typing import List, Union
@@ -184,8 +183,11 @@ class MakeInputs:
     It will create the necessary topology and configuration files, as well the
     correct directory trees.
     """
-    def __init__(self, protein: dict = None, host_name: str = "Protein", membrane: dict = None, cofactor: dict = None,
-                 cofactor_on_protein: bool = True, water_model: str = 'amber/tip3p',
+    def __init__(self, protein: dict = None, host_name: str = "Protein", membrane: dict = None,
+                 cofactor: dict = None,
+                 cofactor_selection: str = "resname COF",
+                 cofactor_on_protein: bool = True,
+                 water_model: str = 'amber/tip3p',
                  custom_ff_path: Union[None, PathLike] = None, hmr_factor: Union[float, None] = None,
                  fix_protein: bool = True,
                  solv_d: float = 1.5,
@@ -283,6 +285,13 @@ class MakeInputs:
             It is used during the index generation for membrane systems. It only works if cofactor_mol is provided.
             If True, the cofactor will be part of the protein and the ligand
             if False will be part of the solvent and ions. This is used mainly for the thermostat. By default True
+
+        cofactor_selection : str, optional
+            GMX selection. This is useful when a complex topology is provided via .top/.gro files.
+            For example, when two molecules are cofactors: "resname GDP or resname GTP or resname MG".
+            If the cofactor is provided as a .mol file, internally a new residue "COF" will be generated
+            By default "resname COF".
+
         hmr_factor : float, optional
             The Hydrogen Mass Factor to use, by default None
 
@@ -335,6 +344,7 @@ class MakeInputs:
         self.membrane = membrane
         self.cofactor = cofactor
         self.cofactor_on_protein = cofactor_on_protein
+        self.cofactor_selection = cofactor_selection
         self.hmr_factor = hmr_factor
         self.water_model = water_model
         self.fix_protein = fix_protein
@@ -723,7 +733,7 @@ class MakeInputs:
                 ndxout=system_dir/"index.ndx",
                 ligand_name="LIG",
                 host_name=self.host_name,
-                cofactor_name='COF' if self.cofactor else None,
+                cofactor_selection=self.cofactor_selection if self.cofactor else None,
                 cofactor_on_protein=self.cofactor_on_protein,
                 load_dependencies=self.load_dependencies
             )

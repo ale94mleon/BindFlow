@@ -48,6 +48,7 @@ rule build_ligand_system:
             membrane=config["inputs"]["membrane"],
             cofactor=config["inputs"]["cofactor"],
             cofactor_on_protein=config["cofactor_on_protein"],
+            cofactor_selection=config["cofactor_selection"],
             water_model=config["water_model"],
             custom_ff_path=config["custom_ff_path"],
             hmr_factor=hmr_factor,
