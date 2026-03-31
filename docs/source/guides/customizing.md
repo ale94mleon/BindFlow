@@ -131,7 +131,7 @@ This is a list of executable commands that should be run before any `gmx` comman
 extra_directives:
   dependencies:
     - source /groups/CBG/opt/spack-0.18.1/shared.bash
-    - module load gromacs/2022.4
+    - module load gromacs/2025.4
     - module load nvidia/latest
     - export GMX_MAXBACKUP=-1
 

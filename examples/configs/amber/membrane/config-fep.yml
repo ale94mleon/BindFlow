@@ -16,10 +16,10 @@ cluster:
 extra_directives: # Optional
   dependencies:
     # - MODULEPATH="/data/shared/spack/0.21.1+240303/modules:${MODULEPATH}"
-    # - module add gromacs/2022.4
+    # - module add gromacs/2025.4
     
     - MODULEPATH="/groups/CBG/opt/spack-0.21.0/modules:${MODULEPATH}"
-    - module add gromacs/2022.4
+    - module add gromacs/2025.4
   
     - export GMX_MAXBACKUP=-1
   mdrun:

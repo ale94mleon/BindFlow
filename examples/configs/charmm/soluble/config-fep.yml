@@ -15,7 +15,7 @@ cluster:
 extra_directives: # Optional
   dependencies:
     - 'source /groups/CBG/opt/spack-0.18.1/shared.bash'
-    - 'module load gromacs/2022.4'
+    - 'module load gromacs/2025.4'
     - 'export GMX_MAXBACKUP=-1'
   mdrun:
     all:

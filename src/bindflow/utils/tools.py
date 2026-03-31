@@ -99,7 +99,7 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
     ----------
     load_dependencies : List[str]
         It is used in case some previous loading steps are needed;
-        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4']
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2025.4']
     interactive : bool
         In case, and interactive section is desired, by default False
     stdout_file : bool
@@ -263,7 +263,7 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
         Number of threads to run, by default 12
     load_dependencies : List[str], optional
         It is used in case some previous loading steps are needed;
-        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2025.4'], by default None
     run_dir : PathLike, optional
         Where the simulation should run (write files). If it does not exist will be created, by default '.'
     **mdrun_extra : any
@@ -324,7 +324,7 @@ def center_xtc(tpr: PathLike, xtc: PathLike, run_dir: PathLike, host_name: str =
         Name of the host/receptor, by default 'Protein'
     load_dependencies : List[str], optional
         It is used in case some previous loading steps are needed;
-        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2025.4'], by default None
 
     Returns
     -------

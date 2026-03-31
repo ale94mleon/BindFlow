@@ -287,7 +287,7 @@ class Solvate:
             Where the temporal files will be written.
         load_dependencies : List[str], optional
             It is used in case some previous loading steps are needed for GROMACS commands;
-            e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
+            e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2025.4'], by default None
         Raises
         ------
         ValueError
@@ -639,7 +639,7 @@ def index_for_membrane_system(
         if False will be part of the solvent and ions, bt default True
     load_dependencies : List[str], optional
         It is used in case some previous loading steps are needed for GROMACS commands;
-        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2025.4'], by default None
     """
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')
@@ -719,7 +719,7 @@ def index_for_soluble_system(
         The group name for the host in the configuration file, by default "Protein".
     load_dependencies : List[str], optional
         It is used in case some previous loading steps are needed for GROMACS commands;
-        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2022.4'], by default None
+        e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2025.4'], by default None
     """
     tmpopt = tempfile.NamedTemporaryFile(suffix='.opt')
     tmpndx = tempfile.NamedTemporaryFile(suffix='.ndx')

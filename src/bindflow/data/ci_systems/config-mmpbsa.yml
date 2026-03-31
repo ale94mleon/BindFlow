@@ -1,7 +1,7 @@
 extra_directives: # Optional
   dependencies:
     # - 'source /data/shared/spack-0.19.1/shared.bash'
-    # - 'module load gromacs/2022.4'
+    # - 'module load gromacs/2025.4'
     - 'export GMX_MAXBACKUP=-1'
     # Needed mainly for MacOS with Metal chips and for testing
     # if the GPU wants to be used. Highly discouraged for production!
