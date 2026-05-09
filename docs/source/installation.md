@@ -238,20 +238,9 @@ Open [http://localhost:8000](http://localhost:8000). The HTML documentation is i
 
 Finally, it is advised to check if everything is alright. Be patient and go for a coffee ☕, this could take a couple of minutes (~11 min on my Laptop) ⏳.
 
-````{tab} BindFlow is already cloned
-  ```bash
-  cd BindFlow # The path to your local copy of the repository
-  python -m pytest tests
-  ```
-````
-
-````{tab} BindFlow is not cloned yet
-  ```bash
-  git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
-  cd BindFlow
-  python -m pytest tests
-  ```
-````
+```bash
+pytest --pyargs bindflow.tests
+```
 
 `````{admonition} Expected results
 :class: info
