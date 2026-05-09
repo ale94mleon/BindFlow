@@ -239,6 +239,7 @@ Open [http://localhost:8000](http://localhost:8000). The HTML documentation is i
 Finally, it is advised to check if everything is alright. Be patient and go for a coffee ☕, this could take a couple of minutes (~11 min on my Laptop) ⏳.
 
 ```bash
+pip install pytest
 pytest --pyargs bindflow.tests
 ```
 
