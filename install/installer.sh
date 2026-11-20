@@ -7,6 +7,8 @@
 #
 # BindFlow runs TOFF and pdbfixer out-of-process from BindFlow-TOFF, so the heavy
 # OpenMM/OpenFF/PyTorch stack never has to be solved together with the main environment.
+# Stop at the first error (-e), on undefined variables (-u) and on failures inside pipes (-o pipefail),
+# so a broken step never leaves a half-installed environment that looks fine.
 set -euo pipefail
 
 MAIN_ENV="BindFlow"
@@ -66,6 +68,8 @@ done
 # Conda frontend. `micromamba shell init` defines micromamba as a shell function,
 # which scripts cannot see, so prefer the real binary in $MAMBA_EXE.
 # ---------------------------------------------------------------------------
+# Take the first usable program, in this order: $MAMBA_EXE, micromamba on PATH, mamba on PATH.
+# All later commands call it as "$MM" (e.g. "$MM" create, "$MM" run).
 MM=""
 for candidate in "${MAMBA_EXE:-}" "$(command -v micromamba 2>/dev/null || true)" "$(command -v mamba 2>/dev/null || true)"; do
     if [[ -n "$candidate" && -x "$candidate" ]]; then MM="$candidate"; break; fi
@@ -73,7 +77,8 @@ done
 [[ -n "$MM" ]] || die "micromamba or mamba not found. Install micromamba: https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html"
 echo "Using $MM ($("$MM" --version | head -n 1))"
 
-# Use only the channels from the env files (ignores e.g. 'defaults' in ~/.condarc)
+# Options for every "create": use only the channels listed in the env files (ignores e.g. 'defaults'
+# in ~/.condarc), take each package from the first channel that has it (strict), and do not ask (-y).
 SOLVE=(--override-channels --channel-priority strict -y)
 
 # ---------------------------------------------------------------------------
@@ -89,6 +94,10 @@ if [[ ! -f "$ENV_DIR/bindflow.yml" || ! -f "$ENV_DIR/bindflow-toff.yml" ]]; then
     done
 fi
 
+# Helpers:
+#   env_exists NAME        true if an environment called NAME already exists
+#   prepare_env_name NAME  stop if NAME exists, or delete it first with --force
+#   prefix_of NAME         print the full path of environment NAME (e.g. ~/micromamba/envs/BindFlow)
 env_exists() { "$MM" env list --json | grep -q "/envs/$1\""; }
 prepare_env_name() {
     if env_exists "$1"; then
@@ -132,6 +141,8 @@ main_extra=()
 [[ -n "$MMPBSA" ]] && main_extra+=("${MMPBSA_SPECS[@]}")
 "$MM" create -n "$MAIN_ENV" -f "$ENV_DIR/bindflow.yml" ${main_extra[@]+"${main_extra[@]}"} "${SOLVE[@]}"
 
+# Packages that are not on conda-forge are installed with pip. --no-deps: their dependencies are
+# already in the env file, and pip must not replace (or add different versions of) conda packages.
 pip_main() { "$MM" run -n "$MAIN_ENV" python -m pip install --no-deps "$@"; }
 pip_main "$MDRG_SPEC"
 [[ -n "$MMPBSA" ]] && pip_main "$GMXMMPBSA_SPEC"
@@ -140,6 +151,11 @@ if [[ -n "$EDITABLE" ]]; then pip_main -e "$EDITABLE"; else pip_main "$BINDFLOW_
 # ---------------------------------------------------------------------------
 log "3/4 Linking ${MAIN_ENV} -> ${TOFF_ENV}"
 # ---------------------------------------------------------------------------
+# BindFlow must know where BindFlow-TOFF is. micromamba/mamba/conda run every script in an
+# environment's etc/conda/activate.d/ when it is activated (and deactivate.d/ when deactivated).
+# So we write a one-line script there that sets BINDFLOW_TOFF_PREFIX to the full path of
+# BindFlow-TOFF; bindflow.utils.toff_env.find_toff_prefix() reads it. Without activation (e.g. running
+# <env>/bin/python directly), BindFlow falls back to looking for BindFlow-TOFF next to BindFlow.
 MAIN_PREFIX="$(prefix_of "$MAIN_ENV")"
 TOFF_PREFIX="$(prefix_of "$TOFF_ENV")"
 mkdir -p "$MAIN_PREFIX/etc/conda/activate.d" "$MAIN_PREFIX/etc/conda/deactivate.d"
@@ -150,6 +166,9 @@ echo "BINDFLOW_TOFF_PREFIX=$TOFF_PREFIX is set whenever ${MAIN_ENV} is activated
 # ---------------------------------------------------------------------------
 log "4/4 Smoke test: parameterizing ethane from ${MAIN_ENV} through ${TOFF_ENV}"
 # ---------------------------------------------------------------------------
+# Run a short Python script inside BindFlow: import the main packages, find BindFlow-TOFF, check
+# its TOFF version and parameterize ethane with each installed force field. Any failure stops the
+# installer (set -e). The settings are passed to Python as environment variables.
 FORCE_FIELDS="openff gaff${ESPALOMA:+ espaloma}"
 CHECK_MMPBSA="${MMPBSA}"
 export FORCE_FIELDS CHECK_MMPBSA
