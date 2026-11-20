@@ -11,12 +11,11 @@ from typing import List, Union
 
 from parmed.structure import Structure
 from parmed.tools.actions import HMassRepartition
-from toff import Parameterize
 
 from bindflow.home import home
 from bindflow.preparation import solvent
-from bindflow.utils import tools
-from bindflow.utils.tools import PathLike, recursive_update_dict, run
+from bindflow.utils import tools, toff_env
+from bindflow.utils.tools import PathLike, recursive_update_dict
 
 # from pdbfixer import PDBFixer
 logger = logging.getLogger(__name__)
@@ -194,7 +193,8 @@ class MakeInputs:
                  solv_bt: str = "dodecahedron",
                  solv_rmin: float = 1,
                  solv_ion_conc: float = 150E-3,
-                 builder_dir: PathLike = 'builder', load_dependencies: List[str] = None):
+                 builder_dir: PathLike = 'builder', load_dependencies: List[str] = None,
+                 toff_prefix: Union[None, PathLike] = None):
         """Constructor
 
         Parameters
@@ -338,6 +338,9 @@ class MakeInputs:
         load_dependencies : List[str], optional
             It is used in case some previous loading steps are needed for GROMACS commands;
             e.g: ['source /groups/CBG/opt/spack-0.18.1/shared.bash', 'module load sandybridge/gromacs/2025.4'], by default None
+        toff_prefix : Union[None, PathLike], optional
+            Prefix of the external environment with TOFF (small-molecule parameterization) and pdbfixer.
+            If None, it is located with :func:`bindflow.utils.toff_env.find_toff_prefix`, by default None
         """
         self.protein = protein
         self.host_name = host_name
@@ -353,6 +356,9 @@ class MakeInputs:
         self.solv_rmin = solv_rmin
         self.solv_ion_conc = solv_ion_conc
         self.load_dependencies = load_dependencies
+        # Resolved lazily: not needed if all topologies are provided and fix_protein is False
+        self._toff_prefix_arg = toff_prefix
+        self._toff_prefix = None
         self.wd = Path(builder_dir).resolve()
         self.wd.mkdir(exist_ok=True, parents=True)
         self.__self_was_called = False
@@ -377,6 +383,13 @@ class MakeInputs:
             self.vectors, self.angles = None, None
 
         self.cwd = os.getcwd()
+
+    @property
+    def toff_prefix(self) -> Path:
+        """Prefix of the external TOFF environment (located on first use)"""
+        if self._toff_prefix is None:
+            self._toff_prefix = toff_env.find_toff_prefix(self._toff_prefix_arg)
+        return self._toff_prefix
 
     def small_mol_process(self, mol_definition: dict, name: str = "MOL", safe_naming_prefix: str = None):
         """Get parameters for small molecules: ligands, cofactors, ...
@@ -460,17 +473,18 @@ class MakeInputs:
                 raise ValueError("For safety reasons, if top is provided for small molecule; "
                                  f"the gro file must be provided. Provided: {dict_to_work['conf']}.")
         else:
-            parameterizer = Parameterize(
-                force_field_code=dict_to_work['ff']['code'],
-                force_field_type=dict_to_work['ff']['type'],
-                ext_types=['top', 'gro'],
-                hmr_factor=self.hmr_factor,
-                overwrite=True,
-                safe_naming_prefix=safe_naming_prefix,
+            # TOFF runs in the external environment; it accepts *.inchi, *.smi, *.mol, *.mol2, *.sdf
+            toff_env.parameterize(
+                prefix=self.toff_prefix,
+                input_mol=dict_to_work['conf'],
                 out_dir=self.wd,
+                mol_resi_name=name,
+                force_field_type=dict_to_work['ff']['type'],
+                force_field_code=dict_to_work['ff']['code'],
+                hmr_factor=self.hmr_factor,
+                safe_naming_prefix=safe_naming_prefix,
+                ext_types=['top', 'gro'],
             )
-            # Actually you can pass to parameterize Chem.rdchem.Mol, *.inchi, *.smi, *.mol, *.mol2, *.sdf
-            parameterizer(input_mol=dict_to_work['conf'], mol_resi_name=name)
 
             top_file = self.wd/f"{name}.top"
             gro_file = self.wd/f"{name}.gro"
@@ -566,9 +580,11 @@ class MakeInputs:
                     logger.info(f"fix_protein = {self.fix_protein}; therefore pdbfixer will be used \
                                 with flags --add-atoms=all --replace-nonstandard and pdb2gmx with -ignh.\
                                 The protonation of your protien may have changed!")
-                    env_prefix = os.environ["CONDA_PREFIX"]
                     fixed_pdb = self.wd/f"{name}_fixed.pdb"
-                    run(f"{env_prefix}/bin/pdbfixer {dict_to_work['conf']} --output={fixed_pdb} --add-atoms=all --replace-nonstandard")
+                    toff_env.run_in_env(self.toff_prefix,
+                                        ["pdbfixer", dict_to_work['conf'], f"--output={fixed_pdb}",
+                                         "--add-atoms=all", "--replace-nonstandard"],
+                                        log_file=self.wd/f"{name}_pdbfixer.log")
                     pdb2gmx(f=fixed_pdb, merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out, ignh=True)
                 else:
                     pdb2gmx(f=dict_to_work['conf'], merge="all", ff=dict_to_work['ff']['code'], water="none", o=gro_out, p=top_out, i=posre_out)

@@ -59,6 +59,7 @@ rule build_ligand_system:
             solv_ion_conc=config["solv_ion_conc"],
             builder_dir=out_ligand_path/"builder",
             load_dependencies=load_dependencies,
+            toff_prefix=config.get("toff_prefix"),
         ) as builder:
 
             # Create topologies and input files

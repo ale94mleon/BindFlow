@@ -16,7 +16,7 @@ def check_gromacs_installation():
                 raise RuntimeError("⚠️ GROMACS was found, but the version could not be determined. "
                                    "Please run `gmx --version` manually and verify your installation.")
             min_supported = "2022"
-            max_supported = "2026"
+            max_supported = "2027"
             if is_version_in_range(min_version=min_supported, max_version=max_supported):
                 logger.info(f"✅ Compatible GROMACS version detected: {installed_version}")
             else:

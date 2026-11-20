@@ -1,33 +1,41 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import tempfile
+"""Small-molecule parameterization through the external BindFlow-TOFF environment."""
 import sys
+import tempfile
+from pathlib import Path
+
 import pytest
-from rdkit import Chem
-from toff import Parameterize
+
+from bindflow.utils import toff_env
 
 tmp_dir = tempfile.TemporaryDirectory()
-mol = Chem.MolFromSmiles('CC')
+smi_file = Path(tmp_dir.name) / "ethane.smi"
+smi_file.write_text("CC\n")
 
 
-@pytest.mark.filterwarnings("ignore")
-def test_Parameterize_openff():
-    parameterizer = Parameterize(overwrite=True, out_dir=tmp_dir.name, force_field_type='openff', hmr_factor=2.5)
-    parameterizer(input_mol=mol, mol_resi_name='OPE',)
+@pytest.fixture(scope="module")
+def toff_prefix():
+    try:
+        prefix = toff_env.find_toff_prefix()
+    except RuntimeError as e:
+        pytest.skip(str(e))
+    toff_env.check_toff_installation(prefix)
+    return prefix
 
 
-@pytest.mark.xfail(sys.platform == "darwin", reason="This test is expected to fail on macOS")
-@pytest.mark.filterwarnings("ignore")
-def test_Parameterize_gaff():
-    parameterizer = Parameterize(overwrite=True, out_dir=tmp_dir.name, force_field_type='gaff')
-    parameterizer(input_mol=mol, mol_resi_name='GAF')
-
-@pytest.mark.xfail(sys.platform == "darwin", reason="This test is expected to fail on macOS")
-@pytest.mark.filterwarnings("ignore")
-def test_Parameterize_espaloma():
-    parameterizer = Parameterize(overwrite=True, out_dir=tmp_dir.name, force_field_type='espaloma', force_field_code='espaloma-0.3.1')
-    parameterizer(input_mol=mol, mol_resi_name='ESP')
-
-
-if __name__ == '__main__':
-    pass
+@pytest.mark.parametrize("ff_type, ff_code, resname", [
+    ("openff", None, "OPE"),
+    pytest.param("gaff", None, "GAF", marks=pytest.mark.xfail(sys.platform == "darwin", reason="Expected to fail on macOS")),
+    pytest.param("espaloma", "espaloma-0.3.1", "ESP", marks=pytest.mark.xfail(sys.platform == "darwin", reason="Expected to fail on macOS")),
+])
+def test_parameterize(toff_prefix, ff_type, ff_code, resname):
+    if ff_type == "espaloma":
+        try:
+            toff_env.run_in_env(toff_prefix, ["python", "-c", "import espaloma"])
+        except RuntimeError:
+            pytest.skip("Espaloma is not installed in the TOFF environment")
+    toff_env.parameterize(prefix=toff_prefix, input_mol=smi_file, out_dir=tmp_dir.name, mol_resi_name=resname,
+                          force_field_type=ff_type, force_field_code=ff_code, hmr_factor=2.5)
+    assert (Path(tmp_dir.name) / f"{resname}.top").is_file()
+    assert (Path(tmp_dir.name) / f"{resname}.gro").is_file()
