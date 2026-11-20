@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 # safe.directory avoids git "dubious ownership" errors, which versioningit would hit on the mounted repo.
 git config --global --add safe.directory '*'
 
-# Espaloma needs dgl, which conda-forge only builds for x86_64
+# Espaloma needs dgl, which conda-forge does not build for linux-aarch64 (e.g. Docker on Apple Silicon)
 extra=()
 [[ "$(uname -m)" == "x86_64" ]] && extra+=(--espaloma)
 

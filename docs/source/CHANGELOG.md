@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `bindflow.utils.toff_env`: runs TOFF and pdbfixer from the `BindFlow-TOFF` environment, in a separate process.
 - Keyword `toff_prefix` to {py:func}`bindflow.runners.calculate`. If not given, `BINDFLOW_TOFF_PREFIX` (set by the installer) or an environment called `BindFlow-TOFF` next to the current one is used. Before submitting anything, BindFlow checks that the environment exists and has TOFF >= 0.3.0, when it is needed.
 - Development container (`.devcontainer`) built with the installer, including GROMACS 2025.4 from conda-forge for the tests.
+- GitHub Actions workflow (`test-installation.yml`) that tests the installer on Linux (x86_64, ARM) and macOS (Intel, Apple Silicon), on changes to the installer or the code. It runs the small-molecule tests only; `test_fep` and `test_mmpbsa` are too expensive for CI and are run locally.
 
 ### Changed
 

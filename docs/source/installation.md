@@ -66,7 +66,7 @@ curl -fsSL -O https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install
 Add `--espaloma` to any of the commands above to also install the [Espaloma](https://github.com/choderalab/espaloma) force field.
 
 ```{important}
-Espaloma depends on [DGL](https://www.dgl.ai), which conda-forge only provides for **x86_64** (Intel/AMD) computers. It is not available on ARM Linux, and not on Apple Silicon Macs either unless you use an x86_64 environment through Rosetta.
+Espaloma depends on [DGL](https://www.dgl.ai), which conda-forge does not provide for **ARM Linux** (`linux-aarch64`, e.g. Grace/Graviton nodes or Docker on Apple Silicon). It is available on x86_64 Linux and on macOS (Intel and Apple Silicon).
 ```
 
 The installer ends with a quick check (it parameterizes ethane with every installed force field). When it finishes, activate BindFlow with:
@@ -245,4 +245,8 @@ pytest --pyargs bindflow.tests
 - `test_fep`, `test_mmpbsa` and the OpenFF parameterization test should pass. `test_mmpbsa` needs the `--mmpbsa` option of the installer.
 - The Espaloma test is skipped if Espaloma is not installed.
 - On macOS, the GAFF and Espaloma tests are marked as expected to fail (`xfail`).
+```
+
+```{note}
+The installation is tested automatically on GitHub Actions on Linux (x86_64 and ARM) and macOS (Intel and Apple Silicon) on every change of the installer or the code. To keep this affordable, those runs only include the installer check and the small-molecule parameterization tests; `test_fep` and `test_mmpbsa` run real GROMACS simulations and are only run locally, before each release.
 ```
