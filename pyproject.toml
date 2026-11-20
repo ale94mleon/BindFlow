@@ -115,6 +115,6 @@ convention = "numpy"
 
 # The docstring rules are for the package, not for the tests and the scripts.
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D"]
+"src/bindflow/tests/**" = ["D"]
 "Contrib/**" = ["D"]
 "streamlit/**" = ["D"]
