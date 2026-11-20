@@ -2,6 +2,8 @@ FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+# Not pinned: Ubuntu drops old package versions from its archive, so pins would break the build.
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        git wget curl ca-certificates bzip2 sudo build-essential pandoc openssh-client \

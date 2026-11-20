@@ -386,7 +386,7 @@ class MakeInputs:
 
     @property
     def toff_prefix(self) -> Path:
-        """Prefix of the external TOFF environment (located on first use)"""
+        """Prefix of the external TOFF environment, located on first use."""
         if self._toff_prefix is None:
             self._toff_prefix = toff_env.find_toff_prefix(self._toff_prefix_arg)
         return self._toff_prefix
@@ -483,7 +483,6 @@ class MakeInputs:
                 force_field_code=dict_to_work['ff']['code'],
                 hmr_factor=self.hmr_factor,
                 safe_naming_prefix=safe_naming_prefix,
-                ext_types=['top', 'gro'],
             )
 
             top_file = self.wd/f"{name}.top"

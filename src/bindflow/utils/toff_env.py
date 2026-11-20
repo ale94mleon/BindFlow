@@ -1,5 +1,7 @@
-"""Run small-molecule parameterization (TOFF) and other OpenMM-based tools
-from a separate conda environment (by default named ``BindFlow-TOFF``).
+"""Run TOFF and other OpenMM-based tools from a separate conda environment.
+
+Small-molecule parameterization (TOFF) and the other OpenMM-based tools run from
+an external environment, by default named ``BindFlow-TOFF``.
 
 The main BindFlow environment does not need OpenMM, OpenFF, RDKit or Espaloma:
 those tools are executed out-of-process from the external environment, with a
@@ -15,7 +17,8 @@ The external environment is located, in this order, from:
 import logging
 import os
 import re
-import subprocess
+# Commands are built from argument lists and never run through a shell
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 from typing import List, Optional, Sequence, Union
@@ -30,6 +33,8 @@ TOFF_ENV_NAME = "BindFlow-TOFF"
 TOFF_PREFIX_ENV_VAR = "BINDFLOW_TOFF_PREFIX"
 # First TOFF release whose ``parameterize`` CLI accepts ``force_field_type``.
 MIN_TOFF_VERSION = "0.3.0"
+# Files written by ``parameterize``: the GROMACS topology and coordinates.
+TOFF_EXT_TYPES = ("top", "gro")
 
 
 def _is_toff_env(prefix: Path) -> bool:
@@ -53,6 +58,7 @@ def find_toff_prefix(toff_prefix: Optional[PathLike] = None) -> Path:
     ------
     RuntimeError
         If the environment cannot be found
+
     """
     # Explicit locations: if given, they must be valid (no silent fallback)
     explicit = [("toff_prefix argument", toff_prefix),
@@ -117,11 +123,13 @@ def run_in_env(prefix: PathLike, args: Sequence, log_file: Optional[PathLike] = 
     ------
     RuntimeError
         If the command fails
+
     """
     prefix = Path(prefix)
     cmd: List[str] = [str(prefix / "bin" / str(args[0])), *map(str, args[1:])]
     logger.debug(f"Running in {prefix}: {' '.join(cmd)}")
-    proc = subprocess.run(cmd, env=_activated_env(prefix), cwd=cwd, capture_output=True, text=True)
+    # The executable is resolved inside the given prefix and run without a shell
+    proc = subprocess.run(cmd, env=_activated_env(prefix), cwd=cwd, capture_output=True, text=True)  # nosec B603
     if log_file:
         Path(log_file).write_text(f"$ {' '.join(cmd)}\n\n--- stdout ---\n{proc.stdout}\n--- stderr ---\n{proc.stderr}")
     if proc.returncode != 0:
@@ -148,11 +156,10 @@ def check_toff_installation(prefix: PathLike) -> str:
 
 def parameterize(prefix: PathLike, input_mol: PathLike, out_dir: PathLike, mol_resi_name: str = "MOL",
                  force_field_type: str = "openff", force_field_code: Optional[str] = None,
-                 hmr_factor: Optional[float] = None, safe_naming_prefix: Optional[str] = None,
-                 ext_types: Sequence[str] = ("top", "gro")) -> None:
+                 hmr_factor: Optional[float] = None, safe_naming_prefix: Optional[str] = None) -> None:
     """Parameterize a small molecule with TOFF from the external environment.
 
-    Writes ``<out_dir>/<mol_resi_name>.<ext>`` for every ``ext`` in ``ext_types``, plus
+    Writes ``<out_dir>/<mol_resi_name>.top`` and ``<out_dir>/<mol_resi_name>.gro``, plus
     ``<mol_resi_name>_toff.yml`` (the TOFF input) and ``<mol_resi_name>_toff.log``.
     The arguments have the same meaning as in :class:`toff.Parameterize`.
     """
@@ -163,7 +170,7 @@ def parameterize(prefix: PathLike, input_mol: PathLike, out_dir: PathLike, mol_r
         "mol_resi_name": mol_resi_name,
         "force_field_type": force_field_type,
         "force_field_code": force_field_code,
-        "ext_types": list(ext_types),
+        "ext_types": list(TOFF_EXT_TYPES),
         "hmr_factor": float(hmr_factor) if hmr_factor else None,
         "overwrite": True,
         "safe_naming_prefix": safe_naming_prefix,
@@ -174,7 +181,7 @@ def parameterize(prefix: PathLike, input_mol: PathLike, out_dir: PathLike, mol_r
         yaml.safe_dump(config, f)
     run_in_env(prefix, ["parameterize", config_file], log_file=out_dir / f"{mol_resi_name}_toff.log", cwd=out_dir)
 
-    missing = [ext for ext in ext_types if not (out_dir / f"{mol_resi_name}.{ext}").is_file()]
+    missing = [ext for ext in TOFF_EXT_TYPES if not (out_dir / f"{mol_resi_name}.{ext}").is_file()]
     if missing:
         raise RuntimeError(f"🚫 TOFF finished but did not write {missing} for {input_mol}. "
                            f"See {out_dir / f'{mol_resi_name}_toff.log'}")

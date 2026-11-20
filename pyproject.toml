@@ -94,3 +94,27 @@ bindflow = [
 
 [project.scripts]
 bindflow = "bindflow.cli:main"
+
+
+# Codacy reads the configuration of ruff, and of no other Python linter, from this file.
+# D212 and D415 keep the docstrings uniform and the numpy convention leaves them off.
+[tool.pydocstyle]
+convention = "numpy"
+add-select = "D212,D415"
+
+[tool.ruff]
+line-length = 127
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "D"]
+extend-select = ["D212", "D415"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+# The docstring rules are for the package, not for the tests and the scripts.
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+"Contrib/**" = ["D"]
+"streamlit/**" = ["D"]
