@@ -12,6 +12,8 @@ BindFlow
       - |github|
     * - **Build**
       - |pypi-version|
+    * - **Tests**
+      - |tests|
     * - **Python Versions**
       - |pyversions|
     * - **Dependencies**
@@ -67,9 +69,9 @@ This project was forked from `ABFE_workflow <https://github.com/bigginlab/ABFE_w
 .. ..  |binder| image:: https://mybinder.org/badge_logo.svg
 ..     :target: https://mybinder.org/v2/gh/ale94mleon/BindFlow/HEAD?labpath=%2Fdocs%2Fnotebooks%2F
 ..     :alt: binder
-.. ..  |tests| image:: https://github.com/ale94mleon/BindFlow/actions/workflows/tests.yml/badge.svg
-..     :target: https://github.com/ale94mleon/BindFlow/actions/workflows/tests.yml
-..     :alt: tests
+..  |tests| image:: https://github.com/ale94mleon/BindFlow/actions/workflows/test-installation.yml/badge.svg?branch=main
+    :target: https://github.com/ale94mleon/BindFlow/actions/workflows/test-installation.yml
+    :alt: tests
 .. ..  |codacy-codecove| image:: https://app.codacy.com/project/badge/Coverage/08a3ac7c13df4339b8a1da0e8d31810e
 ..     :target: https://app.codacy.com/gh/ale94mleon/BindFlow/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage
 ..     :alt: codacy-codecove
