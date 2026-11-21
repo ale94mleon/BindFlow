@@ -1,0 +1,21 @@
+# Small-molecule parameterization environment used by BindFlow through TOFF.
+# Espaloma is added by the installer only when requested (--espaloma).
+# AmberTools >= 25.3: on macOS Intel the 24.8 build makes antechamber read SDF files as having no
+# atoms, so AM1-BCC charges (GAFF) fail. On macOS Intel, AmberTools 25.3+ is only built for Python
+# 3.12+, hence python=3.12. With the pin, the solver errors out instead of silently falling back to 24.8.
+name: BindFlow-TOFF
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12                # needed for AmberTools >= 25.3 on macOS Intel (see top)
+  - pip
+  - rdkit
+  - openmm
+  - openff-toolkit
+  - openmmforcefields>=0.11.2   # GAFF template generator
+  - ambertools>=25.3           # antechamber/sqm for GAFF and AM1-BCC charges (see top)
+  - pdbfixer            # fix_protein option
+  - parmed
+  - pyyaml
+  - numpy

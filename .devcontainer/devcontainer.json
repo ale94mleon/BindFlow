@@ -1,0 +1,35 @@
+{
+	"name": "bindflow",
+	"build": {
+		"context": "..",
+		"dockerfile": "Dockerfile"   // relative to devcontainer.json
+	},
+
+	"remoteUser": "user",
+
+	"mounts": [
+		"source=claude-code-config-${devcontainerId},target=/home/user/.claude,type=volume"
+	],
+	"containerEnv": {
+		"CLAUDE_CONFIG_DIR": "/home/user/.claude",
+		// The image only ships C.UTF-8; a host locale forwarded by VS Code (e.g. en_US.UTF-8)
+		// makes locale.setlocale(LC_ALL, '') fail, which breaks sphinx-build.
+		"LC_ALL": "C.UTF-8"
+	},
+
+	// BindFlow + BindFlow-TOFF through install/installer.sh (editable), plus GROMACS, pytest and docs deps.
+	"postCreateCommand": "bash .devcontainer/post-create.sh",
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"anthropic.claude-code",
+				"ms-python.python",
+				"ms-toolsai.jupyter"
+			],
+			"settings": {
+				"python.defaultInterpreterPath": "/home/user/micromamba/envs/BindFlow/bin/python"
+			}
+		}
+	}
+}

@@ -1,110 +1,105 @@
 # 💿 Installation
 
+BindFlow is installed in **two** conda environments, created and linked by the BindFlow installer:
+
+- **`BindFlow`**: the workflow, the free energy analysis and (optionally) MM(PB/GB)SA. This is the environment you activate and work with.
+- **`BindFlow-TOFF`**: small-molecule parameterization ([TOFF](https://github.com/ale94mleon/TOFF): OpenFF, GAFF and optionally Espaloma) and [pdbfixer](https://github.com/openmm/pdbfixer). You never need to activate it; BindFlow calls it when needed.
+
+Keeping the heavy OpenMM/OpenFF/PyTorch stack in its own environment makes the dependency resolution much faster and more robust.
+
 ## Installing micromamba
 
-We highly recommend the latest version of [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) for the conda environment creation and a fresh environment (as it will be demonstrated here). This is going to ease the resolution of dependencies. See the [Official Micromamba Installation Instructions](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html). [Mamba](https://mamba.readthedocs.io/en/latest/index.html) may also be used.
+The installer needs [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) (recommended) or [mamba](https://mamba.readthedocs.io/en/latest/index.html) >= 2. See the [Official Micromamba Installation Instructions](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html).
 
-## Building the environment
+## Running the installer
 
-We would like to work in a more relaxed environment, but we have encountered challenging situations. For now, we **highly** recommend the pinned environment (although the relaxed one is provided for reference).
+Download the installer and choose the options you need:
 
-```{raw} html
-<div id="installer-config">
-  <div>
-    <strong>Select environment style:</strong><br>
-    <button data-style="pinned">✅Pinned (recommended)</button>
-    <button data-style="relaxed">‼️Relaxed (untasted)</button>
-  </div>
-
-  <div>
-    <strong>Features:</strong><br>
-    <label><input type="checkbox" data-feature="mmpbsa"> MM(PB/GB)SA capabilities</label>
-    <label><input type="checkbox" data-feature="espaloma"> Espaloma force field</label>
-  </div>
-
-  <div>
-    <strong>Generated environment.yml:</strong>
-    <pre id="env-preview" class="highlight">Select options above...</pre>
-    <a id="download-env" style="display:none;">⬇️ Download environment.yml</a>
-  </div>
-</div>
+```bash
+curl -fsSL -O https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh
 ```
-
-````{note}
-We observed that conda must be configured with `channel_priority: flexible` instead of `strict`.
-
-You may get the following error after the environment is created:
-
-```text
-ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behavior is the source of the following dependency conflicts.
-tensorflow 2.17.0 requires ml-dtypes<0.5.0,>=0.3.1, but you have ml-dtypes 0.5.4 which is incompatible.
-```
-You can **safely** ignore it. This is may happen in MacOS when Espaloma is selected. The issue arieses because the chain dependency: `Espaloma > DLG > TensorFlow > ml-dtypes`. We are currently working to get rid of this "error".
-
-````
-
-```python
-micromamba env create -f environment.yml --channel-priority flexible -y
-micromamba activate BindFlow
-```
-
-## Final optional pip dependency and BindFlow installation
-
-`````{tab} With MM(P/G)BSA capabilities
-
-  ````{tab} 🟢 Stable Release
-    ```bash
-    micromamba activate BindFlow
-    python -m pip install bindflow --no-deps
-    python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010 --no-deps
-    ```
-  ````
-  ````{tab} 🟡 Install from GitHub (latest commit)
-    ```bash
-    micromamba activate BindFlow
-    python -m pip install git+https://github.com/ale94mleon/BindFlow.git --no-deps
-    python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010 --no-deps
-    ```
-  ````
-  ````{tab} 🔵 Developer Mode (editable)
-    ```bash
-    micromamba activate BindFlow
-    git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
-    cd BindFlow 
-    python -m pip install -e . --no-deps
-    python -m pip install -U git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010 --no-deps
-    ```
-  ````
-  
-  ```{note}
-  Currently, we are using the `gmx_MMPBSA` commit [27929e0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/commit/27929e02067bc2321286809818d778a77a872010). This commit has been tested and provides flexibility in selecting the Python version.
-  ```
-  
-`````
 
 `````{tab} Without MM(P/G)BSA capabilities
 
   ````{tab} 🟢 Stable Release
     ```bash
-    micromamba activate BindFlow
-    python -m pip install bindflow --no-deps
+    bash installer.sh
     ```
   ````
   ````{tab} 🟡 Install from GitHub (latest commit)
     ```bash
-    micromamba activate BindFlow
-    python -m pip install git+https://github.com/ale94mleon/BindFlow.git --no-deps
+    bash installer.sh --bindflow git+https://github.com/ale94mleon/BindFlow.git
     ```
   ````
   ````{tab} 🔵 Developer Mode (editable)
     ```bash
-    micromamba activate BindFlow
     git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
-    cd BindFlow 
-    python -m pip install -e . --no-deps
+    bash BindFlow/install/installer.sh --editable BindFlow
     ```
   ````
 `````
+
+`````{tab} With MM(P/G)BSA capabilities
+
+  ````{tab} 🟢 Stable Release
+    ```bash
+    bash installer.sh --mmpbsa
+    ```
+  ````
+  ````{tab} 🟡 Install from GitHub (latest commit)
+    ```bash
+    bash installer.sh --mmpbsa --bindflow git+https://github.com/ale94mleon/BindFlow.git
+    ```
+  ````
+  ````{tab} 🔵 Developer Mode (editable)
+    ```bash
+    git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
+    bash BindFlow/install/installer.sh --mmpbsa --editable BindFlow
+    ```
+  ````
+
+  ```{note}
+  Currently, we are using the `gmx_MMPBSA` commit [27929e0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/commit/27929e02067bc2321286809818d778a77a872010). This commit has been tested and provides flexibility in selecting the Python version.
+  ```
+`````
+
+Add `--espaloma` to any of the commands above to also install the [Espaloma](https://github.com/choderalab/espaloma) force field.
+
+```{important}
+Espaloma depends on [DGL](https://www.dgl.ai), which conda-forge does not provide for **ARM Linux** (`linux-aarch64`, e.g. Grace/Graviton nodes or Docker on Apple Silicon). It is available on x86_64 Linux and on macOS (Intel and Apple Silicon).
+```
+
+The installer ends with a quick check (it parameterizes ethane with every installed force field). When it finishes, activate BindFlow with:
+
+```bash
+micromamba activate BindFlow
+```
+
+````{admonition} All installer options
+:class: tip
+
+  ```text
+  --mmpbsa           Add MM(PB/GB)SA support (AmberTools + gmx_MMPBSA) to the main environment
+  --espaloma         Add Espaloma to the parameterization environment
+  --name NAME        Main environment name (default: BindFlow)
+  --toff-name NAME   Parameterization environment name (default: BindFlow-TOFF)
+  --bindflow SPEC    pip spec for BindFlow (default: bindflow)
+  --editable DIR     Install BindFlow in editable mode from a local clone instead
+  --toff SPEC        pip spec for TOFF (default: toff>=0.3.0)
+  --force            Remove existing environments with the same names first
+  -h, --help         Show this help
+  ```
+````
+
+### How BindFlow finds `BindFlow-TOFF`
+
+BindFlow looks for the parameterization environment in this order:
+
+1. The `toff_prefix` argument of {py:func}`bindflow.runners.calculate`.
+2. The `BINDFLOW_TOFF_PREFIX` environment variable. The installer sets it every time `BindFlow` is activated.
+3. An environment called `BindFlow-TOFF` next to the `BindFlow` environment.
+
+If you used the default names, you do not need to do anything. If you are running on a cluster, make sure `BindFlow-TOFF` is on a file system that the compute nodes can also access.
 
 ## GROMACS
 
@@ -113,7 +108,7 @@ micromamba activate BindFlow
 Here, we will demonstrate how to build GROMACS from Source (courtesy of [Maciej Wójcik](https://biophys.uni-saarland.de/author/maciej-wojcik/)). If this method does not work, consult the [GROMACS Installation Guide](https://manual.gromacs.org/current/install-guide/index.html) for more information.
 
 ```{important}
-At the moment we support GROMACS versions in the range [2022, 2026); BindFlow throws a clean error at the very beginning of the execution of {py:func}`bindflow.runners.calculate` if otherwise.
+At the moment we support GROMACS versions in the range [2022, 2027); BindFlow throws a clean error at the very beginning of the execution of {py:func}`bindflow.runners.calculate` if otherwise.
 ```
 
 <!--
@@ -239,22 +234,19 @@ Open [http://localhost:8000](http://localhost:8000). The HTML documentation is i
 Finally, it is advised to check if everything is alright. Be patient and go for a coffee ☕, this could take a couple of minutes (~11 min on my Laptop) ⏳.
 
 ```bash
-pip install pytest
+micromamba activate BindFlow
+micromamba install -c conda-forge pytest
 pytest --pyargs bindflow.tests
 ```
 
-`````{admonition} Expected results
+```{admonition} Expected results
 :class: info
-````{tab} Linux 🐧
-  ```yaml
-  passed: 5
-  xfailed: 0
-  ```
-````
-````{tab} MacOS 🍏
-  ```bash
-  passed: 3
-  xfailed: 2  # from test/test_small.py
-  ```
-````
-`````
+
+- `test_fep`, `test_mmpbsa` and the OpenFF parameterization test should pass. `test_mmpbsa` needs the `--mmpbsa` option of the installer.
+- The Espaloma test is skipped if Espaloma is not installed.
+- On macOS, the GAFF and Espaloma tests are marked as expected to fail (`xfail`).
+```
+
+```{note}
+The installation is tested automatically on GitHub Actions on Linux (x86_64 and ARM) and macOS (Intel and Apple Silicon) on every change of the installer or the code. To keep this affordable, those runs only include the installer check and the small-molecule parameterization tests; `test_fep` and `test_mmpbsa` run real GROMACS simulations and are only run locally, before each release.
+```
