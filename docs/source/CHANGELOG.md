@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [0.17.0] - 2026.11.21
+
+### Upgrading
+
+Small molecules are now parameterized in a separate `BindFlow-TOFF` environment. Updating BindFlow with `pip` in an existing environment is not enough: BindFlow stops before submitting anything if it cannot find `BindFlow-TOFF`. Run the installer (`install/installer.sh`) to create both environments, or pass `toff_prefix` to {py:func}`bindflow.runners.calculate`. The Python API and the configuration files are otherwise unchanged.
 
 ### Added
 
@@ -77,5 +81,7 @@ sc-sigma                 = 0.3
 
 - `"MDRestraintsGenerator @ git+https://github.com/ale94mleon/MDRestraintsGenerator.git@dev"` dependency from `pyproject.toml` as it is not accepted by PyPi. This dependency is built during the conda environment step anyway.
 
-[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.15.1...HEAD
+[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/ale94mleon/bindflow/compare/v0.16.3...v0.17.0
+[0.16.3]: https://github.com/ale94mleon/bindflow/compare/v0.15.1...v0.16.3
 [0.15.1]: https://github.com/ale94mleon/bindflow/compare/v0.13.0...v0.15.1
