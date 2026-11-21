@@ -25,7 +25,8 @@ TOFF_SPEC="toff>=0.3.0"
 BINDFLOW_REF="${BINDFLOW_REF:-main}"   # git ref used to download env files if they are not next to this script
 
 ESPALOMA_SPEC="espaloma=0.4.0"
-MMPBSA_SPECS=(ambertools "mpi4py=3.1.5" tqdm)
+# ambertools>=25.3: older builds break antechamber on macOS Intel (see install/envs/bindflow-toff.yml)
+MMPBSA_SPECS=("ambertools>=25.3" "mpi4py=3.1.5" tqdm)
 MDRG_SPEC="git+https://github.com/ale94mleon/MDRestraintsGenerator@54ca2484801fef4f572c78639de100bf572a2581"
 GMXMMPBSA_SPEC="git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010"
 
