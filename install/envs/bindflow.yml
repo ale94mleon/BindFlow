@@ -1,14 +1,13 @@
 # Main BindFlow environment: workflow, FEP analysis and (optionally) MM(PB/GB)SA.
 # OpenMM/OpenFF/Espaloma are NOT here: small molecules are parameterized in BindFlow-TOFF.
-# MM(PB/GB)SA extras (ambertools>=25.3, mpi4py=3.1.5, tqdm) are added by the installer with --mmpbsa.
-# python=3.12: on macOS Intel, AmberTools >= 25.3 is only built for Python 3.12+ (see bindflow-toff.yml).
+# MM(PB/GB)SA extras (ambertools, mpi4py=3.1.5, tqdm) are added by the installer with --mmpbsa.
 name: BindFlow
 channels:
   - conda-forge
   - bioconda
   - nodefaults
 dependencies:
-  - python=3.12
+  - python=3.11
   - pip
   - snakemake-minimal=9.24.0
   - pyyaml
@@ -20,4 +19,4 @@ dependencies:
   - matplotlib-base
   - alchemlyb>=2.4.1,<2.6   # 2.5.0 only has linux-64 builds; 2.4.1 (noarch) elsewhere
   - pymbar-core>=4.0.3,<5  # pymbar without the jax dependency
-  - mdanalysis=2.11.0
+  - mdanalysis>=2.11.0

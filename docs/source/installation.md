@@ -7,6 +7,10 @@ BindFlow is installed in **two** conda environments, created and linked by the B
 
 Keeping the heavy OpenMM/OpenFF/PyTorch stack in its own environment makes the dependency resolution much faster and more robust.
 
+```{warning}
+**macOS Intel (x86_64) is not supported** and the installer stops there. On that platform, the conda-forge build of AmberTools' `antechamber` randomly reads zero atoms from valid SDF files, so small-molecule parameterization with OpenFF (AM1-BCC charges) and GAFF fails intermittently. This is an upstream bug (see the *Known issues* in the [TOFF changelog](https://github.com/ale94mleon/TOFF/blob/main/docs/source/CHANGELOG.md)). Supported platforms are Linux (x86_64 and ARM) and macOS Apple Silicon. On Apple Silicon, run the installer from a native shell, not under Rosetta.
+```
+
 ## Installing micromamba
 
 The installer needs [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) (recommended) or [mamba](https://mamba.readthedocs.io/en/latest/index.html) >= 2. See the [Official Micromamba Installation Instructions](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html).
@@ -66,7 +70,7 @@ curl -fsSL -O https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install
 Add `--espaloma` to any of the commands above to also install the [Espaloma](https://github.com/choderalab/espaloma) force field.
 
 ```{important}
-Espaloma depends on [DGL](https://www.dgl.ai), which conda-forge does not provide for **ARM Linux** (`linux-aarch64`, e.g. Grace/Graviton nodes or Docker on Apple Silicon). It is available on x86_64 Linux and on macOS (Intel and Apple Silicon).
+Espaloma depends on [DGL](https://www.dgl.ai), which conda-forge does not provide for **ARM Linux** (`linux-aarch64`, e.g. Grace/Graviton nodes or Docker on Apple Silicon). It is available on x86_64 Linux and on macOS Apple Silicon.
 ```
 
 The installer ends with a quick check (it parameterizes ethane with every installed force field). When it finishes, activate BindFlow with:
@@ -248,5 +252,5 @@ pytest --pyargs bindflow.tests
 ```
 
 ```{note}
-The installation is tested automatically on GitHub Actions on Linux (x86_64 and ARM) and macOS (Intel and Apple Silicon) on every change of the installer or the code. To keep this affordable, those runs only include the installer check and the small-molecule parameterization tests; `test_fep` and `test_mmpbsa` run real GROMACS simulations and are only run locally, before each release.
+The installation is tested automatically on GitHub Actions on Linux (x86_64 and ARM) and macOS Apple Silicon on every change of the installer or the code. To keep this affordable, those runs only include the installer check and the small-molecule parameterization tests; `test_fep` and `test_mmpbsa` run real GROMACS simulations and are only run locally, before each release.
 ```

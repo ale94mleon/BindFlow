@@ -25,8 +25,7 @@ TOFF_SPEC="toff>=0.3.0"
 BINDFLOW_REF="${BINDFLOW_REF:-main}"   # git ref used to download env files if they are not next to this script
 
 ESPALOMA_SPEC="espaloma=0.4.0"
-# ambertools>=25.3: older builds break antechamber on macOS Intel (see install/envs/bindflow-toff.yml)
-MMPBSA_SPECS=("ambertools>=25.3" "mpi4py=3.1.5" tqdm)
+MMPBSA_SPECS=("ambertools>=22.5" "mpi4py=3.1.5" tqdm)
 MDRG_SPEC="git+https://github.com/ale94mleon/MDRestraintsGenerator@54ca2484801fef4f572c78639de100bf572a2581"
 GMXMMPBSA_SPEC="git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e02067bc2321286809818d778a77a872010"
 
@@ -197,6 +196,15 @@ for candidate in "${MAMBA_EXE:-}" "$(command -v micromamba 2>/dev/null || true)"
 done
 [[ -n "$MM" ]] || die "micromamba or mamba not found. Install micromamba: https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html"
 MM_VERSION="$("$MM" --version | head -n 1)"
+
+# macOS Intel (osx-64) is not supported: conda-forge's antechamber there randomly reads zero atoms from
+# a valid SDF file (about 20-25% of calls, AmberTools 24.8 to 26.0). OpenFF (AM1-BCC charges) and GAFF
+# both run antechamber, so parameterization fails intermittently. Upstream bug, reproduced in TOFF:
+# https://github.com/ale94mleon/TOFF/blob/main/.github/scripts/antechamber-diagnostics.sh
+# A shell running under Rosetta on Apple Silicon also reports x86_64 and would install osx-64 packages.
+if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "x86_64" ]]; then
+    die "macOS Intel (x86_64) is not supported: AmberTools' antechamber is unreliable on this platform, so small-molecule parameterization (OpenFF and GAFF) fails intermittently. Use Linux or macOS Apple Silicon. On Apple Silicon, run the installer from a native arm64 shell, not under Rosetta."
+fi
 
 # Espaloma needs dgl, which conda-forge does not build for Linux ARM; stop before the first step
 if [[ -n "$ESPALOMA" && "$(uname -s)" == "Linux" && "$(uname -m)" =~ ^(aarch64|arm64)$ ]]; then
