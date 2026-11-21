@@ -7,8 +7,11 @@ BindFlow is installed in **two** conda environments, created and linked by the B
 
 Keeping the heavy OpenMM/OpenFF/PyTorch stack in its own environment makes the dependency resolution much faster and more robust.
 
-```{warning}
-**macOS Intel (x86_64) is not supported** and the installer stops there. On that platform, the conda-forge build of AmberTools' `antechamber` randomly reads zero atoms from valid SDF files, so small-molecule parameterization with OpenFF (AM1-BCC charges) and GAFF fails intermittently. This is an upstream bug (see the *Known issues* in the [TOFF changelog](https://github.com/ale94mleon/TOFF/blob/main/docs/source/CHANGELOG.md)). Supported platforms are Linux (x86_64 and ARM) and macOS Apple Silicon. On Apple Silicon, run the installer from a native shell, not under Rosetta.
+```{important}
+**Supported platforms:** Linux (x86_64 and ARM), macOS Apple Silicon, and Windows through WSL2. The installer stops on the others:
+
+- **macOS Intel (x86_64):** the conda-forge build of AmberTools' `antechamber` randomly reads zero atoms from valid SDF files, so small-molecule parameterization with OpenFF (AM1-BCC charges) and GAFF fails intermittently. This is an upstream bug (see the *Known issues* in the [TOFF changelog](https://github.com/ale94mleon/TOFF/blob/main/docs/source/CHANGELOG.md)). On Apple Silicon, run the installer from a native shell, not under Rosetta.
+- **Windows (native, e.g. Git Bash):** AmberTools and GROMACS have no Windows builds on conda-forge. Use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) instead: run `wsl --install` in PowerShell as administrator, open the Ubuntu terminal, and follow this page from there, as on Linux.
 ```
 
 ## Installing micromamba

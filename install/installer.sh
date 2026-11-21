@@ -196,6 +196,27 @@ run_step() {
 }
 
 # ---------------------------------------------------------------------------
+# Supported platforms: Linux (x86_64, ARM) and macOS Apple Silicon. Checked first, so an unsupported
+# platform gets this explanation and not, e.g., "micromamba not found".
+# ---------------------------------------------------------------------------
+# Windows is not supported natively: AmberTools (antechamber for OpenFF/GAFF charges, and
+# gmx_MMPBSA) and GROMACS have no Windows builds on conda-forge. WSL2 runs a real Linux, where
+# everything works. Git Bash and MSYS2 report MINGW*/MSYS*, Cygwin reports CYGWIN*.
+case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*)
+        die "Windows is not supported natively (AmberTools and GROMACS have no Windows builds on conda-forge). Use WSL2: run 'wsl --install' in PowerShell as administrator, then run this installer inside the Ubuntu terminal." ;;
+esac
+
+# macOS Intel (osx-64) is not supported: conda-forge's antechamber there randomly reads zero atoms from
+# a valid SDF file (about 20-25% of calls, AmberTools 24.8 to 26.0). OpenFF (AM1-BCC charges) and GAFF
+# both run antechamber, so parameterization fails intermittently. Upstream bug, reproduced in TOFF:
+# https://github.com/ale94mleon/TOFF/blob/main/.github/scripts/antechamber-diagnostics.sh
+# A shell running under Rosetta on Apple Silicon also reports x86_64 and would install osx-64 packages.
+if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "x86_64" ]]; then
+    die "macOS Intel (x86_64) is not supported: AmberTools' antechamber is unreliable on this platform, so small-molecule parameterization (OpenFF and GAFF) fails intermittently. Use Linux or macOS Apple Silicon. On Apple Silicon, run the installer from a native arm64 shell, not under Rosetta."
+fi
+
+# ---------------------------------------------------------------------------
 # Conda frontend. `micromamba shell init` defines micromamba as a shell function,
 # which scripts cannot see, so prefer the real binary in $MAMBA_EXE.
 # ---------------------------------------------------------------------------
@@ -207,15 +228,6 @@ for candidate in "${MAMBA_EXE:-}" "$(command -v micromamba 2>/dev/null || true)"
 done
 [[ -n "$MM" ]] || die "micromamba or mamba not found. Install micromamba: https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html"
 MM_VERSION="$("$MM" --version | head -n 1)"
-
-# macOS Intel (osx-64) is not supported: conda-forge's antechamber there randomly reads zero atoms from
-# a valid SDF file (about 20-25% of calls, AmberTools 24.8 to 26.0). OpenFF (AM1-BCC charges) and GAFF
-# both run antechamber, so parameterization fails intermittently. Upstream bug, reproduced in TOFF:
-# https://github.com/ale94mleon/TOFF/blob/main/.github/scripts/antechamber-diagnostics.sh
-# A shell running under Rosetta on Apple Silicon also reports x86_64 and would install osx-64 packages.
-if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "x86_64" ]]; then
-    die "macOS Intel (x86_64) is not supported: AmberTools' antechamber is unreliable on this platform, so small-molecule parameterization (OpenFF and GAFF) fails intermittently. Use Linux or macOS Apple Silicon. On Apple Silicon, run the installer from a native arm64 shell, not under Rosetta."
-fi
 
 # Espaloma needs dgl, which conda-forge does not build for Linux ARM
 ESPALOMA_AVAILABLE=1

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### Added
+
+- The installer runs straight from GitHub (`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)"`). In a terminal, it asks whether to add MM(PB/GB)SA and Espaloma and whether to recreate existing environments, and confirms before installing; `-y` skips the questions (`--help` lists all options). The installation docs now show this single command.
+- The installer stops on native Windows (Git Bash, MSYS2, Cygwin) and points to WSL2, where BindFlow installs as on Linux. AmberTools and GROMACS have no Windows builds on conda-forge.
+
+### Changed
+
+- The installer takes the environment files from the local clone only when it runs as a file or with `--editable`; otherwise it downloads them (before, it looked in the current directory).
+
 ## [0.17.0] - 2026.11.21
 
 ### Upgrading
@@ -13,7 +24,7 @@ Small molecules are now parameterized in a separate `BindFlow-TOFF` environment.
 
 ### Added
 
-- `install/installer.sh`: installs BindFlow in two linked environments created with micromamba (or mamba >= 2): `BindFlow` (workflow, analysis and, with `--mmpbsa`, MM(PB/GB)SA) and `BindFlow-TOFF` (small-molecule parameterization and pdbfixer; Espaloma with `--espaloma`). The environment files are in `install/envs`. It runs straight from GitHub (`/bin/bash -c "$(curl -fsSL .../install/installer.sh)"`), asks whether to add MM(PB/GB)SA and Espaloma, and confirms before installing; `-y` skips the questions (`--help` lists all options).
+- `install/installer.sh`: installs BindFlow in two linked environments created with micromamba (or mamba >= 2): `BindFlow` (workflow, analysis and, with `--mmpbsa`, MM(PB/GB)SA) and `BindFlow-TOFF` (small-molecule parameterization and pdbfixer; Espaloma with `--espaloma`). The environment files are in `install/envs`.
 - `bindflow.utils.toff_env`: runs TOFF and pdbfixer from the `BindFlow-TOFF` environment, in a separate process.
 - Keyword `toff_prefix` to {py:func}`bindflow.runners.calculate`. If not given, `BINDFLOW_TOFF_PREFIX` (set by the installer) or an environment called `BindFlow-TOFF` next to the current one is used. Before submitting anything, BindFlow checks that the environment exists and has TOFF >= 0.3.0, when it is needed.
 - Development container (`.devcontainer`) built with the installer, including GROMACS 2025.4 from conda-forge for the tests.
