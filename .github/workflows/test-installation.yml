@@ -125,8 +125,32 @@ jobs:
           status=0
           env_run antechamber -i molecule.sdf -fi sdf -o charged.mol2 -fo mol2 -pf no -dr n -c bcc -nc 0.0 || status=$?
           echo "antechamber exit code: $status"
-          for f in sqm.in sqm.out sqm.pdb charged.mol2; do
-            if [[ -f "$f" ]]; then echo "::group::$f"; cat "$f"; echo "::endgroup::"; fi
+          for f in molecule.sdf ANTECHAMBER_AC.AC0 ANTECHAMBER_AC.AC sqm.in sqm.out charged.mol2; do
+            if [[ -f "$f" ]]; then echo "::group::$f"; cat -A "$f"; echo "::endgroup::"; fi
           done
           ls -la "$work"
+
+          # Does antechamber read the molecule at all? Without -c no charges are computed and sqm is not used,
+          # so an empty output here means reading the file is what fails.
+          try() {
+            local name="$1"; shift
+            mkdir -p "$work/$name"; cp "$work"/molecule.* "$work/$name/"; cd "$work/$name"
+            local st=0; env_run antechamber "$@" -o out.mol2 -fo mol2 -pf no -dr n || st=$?
+            echo "::group::$name: exit code $st, $(grep -c '^ *[0-9]' out.mol2 2>/dev/null || echo 0) lines in out.mol2"
+            cat out.mol2 2>/dev/null || true; cat ANTECHAMBER_AC.AC0 2>/dev/null || true
+            echo "::endgroup::"
+            cd "$work"
+          }
+          env_run python -c "
+          from rdkit import Chem
+          Chem.MolToPDBFile(Chem.MolFromMolFile('molecule.sdf', removeHs=False), 'molecule.pdb')"
+          try sdf-no-charges -i molecule.sdf -fi sdf
+          try mdl-no-charges -i molecule.sdf -fi mdl
+          try pdb-no-charges -i molecule.pdb -fi pdb
+          try pdb-bcc -i molecule.pdb -fi pdb -c bcc -nc 0.0
+          echo "::group::locale and binaries"
+          locale || true
+          env_run bash -c 'cat "$CONDA_PREFIX/conda-meta"/ambertools-*.json | python -c "import json,sys; d=json.load(sys.stdin); print(d[\"name\"], d[\"version\"], d[\"build\"])"' || true
+          file "$(env_run bash -c 'echo $CONDA_PREFIX')/bin/wrapped_progs/antechamber" || true
+          echo "::endgroup::"
 
