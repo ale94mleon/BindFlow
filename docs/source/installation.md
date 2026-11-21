@@ -1,5 +1,30 @@
 # 💿 Installation
 
+## TL;DR
+
+On Linux, macOS Apple Silicon or Windows through [WSL2](#supported-platforms):
+
+```bash
+# 1. micromamba (skip if you already have micromamba or mamba >= 2), then open a new terminal
+"${SHELL}" <(curl -L micro.mamba.pm)
+
+# 2. BindFlow (asks whether to add MM(PB/GB)SA and Espaloma)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)"
+
+# 3. Use it
+micromamba activate BindFlow
+```
+
+[GROMACS](#gromacs) is installed separately. To uninstall:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/uninstaller.sh)"
+```
+
+The rest of this page explains what these commands do and their options.
+
+## Overview
+
 BindFlow is installed in **two** conda environments, created and linked by the BindFlow installer:
 
 - **`BindFlow`**: the workflow, the free energy analysis and (optionally) MM(PB/GB)SA. This is the environment you activate and work with.
@@ -7,8 +32,10 @@ BindFlow is installed in **two** conda environments, created and linked by the B
 
 Keeping the heavy OpenMM/OpenFF/PyTorch stack in its own environment makes the dependency resolution much faster and more robust.
 
+### Supported platforms
+
 ```{important}
-**Supported platforms:** Linux (x86_64 and ARM), macOS Apple Silicon, and Windows through WSL2. The installer stops on the others:
+Linux (x86_64 and ARM), macOS Apple Silicon, and Windows through WSL2. The installer stops on the others:
 
 - **macOS Intel (x86_64):** the conda-forge build of AmberTools' `antechamber` randomly reads zero atoms from valid SDF files, so small-molecule parameterization with OpenFF (AM1-BCC charges) and GAFF fails intermittently. This is an upstream bug (see the *Known issues* in the [TOFF changelog](https://github.com/ale94mleon/TOFF/blob/main/docs/source/CHANGELOG.md)). On Apple Silicon, run the installer from a native shell, not under Rosetta.
 - **Windows (native, e.g. Git Bash):** AmberTools and GROMACS have no Windows builds on conda-forge. Use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) instead: run `wsl --install` in PowerShell as administrator, open the Ubuntu terminal, and follow this page from there, as on Linux.
@@ -62,6 +89,19 @@ BindFlow looks for the parameterization environment in this order:
 3. An environment called `BindFlow-TOFF` next to the `BindFlow` environment.
 
 If you used the default names, you do not need to do anything. If you are running on a cluster, make sure `BindFlow-TOFF` is on a file system that the compute nodes can also access.
+
+## Uninstalling
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/uninstaller.sh)"
+```
+
+The uninstaller lists what it will remove, with paths and sizes, and asks before removing anything:
+
+- **The `BindFlow` and `BindFlow-TOFF` environments.** It only removes environments that really contain BindFlow or TOFF, never the active one (run `micromamba deactivate` first). If you used other names with the installer, pass `--name`; the TOFF environment is found from the link the installer wrote.
+- **Optionally, the files Espaloma leaves in your home directory:** its model (`~/.cache/torch/hub/checkpoints/espaloma-*.pt`) and DGL's config file (`~/.dgl/config.json`). The rest of PyTorch's cache is left alone.
+
+It does not touch what other software may share: micromamba and its package cache (`micromamba clean --all` frees that space), pip's download cache, GROMACS, or your BindFlow clone and simulation folders. Use `--dry-run` to only see what would be removed, and `-y` (with `--caches` for the Espaloma files) to skip the questions. Add `-- --help` at the end of the command to list all options.
 
 ## GROMACS
 

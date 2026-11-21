@@ -256,29 +256,39 @@ prefix_of() { "$MM" run -n "$1" python -c 'import sys; print(sys.prefix)'; }
 INTERACTIVE=""
 if [[ -z "$ASSUME_YES" ]] && { : < /dev/tty; } 2>/dev/null; then INTERACTIVE=1; fi
 
-# ask_yes_no QUESTION DEFAULT(y|n): true if the answer is yes; Enter takes the default
+# ask_yes_no QUESTION DEFAULT(y|n) [IF_YES IF_NO]: true if the answer is yes; Enter takes the default
+# (the capital letter in the hint). IF_YES/IF_NO, if given, are printed (dimmed) under the question
+# with the outcome, so pressing Enter always shows what it chose.
 ask_yes_no() {
-    local hint="[y/N]" answer
+    local hint="[y/N]" answer result note=""
     if [[ "$2" == "y" ]]; then hint="[Y/n]"; fi
     while true; do
         printf '%s?%s %s %s%s%s ' "$CYAN" "$RESET" "$1" "$DIM" "$hint" "$RESET" > /dev/tty
         read -r answer < /dev/tty || answer=""
+        if [[ -z "$answer" ]]; then note=" (default)"; fi
         case "${answer:-$2}" in
-            [Yy]|[Yy][Ee][Ss]) return 0 ;;
-            [Nn]|[Nn][Oo]) return 1 ;;
+            [Yy]|[Yy][Ee][Ss]) result=0; break ;;
+            [Nn]|[Nn][Oo]) result=1; break ;;
         esac
         printf '  Please answer y or n.\n' > /dev/tty
     done
+    if [[ $# -ge 4 ]]; then
+        if [[ $result -eq 0 ]]; then answer="$3"; else answer="$4"; fi
+        printf '  %s-> %s%s%s\n' "$DIM" "$answer" "$note" "$RESET" > /dev/tty
+    fi
+    return $result
 }
 
 printf '\n%sBindFlow installer%s\n\n' "$BOLD" "$RESET"
 
 # Optional parts: asked only if no option decided them already
 if [[ -n "$INTERACTIVE" ]]; then
-    if [[ -z "$MMPBSA" ]] && ask_yes_no "Add MM(PB/GB)SA support (AmberTools + gmx_MMPBSA)?" n; then MMPBSA=1; fi
+    if [[ -z "$MMPBSA" ]] && ask_yes_no "Add MM(PB/GB)SA support (AmberTools + gmx_MMPBSA)?" n \
+        "MM(PB/GB)SA will be installed" "No MM(PB/GB)SA"; then MMPBSA=1; fi
     if [[ -z "$ESPALOMA" ]]; then
         if [[ -n "$ESPALOMA_AVAILABLE" ]]; then
-            if ask_yes_no "Add the Espaloma force field (PyTorch; a larger download)?" n; then ESPALOMA=1; fi
+            if ask_yes_no "Add the Espaloma force field (PyTorch; a larger download)?" n \
+                "Espaloma will be installed" "No Espaloma"; then ESPALOMA=1; fi
         else
             printf '%sEspaloma is not available on Linux ARM (its dependency dgl is not built for it); skipped.%s\n' "$DIM" "$RESET"
         fi
@@ -293,7 +303,8 @@ for env in "$TOFF_ENV" "$MAIN_ENV"; do
 done
 if [[ ${#existing[@]} -gt 0 && -z "$FORCE" ]]; then
     names="$(printf '%s, ' "${existing[@]}")"; names="${names%, }"
-    if [[ -n "$INTERACTIVE" ]] && ask_yes_no "These environments already exist: ${names}. Remove and recreate them?" n; then
+    if [[ -n "$INTERACTIVE" ]] && ask_yes_no "These environments already exist: ${names}. Remove and recreate them?" n \
+        "They will be removed and recreated" "Kept"; then
         FORCE=1
     else
         die "Environment(s) already exist: ${names}. Use --force to recreate them, or choose other names with --name/--toff-name."

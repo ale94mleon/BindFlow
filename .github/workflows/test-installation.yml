@@ -3,6 +3,7 @@
 # What is tested here:
 #   - installer.sh end to end, including its own check (imports, ethane with every force field)
 #   - the small-molecule parameterization tests (test_small.py)
+#   - uninstaller.sh, at the end (removes everything the installer and the tests created)
 # What is NOT tested here: test_fep.py and test_mmpbsa.py. They run real GROMACS simulations,
 # which take too long on the hosted runners; run them locally before a release
 # (pytest --pyargs bindflow.tests). GROMACS is therefore not installed in this workflow.
@@ -97,3 +98,15 @@ jobs:
             micromamba list -n "$env" || true
             echo "::endgroup::"
           done
+
+      # Last: the uninstaller must remove both environments and, with --caches, the Espaloma files
+      - name: Uninstall
+        run: |
+          bash install/uninstaller.sh -y --caches
+          for env in BindFlow BindFlow-TOFF; do
+            if micromamba env list --json | grep -q "/envs/$env\""; then echo "::error::$env was not removed"; exit 1; fi
+          done
+          if ls "$HOME"/.cache/torch/hub/checkpoints/espaloma-*.pt "$HOME/.dgl/config.json" 2>/dev/null; then
+            echo "::error::Espaloma files were not removed"; exit 1
+          fi
+          echo "Both environments and the Espaloma files are gone."

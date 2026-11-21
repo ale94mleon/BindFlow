@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The installer runs straight from GitHub (`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)"`). In a terminal, it asks whether to add MM(PB/GB)SA and Espaloma and whether to recreate existing environments, and confirms before installing; `-y` skips the questions (`--help` lists all options). The installation docs now show this single command.
+- `install/uninstaller.sh`: removes the `BindFlow` and `BindFlow-TOFF` environments after listing them and asking, and optionally the files Espaloma leaves in the home directory (its model and DGL's config). It only removes environments that contain BindFlow or TOFF; `--dry-run`, `-y` and `--caches` are available. See the installation docs.
 - The installer stops on native Windows (Git Bash, MSYS2, Cygwin) and points to WSL2, where BindFlow installs as on Linux. AmberTools and GROMACS have no Windows builds on conda-forge.
 
 ### Changed
