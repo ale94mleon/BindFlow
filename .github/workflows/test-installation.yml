@@ -78,7 +78,7 @@ jobs:
         run: |
           extra=()
           [[ "${{ matrix.espaloma }}" == "true" ]] && extra+=(--espaloma)
-          bash install/installer.sh --editable . --mmpbsa ${extra[@]+"${extra[@]}"}
+          bash install/installer.sh -y --editable . --mmpbsa ${extra[@]+"${extra[@]}"}
 
       - name: Install pytest
         run: micromamba install -n BindFlow -c conda-forge --override-channels -y pytest

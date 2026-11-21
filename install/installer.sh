@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # BindFlow installer.
 #
+# Run it straight from GitHub (it asks about the optional parts; -y skips the questions):
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)"
+#
 # Creates two environments and links them:
 #   BindFlow       workflow, FEP analysis and (optionally) MM(PB/GB)SA
 #   BindFlow-TOFF  small-molecule parameterization (TOFF: OpenFF, GAFF, optionally Espaloma) and pdbfixer
@@ -18,11 +21,12 @@ TOFF_ENV="BindFlow-TOFF"
 MMPBSA=""
 ESPALOMA=""
 FORCE=""
+ASSUME_YES=""
 VERBOSE=""
 BINDFLOW_SPEC="bindflow"
 EDITABLE=""
 TOFF_SPEC="toff>=0.3.0"
-BINDFLOW_REF="${BINDFLOW_REF:-main}"   # git ref used to download env files if they are not next to this script
+BINDFLOW_REF="${BINDFLOW_REF:-main}"   # git ref to download the env files from when there is no local clone (see "Environment files")
 
 ESPALOMA_SPEC="espaloma=0.4.0"
 MMPBSA_SPECS=("ambertools>=22.5" "mpi4py=3.1.5" tqdm)
@@ -32,7 +36,13 @@ GMXMMPBSA_SPEC="git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git@27929e0
 usage() {
     cat <<EOF
 Usage: bash installer.sh [options]
+       /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)" -- [options]
 
+In a terminal, the installer asks whether to add MM(PB/GB)SA and Espaloma (unless given as
+options) and confirms before installing. With -y, or without a terminal (e.g. CI), it asks
+nothing: only what the options request is installed.
+
+  -y, --yes          Do not ask anything; install what the options request
   --mmpbsa           Add MM(PB/GB)SA support (AmberTools + gmx_MMPBSA) to the main environment
   --espaloma         Add Espaloma to the parameterization environment
   --name NAME        Main environment name (default: ${MAIN_ENV})
@@ -41,7 +51,7 @@ Usage: bash installer.sh [options]
                      e.g. git+https://github.com/ale94mleon/BindFlow.git
   --editable DIR     Install BindFlow in editable mode from a local clone instead
   --toff SPEC        pip spec for TOFF (default: ${TOFF_SPEC})
-  --force            Remove existing environments with the same names first
+  --force            Remove existing environments with the same names without asking
   --verbose          Print the full output of every step instead of the compact progress view
   -h, --help         Show this help
 
@@ -59,6 +69,7 @@ while [[ $# -gt 0 ]]; do
         --editable) EDITABLE="$(cd "$2" && pwd)"; shift ;;
         --toff) TOFF_SPEC="$2"; shift ;;
         --force) FORCE=1 ;;
+        -y|--yes) ASSUME_YES=1 ;;
         --verbose) VERBOSE=1 ;;
         -h|--help) usage; exit 0 ;;
         *) usage; printf 'ERROR: Unknown option: %s\n' "$1" >&2; exit 1 ;;
@@ -93,11 +104,11 @@ esac
 ESC=$'\033'
 CLEAR_STEP=$'\r\033[K\n\033[K\033[1A\r'   # erase the spinner line and the line below it
 
+# Only the path is chosen here; the file is created after "Proceed?", so declining leaves nothing behind
 LOG=""
 if [[ -n "$FANCY" ]]; then
     LOG="${TMPDIR:-/tmp}"
     LOG="${LOG%/}/bindflow-install-$(date +%Y%m%d-%H%M%S).log"
-    : > "$LOG"
 fi
 
 die() {
@@ -135,7 +146,7 @@ on_interrupt() {
     if [[ -n "$STEP_PID" ]]; then kill_tree "$STEP_PID"; fi
     if [[ -n "$FANCY" ]]; then printf '%s' "$CLEAR_STEP"; fi
     printf '\n%sInterrupted.%s' "$YELLOW" "$RESET"
-    if [[ -n "$LOG" ]]; then printf ' Log: %s' "$LOG"; fi
+    if [[ -f "$LOG" ]]; then printf ' Log: %s' "$LOG"; fi
     printf '\n'
     exit 130
 }
@@ -206,14 +217,76 @@ if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "x86_64" ]]; then
     die "macOS Intel (x86_64) is not supported: AmberTools' antechamber is unreliable on this platform, so small-molecule parameterization (OpenFF and GAFF) fails intermittently. Use Linux or macOS Apple Silicon. On Apple Silicon, run the installer from a native arm64 shell, not under Rosetta."
 fi
 
-# Espaloma needs dgl, which conda-forge does not build for Linux ARM; stop before the first step
-if [[ -n "$ESPALOMA" && "$(uname -s)" == "Linux" && "$(uname -m)" =~ ^(aarch64|arm64)$ ]]; then
+# Espaloma needs dgl, which conda-forge does not build for Linux ARM
+ESPALOMA_AVAILABLE=1
+if [[ "$(uname -s)" == "Linux" && "$(uname -m)" =~ ^(aarch64|arm64)$ ]]; then ESPALOMA_AVAILABLE=""; fi
+if [[ -n "$ESPALOMA" && -z "$ESPALOMA_AVAILABLE" ]]; then
     die "--espaloma is not available on Linux ARM ($(uname -m)): its dependency dgl is not built for this platform on conda-forge. Run the installer without --espaloma."
 fi
 
 # Options for every "create": use only the channels listed in the env files (ignores e.g. 'defaults'
 # in ~/.condarc), take each package from the first channel that has it (strict), and do not ask (-y).
 SOLVE=(--override-channels --channel-priority strict -y)
+
+# Helpers:
+#   env_exists NAME   true if an environment called NAME already exists
+#   prefix_of NAME    print the full path of environment NAME (e.g. ~/micromamba/envs/BindFlow)
+env_exists() { "$MM" env list --json | grep -q "/envs/$1\""; }
+prefix_of() { "$MM" run -n "$1" python -c 'import sys; print(sys.prefix)'; }
+
+# ---------------------------------------------------------------------------
+# Questions (interactive mode)
+# ---------------------------------------------------------------------------
+# The installer asks only when a person can answer: no -y, and the terminal (/dev/tty) can be opened.
+# Questions and answers go through /dev/tty, not stdin/stdout, so they also work when the script
+# itself comes through a pipe (curl ... | bash). In CI there is no terminal, so nothing is asked and
+# only what the options request is installed.
+INTERACTIVE=""
+if [[ -z "$ASSUME_YES" ]] && { : < /dev/tty; } 2>/dev/null; then INTERACTIVE=1; fi
+
+# ask_yes_no QUESTION DEFAULT(y|n): true if the answer is yes; Enter takes the default
+ask_yes_no() {
+    local hint="[y/N]" answer
+    if [[ "$2" == "y" ]]; then hint="[Y/n]"; fi
+    while true; do
+        printf '%s?%s %s %s%s%s ' "$CYAN" "$RESET" "$1" "$DIM" "$hint" "$RESET" > /dev/tty
+        read -r answer < /dev/tty || answer=""
+        case "${answer:-$2}" in
+            [Yy]|[Yy][Ee][Ss]) return 0 ;;
+            [Nn]|[Nn][Oo]) return 1 ;;
+        esac
+        printf '  Please answer y or n.\n' > /dev/tty
+    done
+}
+
+printf '\n%sBindFlow installer%s\n\n' "$BOLD" "$RESET"
+
+# Optional parts: asked only if no option decided them already
+if [[ -n "$INTERACTIVE" ]]; then
+    if [[ -z "$MMPBSA" ]] && ask_yes_no "Add MM(PB/GB)SA support (AmberTools + gmx_MMPBSA)?" n; then MMPBSA=1; fi
+    if [[ -z "$ESPALOMA" ]]; then
+        if [[ -n "$ESPALOMA_AVAILABLE" ]]; then
+            if ask_yes_no "Add the Espaloma force field (PyTorch; a larger download)?" n; then ESPALOMA=1; fi
+        else
+            printf '%sEspaloma is not available on Linux ARM (its dependency dgl is not built for it); skipped.%s\n' "$DIM" "$RESET"
+        fi
+    fi
+fi
+
+# Existing environments with the same names: check both before the first (long) step, so a name
+# clash never stops the installer halfway. They are removed only with --force or a "yes" here.
+existing=()
+for env in "$TOFF_ENV" "$MAIN_ENV"; do
+    if env_exists "$env"; then existing+=("$env"); fi
+done
+if [[ ${#existing[@]} -gt 0 && -z "$FORCE" ]]; then
+    names="$(printf '%s, ' "${existing[@]}")"; names="${names%, }"
+    if [[ -n "$INTERACTIVE" ]] && ask_yes_no "These environments already exist: ${names}. Remove and recreate them?" n; then
+        FORCE=1
+    else
+        die "Environment(s) already exist: ${names}. Use --force to recreate them, or choose other names with --name/--toff-name."
+    fi
+fi
 
 # ---------------------------------------------------------------------------
 # Summary of what will be installed
@@ -223,23 +296,37 @@ if [[ -n "$ESPALOMA" ]]; then extras="${extras}, Espaloma"; fi
 if [[ -n "$MMPBSA" ]]; then extras="${extras}, MM(PB/GB)SA"; fi
 extras="${extras#, }"
 if [[ -n "$EDITABLE" ]]; then bindflow_from="$EDITABLE (editable)"; else bindflow_from="$BINDFLOW_SPEC"; fi
-printf '\n%sBindFlow installer%s\n\n' "$BOLD" "$RESET"
+envs_line="${MAIN_ENV}, ${TOFF_ENV}"
+if [[ ${#existing[@]} -gt 0 ]]; then envs_line="${envs_line} (existing ones are recreated)"; fi
+printf '\n'
 printf '  %-14s %s\n' "Frontend" "$(basename "$MM") $MM_VERSION" \
-                      "Environments" "${MAIN_ENV}, ${TOFF_ENV}" \
+                      "Environments" "$envs_line" \
                       "Extras" "${extras:-none}" \
                       "BindFlow" "$bindflow_from"
 if [[ -n "$LOG" ]]; then printf '  %-14s %s\n' "Log" "$LOG"; fi
 printf '\n'
+if [[ -n "$INTERACTIVE" ]]; then
+    ask_yes_no "Proceed?" y || { printf 'Nothing was installed.\n'; exit 0; }
+    printf '\n'
+fi
+if [[ -n "$LOG" ]]; then : > "$LOG"; fi
 if [[ -n "$FANCY" ]]; then
     printf '%sCreating the environments downloads several GB and can take 10-20 minutes.%s\n\n' "$DIM" "$RESET"
 fi
 
 # ---------------------------------------------------------------------------
-# Environment files: next to this script, or downloaded from the BindFlow repo
+# Environment files
 # ---------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-ENV_DIR="$SCRIPT_DIR/envs"
-if [[ ! -f "$ENV_DIR/bindflow.yml" || ! -f "$ENV_DIR/bindflow-toff.yml" ]]; then
+# Taken from the local clone when there is one: next to this script when it is run as a file
+# (bash install/installer.sh), or from the --editable clone. Run from a URL (bash -c "$(curl ...)"
+# or curl ... | bash) the script has no file, so they are downloaded from the BindFlow repository.
+ENV_DIR=""
+script_file="${BASH_SOURCE[0]:-}"
+if [[ ! -f "$script_file" ]]; then script_file=""; fi
+for dir in ${script_file:+"$(cd "$(dirname "$script_file")" && pwd)/envs"} ${EDITABLE:+"$EDITABLE/install/envs"}; do
+    if [[ -f "$dir/bindflow.yml" && -f "$dir/bindflow-toff.yml" ]]; then ENV_DIR="$dir"; break; fi
+done
+if [[ -z "$ENV_DIR" ]]; then
     ENV_DIR="$(mktemp -d)"
     for f in bindflow.yml bindflow-toff.yml; do
         curl -fsSL "https://raw.githubusercontent.com/ale94mleon/BindFlow/${BINDFLOW_REF}/install/envs/$f" -o "$ENV_DIR/$f" \
@@ -247,18 +334,8 @@ if [[ ! -f "$ENV_DIR/bindflow.yml" || ! -f "$ENV_DIR/bindflow-toff.yml" ]]; then
     done
 fi
 
-# Helpers:
-#   env_exists NAME   true if an environment called NAME already exists
-#   prefix_of NAME    print the full path of environment NAME (e.g. ~/micromamba/envs/BindFlow)
-env_exists() { "$MM" env list --json | grep -q "/envs/$1\""; }
-prefix_of() { "$MM" run -n "$1" python -c 'import sys; print(sys.prefix)'; }
-
-# Check both names before the first (long) step, so a name clash never stops the installer halfway
-for env in "$TOFF_ENV" "$MAIN_ENV"; do
-    if env_exists "$env"; then
-        [[ -n "$FORCE" ]] || die "Environment '$env' already exists. Use --force to recreate it, or choose another name."
-        run_step "Removing the existing ${env} environment" "$MM" env remove -n "$env" -y
-    fi
+for env in ${existing[@]+"${existing[@]}"}; do
+    run_step "Removing the existing ${env} environment" "$MM" env remove -n "$env" -y
 done
 
 # ---------------------------------------------------------------------------

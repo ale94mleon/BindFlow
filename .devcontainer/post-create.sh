@@ -11,7 +11,7 @@ git config --global --add safe.directory '*'
 extra=()
 [[ "$(uname -m)" == "x86_64" ]] && extra+=(--espaloma)
 
-bash install/installer.sh --editable . --mmpbsa --force ${extra[@]+"${extra[@]}"}
+bash install/installer.sh -y --editable . --mmpbsa --force ${extra[@]+"${extra[@]}"}
 
 # Usually building GROMACS for your architecture translate into better computer efficient
 # Here we are using the conda version jsut for convinience for the test suit.

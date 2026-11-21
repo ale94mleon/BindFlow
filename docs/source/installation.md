@@ -17,82 +17,37 @@ The installer needs [micromamba](https://mamba.readthedocs.io/en/latest/installa
 
 ## Running the installer
 
-Download the installer and choose the options you need:
+Run this in a terminal:
 
 ```bash
-curl -fsSL -O https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)"
 ```
 
-`````{tab} Without MM(P/G)BSA capabilities
+The installer asks whether to add the optional parts (the answer is "no" if you just press Enter):
 
-  ````{tab} 🟢 Stable Release
-    ```bash
-    bash installer.sh
-    ```
-  ````
-  ````{tab} 🟡 Install from GitHub (latest commit)
-    ```bash
-    bash installer.sh --bindflow git+https://github.com/ale94mleon/BindFlow.git
-    ```
-  ````
-  ````{tab} 🔵 Developer Mode (editable)
-    ```bash
-    git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
-    bash BindFlow/install/installer.sh --editable BindFlow
-    ```
-  ````
-`````
+- **MM(PB/GB)SA**: AmberTools and [gmx_MMPBSA](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA) in `BindFlow`.
+- **[Espaloma](https://github.com/choderalab/espaloma)**: an extra force field in `BindFlow-TOFF`. It depends on [DGL](https://www.dgl.ai), which conda-forge does not provide for ARM Linux (`linux-aarch64`, e.g. Grace/Graviton nodes or Docker on Apple Silicon), so it is not offered there.
 
-`````{tab} With MM(P/G)BSA capabilities
-
-  ````{tab} 🟢 Stable Release
-    ```bash
-    bash installer.sh --mmpbsa
-    ```
-  ````
-  ````{tab} 🟡 Install from GitHub (latest commit)
-    ```bash
-    bash installer.sh --mmpbsa --bindflow git+https://github.com/ale94mleon/BindFlow.git
-    ```
-  ````
-  ````{tab} 🔵 Developer Mode (editable)
-    ```bash
-    git clone --depth 1 git@github.com:ale94mleon/BindFlow.git
-    bash BindFlow/install/installer.sh --mmpbsa --editable BindFlow
-    ```
-  ````
-
-  ```{note}
-  Currently, we are using the `gmx_MMPBSA` commit [27929e0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/commit/27929e02067bc2321286809818d778a77a872010). This commit has been tested and provides flexibility in selecting the Python version.
-  ```
-`````
-
-Add `--espaloma` to any of the commands above to also install the [Espaloma](https://github.com/choderalab/espaloma) force field.
-
-```{important}
-Espaloma depends on [DGL](https://www.dgl.ai), which conda-forge does not provide for **ARM Linux** (`linux-aarch64`, e.g. Grace/Graviton nodes or Docker on Apple Silicon). It is available on x86_64 Linux and on macOS Apple Silicon.
-```
-
-The installer ends with a quick check (it parameterizes ethane with every installed force field). When it finishes, activate BindFlow with:
+It then shows a summary and asks for confirmation before installing. At the end, it checks the installation by parameterizing ethane with every installed force field. When it finishes, activate BindFlow with:
 
 ```bash
 micromamba activate BindFlow
 ```
 
-````{admonition} All installer options
+````{admonition} Installer options
 :class: tip
 
-  ```text
-  --mmpbsa           Add MM(PB/GB)SA support (AmberTools + gmx_MMPBSA) to the main environment
-  --espaloma         Add Espaloma to the parameterization environment
-  --name NAME        Main environment name (default: BindFlow)
-  --toff-name NAME   Parameterization environment name (default: BindFlow-TOFF)
-  --bindflow SPEC    pip spec for BindFlow (default: bindflow)
-  --editable DIR     Install BindFlow in editable mode from a local clone instead
-  --toff SPEC        pip spec for TOFF (default: toff>=0.3.0)
-  --force            Remove existing environments with the same names first
-  -h, --help         Show this help
-  ```
+Options go after `--` at the end of the command. For example, to install everything without any question:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)" -- -y --mmpbsa --espaloma
+```
+
+With `-y` (or when no terminal is available, e.g. in CI) nothing is asked and only what the options request is installed. Other options set the environment names, install BindFlow from GitHub or from a local clone (editable mode), or recreate existing environments. To list them all:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)" -- --help
+```
 ````
 
 ### How BindFlow finds `BindFlow-TOFF`
