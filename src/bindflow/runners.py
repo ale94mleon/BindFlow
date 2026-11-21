@@ -10,7 +10,7 @@ from bindflow._version import __version__
 from bindflow.free_energy import gather_results
 from bindflow.orchestration.flow_builder import approach_flow
 from bindflow.orchestration.generate_scheduler import Scheduler, SlurmScheduler
-from bindflow.utils import tools
+from bindflow.utils import toff_env, tools
 
 import logging
 logger = logging.getLogger(__name__)
@@ -48,7 +48,8 @@ def calculate(
         job_prefix: Union[None, str] = None,
         out_root_folder_path: tools.PathLike = "bindflow-out",
         submit: bool = False,
-        global_config: dict = None
+        global_config: dict = None,
+        toff_prefix: Union[None, tools.PathLike] = None,
         ) -> None:
     """Main function of BindFlow to execute the workflow
 
@@ -276,6 +277,10 @@ def calculate(
 
     global_config : dict, optional
         The rest of the configuration and fine tunning of the workflow goes here, by default {}
+    toff_prefix : Union[None, tools.PathLike], optional
+        Prefix of the external environment used for small-molecule parameterization (TOFF) and pdbfixer.
+        If None, it is taken from $BINDFLOW_TOFF_PREFIX or from an environment called BindFlow-TOFF
+        next to the current one (see :func:`bindflow.utils.toff_env.find_toff_prefix`), by default None
 
     Raises
     ------
@@ -287,6 +292,8 @@ def calculate(
         In case wrong calculation_type
     RuntimeError
         For incompatible GROMACS version
+    RuntimeError
+        If the TOFF environment is needed but cannot be found or is too old
     """
 
     logger.info(f"✨ You are using BindFlow: {__version__}")
@@ -330,6 +337,16 @@ def calculate(
     _global_config["inputs"]["cofactor"] = tools.input_helper(arg_name='cofactor', user_input=cofactor, default_ff=None,
                                                               default_ff_type='openff', optional=True)
     _global_config["inputs"]["membrane"] = tools.input_helper(arg_name='membrane', user_input=membrane, default_ff='Slipids_2020', optional=True)
+
+    # Fail early (before submitting anything) if the external TOFF environment is needed but not usable
+    small_molecules = _global_config["inputs"]["ligands"] + [m for m in [_global_config["inputs"]["cofactor"]] if m]
+    needs_pdbfixer = fix_protein and not _global_config["inputs"]["protein"].get('top')
+    if needs_pdbfixer or any(not mol.get('top') for mol in small_molecules):
+        resolved_toff_prefix = toff_env.find_toff_prefix(toff_prefix)
+        toff_env.check_toff_installation(resolved_toff_prefix)
+        _global_config["toff_prefix"] = str(resolved_toff_prefix)
+    else:
+        _global_config["toff_prefix"] = None
 
     _global_config["host_name"] = host_name
     _global_config["host_selection"] = host_selection

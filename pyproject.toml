@@ -30,6 +30,8 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Chemistry"
 ]
@@ -40,7 +42,7 @@ keywords = [
     "drug-design"
 ]
 
-requires-python = ">= 3.8 , < 3.11"
+requires-python = ">= 3.8 , < 3.13"
 dependencies = [
     "alchemlyb >= 2.0.0",
     "pymbar >= 4.0.1",
@@ -93,3 +95,27 @@ bindflow = [
 
 [project.scripts]
 bindflow = "bindflow.cli:main"
+
+
+# Codacy reads the configuration of ruff, and of no other Python linter, from this file.
+# D212 and D415 keep the docstrings uniform and the numpy convention leaves them off.
+[tool.pydocstyle]
+convention = "numpy"
+add-select = "D212,D415"
+
+[tool.ruff]
+line-length = 127
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "D"]
+extend-select = ["D212", "D415"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+# The docstring rules are for the package, not for the tests and the scripts.
+[tool.ruff.lint.per-file-ignores]
+"src/bindflow/tests/**" = ["D"]
+"Contrib/**" = ["D"]
+"streamlit/**" = ["D"]

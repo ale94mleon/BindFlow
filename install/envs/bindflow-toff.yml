@@ -1,0 +1,18 @@
+# Small-molecule parameterization environment used by BindFlow through TOFF.
+# Espaloma is added by the installer only when requested (--espaloma).
+name: BindFlow-TOFF
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pip
+  - rdkit
+  - openmm
+  - openff-toolkit
+  - openmmforcefields>=0.11.2   # GAFF template generator
+  - ambertools>=22.5          # antechamber/sqm for GAFF and AM1-BCC charges
+  - pdbfixer            # fix_protein option
+  - parmed
+  - pyyaml
+  - numpy

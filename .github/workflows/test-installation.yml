@@ -1,0 +1,99 @@
+# Install BindFlow with install/installer.sh on every supported platform and run the light tests.
+#
+# What is tested here:
+#   - installer.sh end to end, including its own check (imports, ethane with every force field)
+#   - the small-molecule parameterization tests (test_small.py)
+# What is NOT tested here: test_fep.py and test_mmpbsa.py. They run real GROMACS simulations,
+# which take too long on the hosted runners; run them locally before a release
+# (pytest --pyargs bindflow.tests). GROMACS is therefore not installed in this workflow.
+name: Test installation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "install/**"
+      - "src/**"
+      - "pyproject.toml"
+      - ".github/workflows/test-installation.yml"
+  pull_request:
+    paths:
+      - "install/**"
+      - "src/**"
+      - "pyproject.toml"
+      - ".github/workflows/test-installation.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x86_64
+            os: ubuntu-latest
+            espaloma: true
+          - name: Linux ARM
+            os: ubuntu-24.04-arm
+            espaloma: false   # dgl (Espaloma) is not built for linux-aarch64
+          - name: macOS Apple Silicon
+            os: macos-latest
+            espaloma: true
+          # macOS Intel is not supported (the installer stops there): conda-forge's antechamber on osx-64
+          # randomly reads zero atoms from SDF files, so OpenFF and GAFF fail intermittently. See
+          # https://github.com/ale94mleon/TOFF (CHANGELOG, "Known issues"). To re-check, add
+          # `os: macos-15-intel` back and remove the platform check at the top of installer.sh.
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # versioningit needs the tags to compute the version
+
+      - name: Install micromamba
+        run: |
+          case "$(uname -s)-$(uname -m)" in
+            Linux-x86_64)  plat=linux-64 ;;
+            Linux-aarch64) plat=linux-aarch64 ;;
+            Darwin-arm64)  plat=osx-arm64 ;;
+            Darwin-x86_64) plat=osx-64 ;;
+            *) echo "Unsupported platform $(uname -s)-$(uname -m)"; exit 1 ;;
+          esac
+          mkdir -p "$HOME/.local"
+          curl -fsSL "https://micro.mamba.pm/api/micromamba/${plat}/latest" | tar -xj -C "$HOME/.local" bin/micromamba
+          echo "MAMBA_EXE=$HOME/.local/bin/micromamba" >> "$GITHUB_ENV"
+          echo "MAMBA_ROOT_PREFIX=$HOME/micromamba" >> "$GITHUB_ENV"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run installer
+        run: |
+          extra=()
+          [[ "${{ matrix.espaloma }}" == "true" ]] && extra+=(--espaloma)
+          bash install/installer.sh --editable . --mmpbsa ${extra[@]+"${extra[@]}"}
+
+      - name: Install pytest
+        run: micromamba install -n BindFlow -c conda-forge --override-channels -y pytest
+
+      # test_fep and test_mmpbsa are excluded: they run full GROMACS simulations (see top of file)
+      - name: Run light tests
+        run: >-
+          micromamba run -n BindFlow python -m pytest --pyargs bindflow.tests -v -rsx
+          -k "not test_fep and not test_mmpbsa"
+
+      - name: Environment details
+        if: always()
+        run: |
+          for env in BindFlow BindFlow-TOFF; do
+            echo "::group::$env"
+            micromamba list -n "$env" || true
+            echo "::endgroup::"
+          done

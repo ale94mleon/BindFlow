@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026.11.21
+
+### Upgrading
+
+Small molecules are now parameterized in a separate `BindFlow-TOFF` environment. Updating BindFlow with `pip` in an existing environment is not enough: BindFlow stops before submitting anything if it cannot find `BindFlow-TOFF`. Run the installer (`install/installer.sh`) to create both environments, or pass `toff_prefix` to {py:func}`bindflow.runners.calculate`. The Python API and the configuration files are otherwise unchanged.
+
+### Added
+
+- `install/installer.sh`: installs BindFlow in two linked environments created with micromamba (or mamba >= 2): `BindFlow` (workflow, analysis and, with `--mmpbsa`, MM(PB/GB)SA) and `BindFlow-TOFF` (small-molecule parameterization and pdbfixer; Espaloma with `--espaloma`). The environment files are in `install/envs`.
+- `bindflow.utils.toff_env`: runs TOFF and pdbfixer from the `BindFlow-TOFF` environment, in a separate process.
+- Keyword `toff_prefix` to {py:func}`bindflow.runners.calculate`. If not given, `BINDFLOW_TOFF_PREFIX` (set by the installer) or an environment called `BindFlow-TOFF` next to the current one is used. Before submitting anything, BindFlow checks that the environment exists and has TOFF >= 0.3.0, when it is needed.
+- Development container (`.devcontainer`) built with the installer, including GROMACS 2025.4 from conda-forge for the tests.
+- GitHub Actions workflow (`test-installation.yml`) that tests the installer on Linux (x86_64, ARM) and macOS Apple Silicon, on changes to the installer or the code. It runs the small-molecule tests only; `test_fep` and `test_mmpbsa` are too expensive for CI and are run locally.
+
+### Changed
+
+- TOFF, OpenMM, OpenFF, RDKit and pdbfixer are no longer needed in the main BindFlow environment.
+- Python 3.11 is supported.
+- GROMACS 2026 is supported (range [2022, 2027)).
+- Installation docs rewritten around the installer.
+
+### Removed
+
+- Support for macOS Intel (x86_64): the installer stops there. conda-forge's `antechamber` on osx-64 randomly reads zero atoms from SDF files, so OpenFF and GAFF parameterization fail intermittently (upstream bug, see TOFF's known issues).
+- The interactive `environment.yml` builder of the docs (`custom.js`, `custom.css`) and the old environment files in `docs/source/env`.
+
 ## [0.16.3] - 2026.05.10
 
 ### Fixed
@@ -55,5 +81,7 @@ sc-sigma                 = 0.3
 
 - `"MDRestraintsGenerator @ git+https://github.com/ale94mleon/MDRestraintsGenerator.git@dev"` dependency from `pyproject.toml` as it is not accepted by PyPi. This dependency is built during the conda environment step anyway.
 
-[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.15.1...HEAD
+[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/ale94mleon/bindflow/compare/v0.16.3...v0.17.0
+[0.16.3]: https://github.com/ale94mleon/bindflow/compare/v0.15.1...v0.16.3
 [0.15.1]: https://github.com/ale94mleon/bindflow/compare/v0.13.0...v0.15.1
