@@ -190,7 +190,15 @@ with tempfile.TemporaryDirectory() as tmp:
     smi = Path(tmp) / "ethane.smi"
     smi.write_text("CC\n")
     for ff in os.environ["FORCE_FIELDS"].split():
-        toff_env.parameterize(prefix, smi, tmp, mol_resi_name=ff[:3].upper(), force_field_type=ff, hmr_factor=2.5)
+        resname = ff[:3].upper()
+        try:
+            toff_env.parameterize(prefix, smi, tmp, mol_resi_name=resname, force_field_type=ff, hmr_factor=2.5)
+        except RuntimeError:
+            # The error only shows the end of the output; print the whole log before tmp is deleted
+            log_file = Path(tmp) / f"{resname}_toff.log"
+            if log_file.is_file():
+                print(f"--- {log_file.name} ---\n{log_file.read_text()}")
+            raise
         print(f"{ff}: OK")
 print(f"BindFlow {bindflow.__version__}: installation OK")
 PYEOF

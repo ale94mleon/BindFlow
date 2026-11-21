@@ -10,8 +10,8 @@ dependencies:
   - rdkit
   - openmm
   - openff-toolkit
-  - openmmforcefields   # GAFF template generator
-  - ambertools          # antechamber/sqm for GAFF and AM1-BCC charges
+  - openmmforcefields>=0.11.2   # GAFF template generator
+  - ambertools>=22.5           # antechamber/sqm for GAFF and AM1-BCC charges; older releases break GAFF
   - pdbfixer            # fix_protein option
   - parmed
   - pyyaml
