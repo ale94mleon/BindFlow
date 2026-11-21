@@ -109,11 +109,15 @@ fmt_time() {
     if (( $1 >= 60 )); then printf '%dm%02ds' $(($1 / 60)) $(($1 % 60)); else printf '%ds' "$1"; fi
 }
 
-# Last non-empty line written to the log by the current step, without colors or carriage-return progress bars
+# Last non-empty line written to the log by the current step, without colors or carriage-return progress bars.
+# The output can contain bytes that are not valid text (e.g. a progress bar cut in the middle), so the
+# filters work byte by byte (LC_ALL=C) and grep treats it as text (-a); otherwise grep prints
+# "binary file matches" over the spinner.
 last_line() {
-    tail -n +"$((STEP_START_LINE + 1))" "$LOG" 2>/dev/null | tail -c 4000 | tr '\r\t' '\n ' | sed -e "s/${ESC}\[[0-9;?]*[A-Za-z]//g" \
-        | grep -v -e '^[[:space:]]*$' -e '^### ' | tail -n 1 || true
-}
+    tail -n +"$((STEP_START_LINE + 1))" "$LOG" 2>/dev/null | tail -c 4000 | LC_ALL=C tr '\r\t' '\n ' \
+        | LC_ALL=C sed -e "s/${ESC}\[[0-9;?]*[A-Za-z]//g" | LC_ALL=C grep -a -v -e '^[[:space:]]*$' -e '^### ' \
+        | tail -n 1 || true
+} 2>/dev/null
 
 # kill_tree PID: stop PID and every process it started (micromamba, pip, ...)
 kill_tree() {
@@ -192,6 +196,11 @@ for candidate in "${MAMBA_EXE:-}" "$(command -v micromamba 2>/dev/null || true)"
 done
 [[ -n "$MM" ]] || die "micromamba or mamba not found. Install micromamba: https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html"
 MM_VERSION="$("$MM" --version | head -n 1)"
+
+# Espaloma needs dgl, which conda-forge does not build for Linux ARM; stop before the first step
+if [[ -n "$ESPALOMA" && "$(uname -s)" == "Linux" && "$(uname -m)" =~ ^(aarch64|arm64)$ ]]; then
+    die "--espaloma is not available on Linux ARM ($(uname -m)): its dependency dgl is not built for this platform on conda-forge. Run the installer without --espaloma."
+fi
 
 # Options for every "create": use only the channels listed in the env files (ignores e.g. 'defaults'
 # in ~/.condarc), take each package from the first channel that has it (strict), and do not ask (-y).
