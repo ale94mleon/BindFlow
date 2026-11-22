@@ -125,10 +125,11 @@ def get_raw_fep_data(root_folder_path: PathLike, out_csv: PathLike = None) -> pd
     root_folder_path = Path(root_folder_path).resolve()
     for item1 in root_folder_path.iterdir():
         if item1.is_dir():
-            ligand = item1.stem
+            # .name, not .stem: a ligand called "lig.1" must not become "lig"
+            ligand = item1.name
             for item2 in item1.iterdir():
                 if item2.is_dir():
-                    replica = item2.stem
+                    replica = item2.name
                     complex_json = item2/"complex/fep/ana/dg_complex_contributions.json"
                     ligand_json = item2/"ligand/fep/ana/dg_ligand_contributions.json"
                     if complex_json.is_file() and ligand_json.is_file():
