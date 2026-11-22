@@ -14,6 +14,10 @@
 # Keep this script compatible with bash 3.2, the version macOS ships.
 # Stop at the first error (-e), on undefined variables (-u) and on failures inside pipes (-o pipefail),
 # so a broken step never leaves a half-installed environment that looks fine.
+# The whole script is wrapped in main(), which is only called on the last line. When the script is
+# downloaded (bash -c "$(curl ...)" or curl ... | bash) and the transfer is cut off, bash then never
+# runs a partial script: without the final "main" line nothing happens at all.
+main() {
 set -euo pipefail
 
 MAIN_ENV="BindFlow"
@@ -490,3 +494,7 @@ You never need to activate ${TOFF_ENV}; BindFlow calls it when parameterizing sm
 GROMACS is not installed by this script; see the BindFlow installation docs.
 EOF
 if [[ -n "$LOG" ]]; then printf '%sFull log: %s%s\n' "$DIM" "$LOG" "$RESET"; fi
+
+}
+
+main "$@"

@@ -6,6 +6,10 @@
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/uninstaller.sh)"
 #
 # Keep this script compatible with bash 3.2, the version macOS ships.
+# The whole script is wrapped in main(), which is only called on the last line. When the script is
+# downloaded (bash -c "$(curl ...)" or curl ... | bash) and the transfer is cut off, bash then never
+# runs a partial script: without the final "main" line nothing happens at all.
+main() {
 set -euo pipefail
 
 MAIN_ENV="BindFlow"
@@ -248,3 +252,7 @@ if [[ -z "$remove_caches" && ${#cache_files[@]} -gt 0 ]]; then
 fi
 # The package cache belongs to micromamba and is shared by all environments, so it is only mentioned
 printf '%smicromamba still keeps the downloaded packages in its cache; "micromamba clean --all" frees that space.%s\n' "$DIM" "$RESET"
+
+}
+
+main "$@"
