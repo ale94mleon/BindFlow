@@ -160,12 +160,13 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
             cmd += f"gmx {gmx_function.__name__}"
             for key in kwargs:
                 value = kwargs[key]
-                if value:
-                    if isinstance(value, bool):
-                        if value:
-                            cmd += f" -{key}"
-                    else:
-                        cmd += f" -{key} {value}"
+                # Skip unset options; keep 0 (e.g. gpu_id: 0), which `if value:` used to drop
+                if value is None or value is False or value == "":
+                    continue
+                if value is True:
+                    cmd += f" -{key}"
+                else:
+                    cmd += f" -{key} {value}"
             if stdout_file:
                 cmd += f" >& {stdout_file}"
                 if interactive:
