@@ -542,7 +542,7 @@ class MakeInputs:
             if dict_to_work['ff']['code'] == 'Slipids_2020':
                 # Retrieve internal Slipids_2020 only if the user did not provided this force field
                 if self.custom_ff_path:
-                    if 'Slipids_2020' not in list(self.custom_ff_path.iterdir()):
+                    if not (Path(self.custom_ff_path)/'Slipids_2020.ff').is_dir():
                         get_gmx_ff('Slipids_2020', out_dir=self.wd)
                 else:
                     get_gmx_ff('Slipids_2020', out_dir=self.wd)
