@@ -276,10 +276,10 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
 
     name = Path(mdp).stem
 
-    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies)
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + list(load_dependencies or []))
     def grompp(**kwargs): ...
 
-    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies, stdout_file=f"{name}.lis")
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + list(load_dependencies or []), stdout_file=f"{name}.lis")
     def mdrun(**kwargs): ...
 
     cwd = os.getcwd()
