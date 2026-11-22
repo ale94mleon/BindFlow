@@ -42,9 +42,8 @@ def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:
         raise ValueError(f"ff_code = {ff_code} is not valid. Chose between: {supported_ff}")
     else:
         fname = home(dataDir='gmx_ff')/f'{ff_code}.ff.tar.gz'
-    tar = tarfile.open(fname, "r:gz")
-    tar.extractall(out_dir)
-    tar.close()
+    with tarfile.open(fname, "r:gz") as tar:
+        tools.safe_extractall(tar, out_dir)
     return out_dir/f'{ff_code}.ff'
 
 
