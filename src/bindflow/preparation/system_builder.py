@@ -43,7 +43,7 @@ def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:
     else:
         fname = home(dataDir='gmx_ff')/f'{ff_code}.ff.tar.gz'
     with tarfile.open(fname, "r:gz") as tar:
-        tools.safe_extractall(tar, out_dir)
+        tools.safe_extract_all(tar, out_dir)
     return out_dir/f'{ff_code}.ff'
 
 

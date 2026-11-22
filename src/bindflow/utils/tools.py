@@ -598,7 +598,7 @@ def safe_extract(tar, member, target_path: PathLike) -> None:
     tar.extract(member, target_path)
 
 
-def safe_extractall(tar, target_path: PathLike) -> None:
+def safe_extract_all(tar, target_path: PathLike) -> None:
     """Extract every member of an open tarfile with :func:`safe_extract`."""
     for member in tar.getmembers():
         safe_extract(tar, member, target_path)

@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - FEP analysis asked for `prod.mdp` files of windows that do not exist when the number of vdw/coul lambda windows differed from the complex bonded ones.
 - `bindflow clean` crashed on subdirectories inside `slurm_logs`.
 - {py:func}`bindflow.utils.tools.gmx_runner` raised `TypeError` with the default `load_dependencies=None`.
-- {py:func}`bindflow.utils.tools.unarchive` could write outside the target folder when given a crafted archive (`../` paths, links). Extraction now uses tarfile's `data` filter (new {py:func}`bindflow.utils.tools.safe_extract` and {py:func}`bindflow.utils.tools.safe_extractall`).
+- {py:func}`bindflow.utils.tools.unarchive` could write outside the target folder when given a crafted archive (`../` paths, links). Extraction now uses tarfile's `data` filter (new {py:func}`bindflow.utils.tools.safe_extract` and {py:func}`bindflow.utils.tools.safe_extract_all`).
 - {py:func}`bindflow.utils.tools.archive` stored XTC files under their absolute path, so {py:func}`bindflow.utils.tools.unarchive` restored them under `target/home/...` instead of inside the project.
 - mdrun options set to `0` (e.g. `gpu_id: 0`) were silently dropped.
 - A custom `Slipids_2020` force field (`custom_ff_path`) was always shadowed by the bundled copy.
