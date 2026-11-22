@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Slurm jobs are submitted through the [cluster-generic executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/cluster-generic.html) (`--executor cluster-generic`), now part of the `BindFlow` environment. Existing environments need it installed: `micromamba install -n BindFlow -c conda-forge -c bioconda snakemake-executor-plugin-cluster-generic`. The deploy guide and the A2A example show the new command.
 - `bindflow clean` only acts on the given pipeline: it cancels the Slurm jobs whose working directory is inside the pipeline folder and stops the Snakemake processes running there (and the jobs they started). Before, it killed every Snakemake process and cancelled all of the user's Slurm jobs.
 - The installer and uninstaller only run once fully downloaded: a transfer cut off midway no longer runs part of the script.
+- Python >= 3.10 is required (the code already did not run on 3.8 and 3.9). `pyproject.toml` lists the dependencies of `install/envs/bindflow.yml`, so `pip install bindflow` no longer misses Snakemake, ParmEd and others; MDRestraintsGenerator and gmx_MMPBSA still come from the installer.
+- {py:func}`bindflow.runners.calculate` raises a `ValueError` when two ligand files have the same name (e.g. `a/lig1.sdf` and `b/lig1.sdf`): the name is the ligand's output folder, so their results overwrote each other.
 
 ### Fixed
 
@@ -29,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - FEP analysis asked for `prod.mdp` files of windows that do not exist when the number of vdw/coul lambda windows differed from the complex bonded ones.
 - `bindflow clean` crashed on subdirectories inside `slurm_logs`.
 - {py:func}`bindflow.utils.tools.gmx_runner` raised `TypeError` with the default `load_dependencies=None`.
+- {py:func}`bindflow.utils.tools.unarchive` could write outside the target folder when given a crafted archive (`../` paths, links). Extraction now uses tarfile's `data` filter (new {py:func}`bindflow.utils.tools.safe_extract` and {py:func}`bindflow.utils.tools.safe_extractall`).
+- {py:func}`bindflow.utils.tools.archive` stored XTC files under their absolute path, so {py:func}`bindflow.utils.tools.unarchive` restored them under `target/home/...` instead of inside the project.
+- mdrun options set to `0` (e.g. `gpu_id: 0`) were silently dropped.
+- A custom `Slipids_2020` force field (`custom_ff_path`) was always shadowed by the bundled copy.
+- Converting water `[ settles ]` to `[ constraints ]` wrote the topology twice when the molecule had no `[ settles ]` section; it now raises a clear error.
+- `MDP(**parameters)` changed the default parameters of every MDP created afterwards.
+- {py:func}`bindflow.free_energy.gather_results.get_raw_fep_data` cut ligand names at the last dot (`lig.1` became `lig`).
 
 ## [0.17.0] - 2026.11.21
 
