@@ -1,5 +1,6 @@
 import json
 import os
+import shlex
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -202,7 +203,10 @@ class SlurmScheduler(Scheduler):
                 verbose = True
                 debug_dag = True
                 keep_going = False
-        command = f"snakemake --jobs {jobs} --latency-wait {latency_wait} --cluster-cancel {self.cancel_command} "
+        # Snakemake >= 8 removed --cluster/--cluster-cancel; the same behavior lives in the
+        # cluster-generic executor plugin (snakemake-executor-plugin-cluster-generic).
+        command = f"snakemake --jobs {jobs} --latency-wait {latency_wait} --executor cluster-generic " \
+                  f"--cluster-generic-cancel-cmd {self.cancel_command} "
         if verbose:
             command += "--verbose "
         if debug_dag:
@@ -213,13 +217,13 @@ class SlurmScheduler(Scheduler):
             command += "--keep-incomplete "
         if keep_going:
             command += "--keep-going "
-        # Construct the cluster configuration
-        command += f"--cluster '{self.submit_command}"
-        # Here is the only possible difference, maybe it could be creates an
-        # abstract method that return cluster_config to a string representation valid to execute the jobs
-        for key in self.cluster_config:
-            command += f" --{key}={self.cluster_config[key]}"
-        command += "'"
+        # Construct the submit command. --parsable makes sbatch print only the job ID,
+        # which the plugin passes to --cluster-generic-cancel-cmd when the workflow is interrupted.
+        # {threads}, {rule} and {jobid} are filled in by Snakemake for every job.
+        submit_cmd = f"{self.submit_command} --parsable"
+        for key, value in self.cluster_config.items():
+            submit_cmd += f" {_sbatch_option(key, value)}"
+        command += f"--cluster-generic-submit-cmd {shlex.quote(submit_cmd)}"
 
         # Just save the command in the class
         self._snakemake_str_cmd = command
@@ -276,8 +280,8 @@ class SlurmScheduler(Scheduler):
 
         # Create the sbatch section of the script
         sbatch_section = f"{self.shebang}\n"
-        for key in cluster_to_work:
-            sbatch_section += f"{self.job_keyword} --{key}={cluster_to_work[key]}\n"
+        for key, value in cluster_to_work.items():
+            sbatch_section += f"{self.job_keyword} {_sbatch_option(key, value)}\n"
 
         if self.snake_executor_file:
             # Update snake_executor_file
@@ -289,6 +293,15 @@ class SlurmScheduler(Scheduler):
                 return process.stdout
         else:
             raise RuntimeError("'snake_executor_file' attribute is not present on the current instance. Consider to call build_snakemake first")
+
+
+def _sbatch_option(key: str, value) -> str:
+    """Render one sbatch option. Flags (stored as "" by :func:`slurm_validation`) are rendered
+    bare, e.g. ``--exclusive``, because sbatch rejects ``--exclusive=``.
+    """
+    if value == "":
+        return f"--{key}"
+    return f"--{key}={value}"
 
 
 def slurm_validation(cluster_config: dict) -> dict:

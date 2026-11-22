@@ -10,6 +10,7 @@ dependencies:
   - python=3.11
   - pip
   - snakemake-minimal=9.24.0
+  - snakemake-executor-plugin-cluster-generic>=1.0.7   # Slurm submission (replaces --cluster, removed in Snakemake 8)
   - pyyaml
   - importlib_resources   # used by bindflow.mmpbsa_in
   - parmed
