@@ -9,7 +9,8 @@ rule fep_ana_get_dg_complex_contributions:
         # Boresch correction
         boresch_dat=out_approach_path+"/{ligand_name}/{replica}/complex/equil-mdsim/boreschcalc/dG_off.dat",
         # To get the simulation temperature
-        mdp=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{sim_type}.{state}/prod/prod.mdp", state=range(len(config['lambdas']['complex']['bonded'])), sim_type=['vdw', 'coul', 'bonded'], allow_missing=True)
+        # Each window type uses its own number of lambda states
+        mdp=[path for sim_type in ['vdw', 'coul', 'bonded'] for path in expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/{sim_type}.{state}/prod/prod.mdp", sim_type=sim_type, state=range(len(config['lambdas']['complex'][sim_type])), allow_missing=True)]
     params:
         xvg_vdw=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['vdw'])), allow_missing=True),
         xvg_coul=expand(out_approach_path+"/{ligand_name}/{replica}/complex/fep/simulation/coul.{state}/prod/prod.xvg", state=range(len(config['lambdas']['complex']['coul'])), allow_missing=True),
