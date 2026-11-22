@@ -540,9 +540,11 @@ def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str =
     with tarfile.open(f"{name}.tar", 'w:tar') as project_archive:
         if xtc_files:
             for xtc_file in xtc_files:
-                xtc_file_path = root_path/xtc_file
-                print(f"Adding XTC: {xtc_file}")
-                project_archive.add(xtc_file_path, arcname=xtc_file)
+                # find_xtc returns absolute paths; store them relative to root_path, like the files
+                # in main_project.tar, so unarchive restores them inside the project tree.
+                arcname = Path(xtc_file).relative_to(root_path.resolve())
+                print(f"Adding XTC: {arcname}")
+                project_archive.add(xtc_file, arcname=str(arcname))
 
         with tempfile.TemporaryDirectory(prefix='.main_archive', dir='.') as tmpdir:
             # Create the compressed main_archive
