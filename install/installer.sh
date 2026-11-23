@@ -485,13 +485,20 @@ fi
 # Done
 # ---------------------------------------------------------------------------
 printf '\n%s%s BindFlow is installed%s %s(%s)%s\n\n' "$BOLD$GREEN" "$OK" "$RESET" "$DIM" "$(fmt_time "$SECONDS")" "$RESET"
+MM_NAME="$(basename "$MM")"   # micromamba or mamba, whichever was used
 cat <<EOF
 Activate it with:
 
-    ${BOLD}micromamba activate ${MAIN_ENV}${RESET}
+    ${BOLD}${MM_NAME} activate ${MAIN_ENV}${RESET}
 
 You never need to activate ${TOFF_ENV}; BindFlow calls it when parameterizing small molecules.
-GROMACS is not installed by this script; see the BindFlow installation docs.
+
+${BOLD}Next steps${RESET}
+  1. Install GROMACS. It is not part of this installer:
+     https://bindflow.readthedocs.io/en/latest/source/installation.html#gromacs
+  2. Check that BindFlow runs simulations with it (a few minutes):
+     ${MM_NAME} install -n ${MAIN_ENV} -c conda-forge pytest
+     ${MM_NAME} run -n ${MAIN_ENV} pytest --pyargs bindflow.tests.test_fep${MMPBSA:+ bindflow.tests.test_mmpbsa}
 EOF
 if [[ -n "$LOG" ]]; then printf '%sFull log: %s%s\n' "$DIM" "$LOG" "$RESET"; fi
 

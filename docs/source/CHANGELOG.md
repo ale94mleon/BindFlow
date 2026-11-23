@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `install/uninstaller.sh`: removes the `BindFlow` and `BindFlow-TOFF` environments after listing them and asking, and optionally the files Espaloma leaves in the home directory (its model and DGL's config). It only removes environments that contain BindFlow or TOFF; `--dry-run`, `-y` and `--caches` are available. See the installation docs.
 - The installer stops on native Windows (Git Bash, MSYS2, Cygwin) and points to WSL2, where BindFlow installs as on Linux. AmberTools and GROMACS have no Windows builds on conda-forge.
 - `bindflow clean --dry-run` (`-n`): lists the processes, Slurm jobs and folders that would be affected, without touching them.
+- When it finishes, the installer lists the next steps: install GROMACS (with a link to the docs) and run `test_fep` (and `test_mmpbsa` with `--mmpbsa`) to check that BindFlow runs simulations with it.
 
 ### Changed
 
