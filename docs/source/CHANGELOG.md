@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [0.18.0] - 2026.11.23
+
+### Upgrading
+
+- **Slurm:** jobs are now submitted with Snakemake's cluster-generic executor plugin. Existing `BindFlow` environments need it: run the installer again, or `micromamba install -n BindFlow -c conda-forge -c bioconda snakemake-executor-plugin-cluster-generic`. Commands written by hand with `--cluster`/`--cluster-cancel` must change to `--executor cluster-generic --cluster-generic-submit-cmd 'sbatch --parsable ...' --cluster-generic-cancel-cmd scancel` (see the deploy guide).
+- **Environment modules:** if `module: command not found` appears on compute nodes, load the module system as the first entry of `extra_directives: dependencies`, e.g. `source /etc/profile.d/modules.sh` (or `lmod.sh`, depending on the cluster). BindFlow runs those commands in a non-login shell, where `module` is only defined if it was exported.
+- **Python:** 3.10 or newer is required.
+- **`bindflow clean`** no longer kills every Snakemake process or cancels all of your Slurm jobs; it only acts on the given pipeline folder. Use `--dry-run` to see what it would do.
 
 ### Added
 
@@ -18,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The installer takes the environment files from the local clone only when it runs as a file or with `--editable`; otherwise it downloads them (before, it looked in the current directory).
-- Slurm jobs are submitted through the [cluster-generic executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/cluster-generic.html) (`--executor cluster-generic`), now part of the `BindFlow` environment. Existing environments need it installed: `micromamba install -n BindFlow -c conda-forge -c bioconda snakemake-executor-plugin-cluster-generic`. The deploy guide and the A2A example show the new command.
+- Slurm jobs are submitted through the [cluster-generic executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/cluster-generic.html) (`--executor cluster-generic`), now part of the `BindFlow` environment (see Upgrading). The deploy guide and the A2A example show the new command.
 - `bindflow clean` only acts on the given pipeline: it cancels the Slurm jobs whose working directory is inside the pipeline folder and stops the Snakemake processes running there (and the jobs they started). Before, it killed every Snakemake process and cancelled all of the user's Slurm jobs.
 - The installer and uninstaller only run once fully downloaded: a transfer cut off midway no longer runs part of the script.
 - Python >= 3.10 is required (the code already did not run on 3.8 and 3.9). `pyproject.toml` lists the dependencies of `install/envs/bindflow.yml`, so `pip install bindflow` no longer misses Snakemake, ParmEd and others; MDRestraintsGenerator and gmx_MMPBSA still come from the installer.
