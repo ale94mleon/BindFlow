@@ -245,3 +245,28 @@ flowchart TD
     D -- No --> H[Check main BindFlow log for other causes]
 ```
 ````
+
+````{dropdown} Which uncertainty should I report for FEP results?
+:color: info
+:animate: fade-in-slide-down
+
+`bindflow check_fep` (and {py:func}`bindflow.free_energy.gather_results.get_all_fep_dgs`) report two uncertainties for each estimator:
+
+- `MBAR_sem` / `TI_sem`: the standard error of the mean between replicas. **Report this one.** Independent replicas also capture correlated samples and slow motions that a single trajectory misses. It needs at least two replicas (`replicas` of {py:func}`bindflow.runners.calculate`); with one, it is empty.
+- `MBAR_uncertainty_propagation` / `TI_uncertainty_propagation`: the analytical errors of MBAR/TI, combined over the thermodynamic cycle. They assume independent samples and usually **underestimate** the uncertainty, more so in poorly sampled windows (see below).
+
+**How windows are subsampled.** With the default production settings, each window writes 25 000 frames (10 ns, one frame every 0.4 ps). Before MBAR/TI, BindFlow keeps one frame per statistical inefficiency, so the samples are uncorrelated, but never fewer than `min_samples` (500) per window. When a window is so correlated that this would leave fewer than 500 samples, correlated frames are kept. That does not bias ΔG (correlated frames are still equilibrium samples), but the analytical errors of that window become too small; BindFlow warns about it during the analysis.
+
+**Which windows are correlated?** Each `dg_ligand_contributions.json` and `dg_complex_contributions.json` (in `<ligand>/<replica>/{ligand,complex}/fep/ana/`) has a `sampling` entry per lambda type, with one record per window:
+
+| Key | Meaning |
+|---|---|
+| `window` | Window folder, e.g. `vdw.3` |
+| `frames`, `frame_interval_ps` | Frames analyzed and time between them |
+| `statistical_inefficiency`, `statistical_inefficiency_ps` | Frames (ps) per independent sample: how long the window must run for each uncorrelated sample |
+| `independent_samples` | Number of uncorrelated samples |
+| `step`, `samples` | Subsampling step used and resulting number of samples |
+| `decorrelated` | `false` if correlated frames were kept to reach `min_samples` |
+
+Windows with a large `statistical_inefficiency_ps` or `decorrelated: false` are the ones that would profit from longer simulations.
+````
