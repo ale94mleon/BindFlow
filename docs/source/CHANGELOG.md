@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The installer stops on native Windows (Git Bash, MSYS2, Cygwin) and points to WSL2, where BindFlow installs as on Linux. AmberTools and GROMACS have no Windows builds on conda-forge.
 - `bindflow clean --dry-run` (`-n`): lists the processes, Slurm jobs and folders that would be affected, without touching them.
 - When it finishes, the installer lists the next steps: install GROMACS (with a link to the docs) and run `test_fep` (and `test_mmpbsa` with `--mmpbsa`) to check that BindFlow runs simulations with it.
+- The FEP contribution files (`dg_ligand_contributions.json`, `dg_complex_contributions.json`) record how each lambda window was sampled, under `sampling`: frames, statistical inefficiency (in frames and ps), independent samples, the subsampling step and whether the samples used are uncorrelated. It shows which windows are highly correlated and would profit from longer simulations. Results are unchanged.
+- A warning lists the windows where correlated frames were kept to reach `min_samples`, whose analytical MBAR/TI errors are therefore too small.
+- FAQ: which FEP uncertainty to report (the standard error between replicas, `*_sem`) and how to read the sampling information.
 
 ### Changed
 
@@ -48,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Converting water `[ settles ]` to `[ constraints ]` wrote the topology twice when the molecule had no `[ settles ]` section; it now raises a clear error.
 - `MDP(**parameters)` changed the default parameters of every MDP created afterwards.
 - {py:func}`bindflow.free_energy.gather_results.get_raw_fep_data` cut ligand names at the last dot (`lig.1` became `lig`).
+- The number of samples per window printed during the FEP analysis used the size of the last window for every window.
 
 ## [0.17.0] - 2026.11.21
 

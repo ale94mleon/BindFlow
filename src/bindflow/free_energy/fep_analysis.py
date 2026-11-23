@@ -16,6 +16,51 @@ from alchemlyb.preprocessing import slicing, statistical_inefficiency
 from bindflow.utils.tools import PathLike, sum_uncertainty_propagation
 
 
+def _window_sampling(xvg: PathLike, df: pd.DataFrame, df_ineff: pd.DataFrame, step: int) -> dict:
+    """Describe how one lambda window was sampled and subsampled.
+
+    Parameters
+    ----------
+    xvg : PathLike
+        The window's dhdl xvg file (``.../<lambda_type>.<state>/prod/prod.xvg``).
+    df : pd.DataFrame
+        dH/dl data of the window after slicing (all frames).
+    df_ineff : pd.DataFrame
+        The same data subsampled by its statistical inefficiency (independent samples).
+    step : int
+        Step used to subsample the window for MBAR/TI.
+
+    Returns
+    -------
+    dict
+        ``window``: window folder name (e.g. ``vdw.3``);
+        ``frames``: number of frames;
+        ``frame_interval_ps``: time between frames;
+        ``statistical_inefficiency``: frames per independent sample (``frames / independent_samples``);
+        ``statistical_inefficiency_ps``: the same in ps, i.e. how long the window must run per independent sample;
+        ``independent_samples``: number of uncorrelated samples;
+        ``step`` and ``samples``: subsampling step used and resulting number of samples;
+        ``decorrelated``: False if correlated samples were kept to reach ``min_samples``.
+    """
+    times = np.unique(df.index.get_level_values('time'))
+    frame_interval = float(np.median(np.diff(times))) if len(times) > 1 else float('nan')
+    frames = len(df)
+    independent = len(df_ineff)
+    inefficiency = frames / independent if independent else float('nan')
+    return {
+        # BindFlow layout: <lambda_type>.<state>/prod/prod.xvg -> "vdw.3"; anything else: the file path
+        'window': Path(xvg).parent.parent.name if Path(xvg).parent.name == 'prod' else str(xvg),
+        'frames': frames,
+        'frame_interval_ps': frame_interval,
+        'statistical_inefficiency': inefficiency,
+        'statistical_inefficiency_ps': inefficiency * frame_interval,
+        'independent_samples': independent,
+        'step': int(step),
+        'samples': math.ceil(frames / step),
+        'decorrelated': bool(independent and step >= math.ceil(frames / independent)),
+    }
+
+
 def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None,
                   min_samples: int = 500, temperature: float = 298.15, convergency_plots_prefix: str = None) -> dict:
     """
@@ -59,13 +104,20 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None,
                 'value': <value>,
                 'error': <error>
             },
+            'sampling': [<one dict per window>],
         }
-        two entry dictionary containing the MBAR and TI free energy and
-        associated variance error estimate in kcal/mol
+        MBAR and TI free energy and associated variance error estimate in kcal/mol, and how each
+        window was sampled (see :func:`_window_sampling`). The errors assume independent samples, so
+        they are too small for windows with ``decorrelated = False``.
     """
 
     # Check how many independent samples do we have in our data.
+    # The step never exceeds len(df) / min_samples: on poorly sampled windows, correlated frames are
+    # kept to have at least min_samples. That does not bias the mean (they are still equilibrium
+    # samples) but the analytical errors of MBAR/TI assume independent samples and become too small;
+    # the spread between replicas (``<estimator>_sem`` of get_fep_stats) is then the error to report.
     sub_steps = []
+    sampling = []
     for xvg in xvgs:
         extracted_dHdls = extract_dHdl(xvg, T=temperature)
 
@@ -92,8 +144,16 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None,
             sub_steps.append(ineff_step)
         else:
             sub_steps.append(int(step_cutoff))
+        sampling.append(_window_sampling(xvg, df, df_ineff, sub_steps[-1]))
 
-    print(f"number of samples per window: {[int(len(df) / sub_step) for sub_step in sub_steps]}")
+    correlated = [window['window'] for window in sampling if not window['decorrelated']]
+    if correlated:
+        warnings.warn(
+            f"{len(correlated)} of {len(sampling)} windows kept correlated samples to reach {min_samples = } "
+            f"({', '.join(correlated)}). The analytical MBAR/TI errors underestimate the uncertainty; "
+            "use the standard error between replicas instead."
+        )
+    print(f"number of samples per window: {[window['samples'] for window in sampling]}")
 
     dhdls_data = [slicing(extract_dHdl(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)]
     u_nks_data = [slicing(extract_u_nk(xvg, T=temperature), lower=lower, upper=upper, step=step) for xvg, step in zip(xvgs, sub_steps)]
@@ -112,7 +172,8 @@ def run_alchemlyb(xvgs: list, lower: int = None, upper: int = None,
         'TI': {
             'value': units.to_kcalmol(ti.delta_f_).iloc[0, -1],
             'error': units.to_kcalmol(ti.d_delta_f_).iloc[0, -1]
-        }
+        },
+        'sampling': sampling,
     }
     # # Evaluate convergency
     # # TODO: On MBAR I am getting LLVM ERROR: pthread_create failed: Resource temporarily unavailable Aborted
