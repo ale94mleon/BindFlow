@@ -42,9 +42,8 @@ def get_gmx_ff(ff_code: str, out_dir: PathLike = '.') -> PathLike:
         raise ValueError(f"ff_code = {ff_code} is not valid. Chose between: {supported_ff}")
     else:
         fname = home(dataDir='gmx_ff')/f'{ff_code}.ff.tar.gz'
-    tar = tarfile.open(fname, "r:gz")
-    tar.extractall(out_dir)
-    tar.close()
+    with tarfile.open(fname, "r:gz") as tar:
+        tools.safe_extract_all(tar, out_dir)
     return out_dir/f'{ff_code}.ff'
 
 
@@ -543,7 +542,7 @@ class MakeInputs:
             if dict_to_work['ff']['code'] == 'Slipids_2020':
                 # Retrieve internal Slipids_2020 only if the user did not provided this force field
                 if self.custom_ff_path:
-                    if 'Slipids_2020' not in list(self.custom_ff_path.iterdir()):
+                    if not (Path(self.custom_ff_path)/'Slipids_2020.ff').is_dir():
                         get_gmx_ff('Slipids_2020', out_dir=self.wd)
                 else:
                     get_gmx_ff('Slipids_2020', out_dir=self.wd)

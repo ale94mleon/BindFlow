@@ -55,81 +55,165 @@ def mmxbsa_check_results(out_root_folder_path, out_csv_summary, out_csv_raw):
         print("🫣")
 
 
-def clean(out_root_folder_path):
-    import subprocess
-    import signal
-    import shutil
+def _is_inside(path, root) -> bool:
+    """Check whether ``path`` is ``root`` or lies inside it (both resolved, compared by path parts)."""
     from pathlib import Path
-
-    print("🧹 Initiating lab cleanup sequence...")
-
-    # ---------- Step 1: Kill Snakemake processes ----------
     try:
-        result = subprocess.run(
-            ["ps", "aux"], capture_output=True, text=True, check=True
-        )
-        lines = result.stdout.splitlines()
+        Path(path).resolve().relative_to(Path(root).resolve())
+        return True
+    except (ValueError, OSError):
+        return False
 
-        # Filter out lines with "snakemake" but not "grep"
-        matching = [line for line in lines if "snakemake" in line and "grep" not in line]
 
-        # Extract PIDs (second column)
-        pids = [int(line.split()[1]) for line in matching]
+def _run_tool(tool: str, *args: str, check: bool = False):
+    """Run a system tool by its absolute path and return the completed process.
 
-        if pids:
-            print("🧹🐍 Snakes on the compute node! Initiating containment...")
-            for pid in pids:
-                os.kill(pid, signal.SIGKILL)
-            print("✅ Free of snakes!")
-        else:
-            print("✅ No Snakemake found slithering around.")
-    except subprocess.CalledProcessError:
-        print("Failed to run 'ps aux'. Is this a Unix-like system?")
-    except IndexError:
-        print("Unexpected output format from 'ps'.")
-    except ValueError:
-        print("Failed to parse PID.")
-    except ProcessLookupError:
-        print("Process no longer exists.")
-    except PermissionError:
-        print("Permission denied when trying to kill a process.")
+    The tool is resolved with ``shutil.which`` so the call never depends on a partial path, and the
+    arguments are passed as a list without a shell, so nothing in them is interpreted.
+
+    Raises
+    ------
+    FileNotFoundError
+        If ``tool`` is not on the PATH.
+    """
+    import shutil
+    import subprocess  # nosec B404: only used through this helper, with an argument list and no shell
+
+    executable = shutil.which(tool)
+    if executable is None:
+        raise FileNotFoundError(f"'{tool}' was not found on the PATH")
+    # Absolute executable, argument list and no shell; the arguments are PIDs, job IDs and fixed flags.
+    return subprocess.run([executable, *args], capture_output=True, text=True, check=check)  # nosec B603
+
+
+def _process_cwd(pid: int):
+    """Return the working directory of a process, or None if it cannot be read (gone, other user, ...)."""
+    try:
+        return os.readlink(f"/proc/{pid}/cwd")  # Linux
+    except FileNotFoundError:
+        if not os.path.isdir("/proc/self"):  # No /proc (macOS): ask lsof
+            out = _run_tool("lsof", "-a", "-p", str(pid), "-d", "cwd", "-Fn").stdout
+            for line in out.splitlines():
+                if line.startswith("n"):
+                    return line[1:]
+    except OSError:
+        pass
+    return None
+
+
+def _pipeline_processes(out_root_folder_path) -> list:
+    """Return the PIDs of the user's Snakemake processes running inside ``out_root_folder_path``.
+
+    All their descendants (the jobs they started, e.g. gmx mdrun) are included.
+    """
+    result = _run_tool("ps", "-u", str(os.getuid()), "-o", "pid=,ppid=,args=", check=True)
+    children, args = {}, {}
+    for line in result.stdout.splitlines():
+        parts = line.split(None, 2)
+        if len(parts) < 3:
+            continue
+        pid, ppid = int(parts[0]), int(parts[1])
+        args[pid] = parts[2]
+        children.setdefault(ppid, []).append(pid)
+
+    own = {os.getpid(), os.getppid()}
+    roots = [pid for pid, cmd in args.items()
+             if "snakemake" in cmd and pid not in own
+             and (cwd := _process_cwd(pid)) and _is_inside(cwd, out_root_folder_path)]
+
+    found, stack = set(), list(roots)
+    while stack:
+        pid = stack.pop()
+        if pid not in found and pid not in own:
+            found.add(pid)
+            stack.extend(children.get(pid, []))
+    return sorted(found)
+
+
+def _pipeline_slurm_jobs(out_root_folder_path) -> list:
+    """Return the IDs of the user's Slurm jobs whose working directory is inside ``out_root_folder_path``.
+
+    BindFlow submits the controller job (job.sh) from that directory and Snakemake submits every
+    rule job from there too, so this selects exactly the jobs of this pipeline.
+    """
+    import getpass
+    result = _run_tool("squeue", "--noheader", "-u", getpass.getuser(), "--format=%i|%Z", check=True)
+    job_ids = []
+    for line in result.stdout.splitlines():
+        job_id, _, workdir = line.strip().partition("|")
+        if job_id and workdir and _is_inside(workdir, out_root_folder_path):
+            job_ids.append(job_id)
+    return job_ids
+
+
+def _stop_pipeline_processes(out_root_folder_path, dry_run: bool) -> None:
+    """Stop the Snakemake processes of the pipeline: SIGTERM first, then SIGKILL what is left."""
+    import signal
+    import time
+
+    try:
+        pids = _pipeline_processes(out_root_folder_path)
     except Exception as e:
         print("❌ Snake scan failed. Something went wrong:", e)
+        return
+    if not pids:
+        print("✅ No Snakemake of this pipeline found slithering around.")
+        return
 
-    # ---------- Step 2: Cancel SLURM jobs ----------
-    # Check if 'squeue' is available on the system
-    if shutil.which("squeue"):
-        print("🧹👨‍🔬 Scanning the SLURM queue...")
-        # Build and run the squeue command
-        command = 'squeue --noheader -u $USER --format="%i"'
-        process = subprocess.Popen(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            executable='/bin/bash'
-        )
-        output, _ = process.communicate()
-        # Decode and filter non-empty job IDs
-        job_ids = [jid.strip() for jid in output.decode().split('\n') if jid.strip()]
+    print(f"🧹🐍 {len(pids)} process(es) of this pipeline found: {' '.join(map(str, pids))}")
+    if dry_run:
+        return
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        for pid in pids:
+            try:
+                os.kill(pid, sig)
+            except ProcessLookupError:
+                pass
+            except PermissionError:
+                print(f"Permission denied when trying to stop process {pid}.")
+        if sig == signal.SIGTERM:
+            time.sleep(3)  # Let Snakemake shut down cleanly
+    print("✅ Free of snakes!")
 
-        if job_ids:
-            print("🧹🧪⚠️ Found SLURM jobs. Everything will be cancelled.")
-            cancel_command = "scancel " + " ".join(job_ids)
-            subprocess.run(cancel_command, shell=True, executable='/bin/bash')
-            print("✅ Lab bench cleared! SLURM jobs canceled.")
-        else:
-            print("✅ No active experiments — lab bench is clear.")
-    else:
+
+def _cancel_pipeline_slurm_jobs(out_root_folder_path, dry_run: bool) -> None:
+    """Cancel the Slurm jobs of the pipeline, if Slurm is available."""
+    import shutil
+
+    if not shutil.which("squeue"):
         print("❌ 'squeue' not found — SLURM job cleanup skipped.")
+        return
+    print("🧹👨‍🔬 Scanning the SLURM queue...")
+    try:
+        job_ids = _pipeline_slurm_jobs(out_root_folder_path)
+    except Exception as e:
+        print("❌ Failed to read the SLURM queue:", e)
+        return
+    if not job_ids:
+        print("✅ No active experiments of this pipeline — lab bench is clear.")
+        return
 
-    # Deleting temporal directories
-    # ---------- Step 3: Delete workflow folders ----------
+    print(f"🧹🧪⚠️ Found {len(job_ids)} SLURM job(s) of this pipeline.")
+    if dry_run:
+        print("   " + " ".join(job_ids))
+        return
+    # Chunk to stay below the command-line length limit
+    for i in range(0, len(job_ids), 500):
+        _run_tool("scancel", *job_ids[i:i + 500])
+    print("✅ Lab bench cleared! SLURM jobs canceled.")
 
-    slurm_logs = Path(out_root_folder_path) / "slurm_logs"
-    snakemake = Path(out_root_folder_path) / ".snakemake"
 
-    if snakemake.exists() and snakemake.is_dir():
+def _remove_workflow_folders(out_root_folder_path, dry_run: bool) -> None:
+    """Delete the .snakemake directory and the content of slurm_logs."""
+    import shutil
+
+    slurm_logs = out_root_folder_path / "slurm_logs"
+    snakemake = out_root_folder_path / ".snakemake"
+    if dry_run:
+        print(f"🔍 Would remove '{snakemake}' and the content of '{slurm_logs}'.")
+        return
+
+    if snakemake.is_dir():
         try:
             shutil.rmtree(snakemake)
             print(f"🧽 Removed '{snakemake}' — workflow residue eliminated.")
@@ -138,14 +222,47 @@ def clean(out_root_folder_path):
     else:
         print(f"✅ No '{snakemake.name}' directory found — already clean.")
 
-    if slurm_logs.exists() and slurm_logs.is_dir():
+    if slurm_logs.is_dir():
         for item in slurm_logs.iterdir():
-            item.unlink()
+            if item.is_dir() and not item.is_symlink():
+                shutil.rmtree(item)
+            else:
+                item.unlink()
         print(f"🧽 Removed '{slurm_logs}' content  — workflow residue eliminated.")
     else:
         print(f"✅ No '{slurm_logs.name}' directory found — already clean.")
 
-    print("🧼✨ Lab cleanup complete — your workspace is spotless!")
+
+def clean(out_root_folder_path, dry_run: bool = False):
+    """Clean a pipeline folder for a restart, without touching other pipelines.
+
+    Stops the Snakemake processes running inside the folder (and the jobs they started), cancels the
+    Slurm jobs whose working directory is inside it, and deletes the .snakemake directory and the
+    content of slurm_logs.
+
+    Parameters
+    ----------
+    out_root_folder_path : PathLike
+        Pipeline folder (``out_root_folder_path`` of :func:`bindflow.runners.calculate`).
+    dry_run : bool, optional
+        Only list the processes, Slurm jobs and folders that would be affected, by default False.
+    """
+    from pathlib import Path
+
+    out_root_folder_path = Path(out_root_folder_path).resolve()
+    if not out_root_folder_path.is_dir():
+        print(f"❌ '{out_root_folder_path}' is not a directory.")
+        return
+
+    print(f"🧹 Initiating lab cleanup sequence for '{out_root_folder_path}'...")
+    if dry_run:
+        print("🔍 Dry run: nothing will be killed, cancelled or deleted.")
+
+    _stop_pipeline_processes(out_root_folder_path, dry_run)
+    _cancel_pipeline_slurm_jobs(out_root_folder_path, dry_run)
+    _remove_workflow_folders(out_root_folder_path, dry_run)
+    if not dry_run:
+        print("🧼✨ Lab cleanup complete — your workspace is spotless!")
 
 
 def main():
@@ -232,15 +349,21 @@ def main():
         'clean',
         help="🧹 Clean the running directory for restart",
         description="🧹 Clean the running directory for restart. It will:\n"
-        "   1 - ⚠️ Kill ALL snakemake process running\n"
-        "   2 - ⚠️ Cancel ALL running jobs of an Slurm queue\n"
-        "   3 - Delete the .snakemake directory and the content of slurm_logs\n",
+        "   1 - Stop the Snakemake processes running inside the directory (and the jobs they started)\n"
+        "   2 - Cancel the Slurm jobs whose working directory is inside the directory\n"
+        "   3 - Delete the .snakemake directory and the content of slurm_logs\n"
+        "Processes and jobs of other pipelines are not touched. Use --dry-run to see what would be done.\n",
         formatter_class=argparse.RawDescriptionHelpFormatter)
     cleaner.add_argument(
         dest='out_root_folder_path',
         help='MM(P/B)BSA / FEP directory (`out_root_folder_path` kwarg of :func:`bindflow.runners.calculate`)',
         type=str)
-    cleaner.set_defaults(func=lambda args: clean(out_root_folder_path=args.out_root_folder_path))
+    cleaner.add_argument(
+        '-n', '--dry-run',
+        help="Only list the processes, Slurm jobs and folders that would be affected",
+        dest='dry_run',
+        action='store_true')
+    cleaner.set_defaults(func=lambda args: clean(out_root_folder_path=args.out_root_folder_path, dry_run=args.dry_run))
 
     args = parser.parse_args()
     args.func(args)

@@ -24,10 +24,10 @@ For example, if you set `threads = 4` and your frontend has 12 CPUs, this config
 
 ````{tab} SLURM
 ```bash
-snakemake --jobs 100000 --latency-wait 360 --cluster-cancel scancel --rerun-incomplete --keep-incomplete --keep-going --cluster 'sbatch --partition=uds-hub --time=2-00:00:00 --gpus=1 --gres=gpu:1 --mem=4G --cpus-per-task={threads} --job-name=test.{rule}.{jobid} --output=approach/slurm_logs/test.{rule}.{jobid}.out --error=approach/slurm_logs/test.{rule}.{jobid}.err'
+snakemake --jobs 100000 --latency-wait 360 --executor cluster-generic --cluster-generic-cancel-cmd scancel --rerun-incomplete --keep-incomplete --keep-going --cluster-generic-submit-cmd 'sbatch --parsable --partition=uds-hub --time=2-00:00:00 --gpus=1 --gres=gpu:1 --mem=4G --cpus-per-task={threads} --job-name=test.{rule}.{jobid} --output=approach/slurm_logs/test.{rule}.{jobid}.out --error=approach/slurm_logs/test.{rule}.{jobid}.err'
 ```
 
-All jobs will be launched using the `sbatch` command. Note that the only differences with the frontend executions are `--cluster-cancel scancel` and `--cluster (...)`. The first defines the command used in the cluster to cancel jobs, and the second defines how to interact with the cluster. The number of jobs can be typically a big number, but there are some clusters that set a maximum number of job to be lunch, so you can lay with this number.
+All jobs will be launched using the `sbatch` command. Note that the only differences with the frontend executions are `--executor cluster-generic`, `--cluster-generic-cancel-cmd scancel` and `--cluster-generic-submit-cmd (...)`. The first selects the [cluster-generic executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/cluster-generic.html) (installed with BindFlow; it replaces the `--cluster` options removed in Snakemake 8), the second defines the command used in the cluster to cancel jobs, and the third defines how to submit them. `--parsable` makes `sbatch` print only the job ID, which Snakemake needs to cancel the jobs. The number of jobs can be typically a big number, but there are some clusters that set a maximum number of job to be lunch, so you can lay with this number.
 
 In this case, `--jobs` represents how many concurrent jobs can be run in parallel. This includes all jobs added to the queue, regardless of their status (RUNNING, PENDING, CANCELING, CONFIGURING, etc.). Resource allocation is handled by [SLURM](https://slurm.schedmd.com/documentation.html).
 

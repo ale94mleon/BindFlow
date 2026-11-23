@@ -396,6 +396,14 @@ def calculate(
     if not _global_config["ligand_names"]:
         raise ValueError("No ligands found")
 
+    # The file name (without extension) is the ligand's output folder and Snakemake wildcard, so two
+    # files with the same name (e.g. a/lig1.sdf and b/lig1.sdf) would overwrite each other's results.
+    duplicated = sorted({name for name in _global_config["ligand_names"] if _global_config["ligand_names"].count(name) > 1})
+    if duplicated:
+        clashing = [mol['conf'] for mol in _global_config["inputs"]["ligands"] if Path(mol['conf']).stem in duplicated]
+        raise ValueError(f"Ligand file names must be unique (they name the output folders). Duplicated: {duplicated}. "
+                         f"Rename one of: {clashing}")
+
     if calculation_type == 'fep':
         expected_out_paths = int(replicas) * len(_global_config["ligand_names"])
         result_paths = glob.glob(_global_config["out_approach_path"] + "/*/*/dG*csv")

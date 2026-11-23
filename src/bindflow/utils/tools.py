@@ -160,12 +160,13 @@ def gmx_command(load_dependencies: List[str] = None, interactive: bool = False, 
             cmd += f"gmx {gmx_function.__name__}"
             for key in kwargs:
                 value = kwargs[key]
-                if value:
-                    if isinstance(value, bool):
-                        if value:
-                            cmd += f" -{key}"
-                    else:
-                        cmd += f" -{key} {value}"
+                # Skip unset options; keep 0 (e.g. gpu_id: 0), which `if value:` used to drop
+                if value is None or value is False or value == "":
+                    continue
+                if value is True:
+                    cmd += f" -{key}"
+                else:
+                    cmd += f" -{key} {value}"
             if stdout_file:
                 cmd += f" >& {stdout_file}"
                 if interactive:
@@ -276,10 +277,10 @@ def gmx_runner(mdp: PathLike, topology: PathLike, structure: PathLike, checkpoin
 
     name = Path(mdp).stem
 
-    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies)
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + list(load_dependencies or []))
     def grompp(**kwargs): ...
 
-    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + load_dependencies, stdout_file=f"{name}.lis")
+    @gmx_command(load_dependencies=HARD_CODE_DEPENDENCIES + list(load_dependencies or []), stdout_file=f"{name}.lis")
     def mdrun(**kwargs): ...
 
     cwd = os.getcwd()
@@ -540,9 +541,11 @@ def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str =
     with tarfile.open(f"{name}.tar", 'w:tar') as project_archive:
         if xtc_files:
             for xtc_file in xtc_files:
-                xtc_file_path = root_path/xtc_file
-                print(f"Adding XTC: {xtc_file}")
-                project_archive.add(xtc_file_path, arcname=xtc_file)
+                # find_xtc returns absolute paths; store them relative to root_path, like the files
+                # in main_project.tar, so unarchive restores them inside the project tree.
+                arcname = Path(xtc_file).relative_to(root_path.resolve())
+                print(f"Adding XTC: {arcname}")
+                project_archive.add(xtc_file, arcname=str(arcname))
 
         with tempfile.TemporaryDirectory(prefix='.main_archive', dir='.') as tmpdir:
             # Create the compressed main_archive
@@ -569,6 +572,36 @@ def archive(root_path: PathLike, exclude_suffixes: List[str] = None, name: str =
         print("Cleaning after compression:")
         print(f"Removing: {root_path}")
         shutil.rmtree(root_path)
+
+
+def safe_extract(tar, member, target_path: PathLike) -> None:
+    """Extract one member of an open tarfile without letting it write outside ``target_path``.
+
+    Uses tarfile's ``"data"`` filter when available (Python 3.12+, backported to 3.8.17, 3.9.17,
+    3.10.12 and 3.11.4): it rejects absolute paths, ``..`` components, links pointing outside the
+    target and device files. On older Pythons, members that resolve outside ``target_path`` and
+    links are refused.
+
+    Raises
+    ------
+    ValueError
+        If the member would be written outside ``target_path`` (older Pythons only; with the
+        ``"data"`` filter, tarfile raises a ``tarfile.FilterError`` subclass instead).
+    """
+    import tarfile
+
+    if hasattr(tarfile, "data_filter"):
+        tar.extract(member, target_path, filter="data")
+        return
+    if member.issym() or member.islnk() or not is_file_inside_directory(target_path, Path(target_path)/member.name):
+        raise ValueError(f"Refusing to extract {member.name!r}: it would be written outside {target_path}")
+    tar.extract(member, target_path)
+
+
+def safe_extract_all(tar, target_path: PathLike) -> None:
+    """Extract every member of an open tarfile with :func:`safe_extract`."""
+    for member in tar.getmembers():
+        safe_extract(tar, member, target_path)
 
 
 def _filter_helper(TarInfo: str, suffix: Tuple[str], prefix: Tuple[str] = ('main_project.tar')):
@@ -627,15 +660,15 @@ def unarchive(archive_file: PathLike, target_path: PathLike,
                         # twice the size of the original archive file
                         # The solution is to have separately for xtc and main project, but then we have two files
                         # not soe "archive", but either we solve the clean archive, or improve the unarchive.
-                        archive.extract(member, tmpdir)
+                        safe_extract(archive, member, tmpdir)
                         with tarfile.open(main_archive_path, f'r:{compress_type}') as main_archive:
                             for main_member in main_archive.getmembers():
                                 main_member = _filter_helper(main_member, only_with_suffix, prefix=prefix)
                                 if main_member:
                                     print(f"Decompressing: {main_member.name}")
-                                    main_archive.extract(main_member, target_path)
+                                    safe_extract(main_archive, main_member, target_path)
                     else:
-                        archive.extract(member, target_path)
+                        safe_extract(archive, member, target_path)
 
 
 def recursive_update_dict(original_dict: dict, update_dict: dict) -> None:

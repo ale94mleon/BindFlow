@@ -16,13 +16,13 @@ def test_mmpbsa():
     from bindflow.home import home
     from bindflow.orchestration.generate_scheduler import FrontEnd
     from bindflow.runners import calculate
+    from bindflow.utils.tools import safe_extract_all
 
     with tempfile.TemporaryDirectory(dir='.', prefix='.test_mmpbsa_') as tmp:
         home_path = home(dataDir='ci_systems')
         fname = home_path / 'WP6.tar.gz'
-        tar = tarfile.open(fname, "r:gz")
-        tar.extractall(tmp)
-        tar.close()
+        with tarfile.open(fname, "r:gz") as tar:
+            safe_extract_all(tar, tmp)
 
         tmp_path = Path(tmp)/"WP6"
         ligand_files = list((tmp_path/"guest").rglob("*sdf"))[:2]

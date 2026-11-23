@@ -17,7 +17,8 @@ cluster:
       # exclude: fang[51-54]
 extra_directives: # Optional
   dependencies:
-    - MODULEPATH="/data/shared/spack/0.22.1+240909/modules:${MODULEPATH}"
+    - source /etc/profile.d/modules.sh
+    - source /data/shared/spack/1.1.0+260122/env.bash
     - module add gromacs/2025.4
     
     # - MODULEPATH="/groups/CBG/opt/spack-0.21.0/modules:${MODULEPATH}"

@@ -50,7 +50,9 @@ rule run_gmx_mmpbsa:
         max_parallel = min(threads, frames_for_gmx_mmpbsa_analysis)
         logger.info(f"📊 Estimated number of frames {frames_for_gmx_mmpbsa_analysis}. Running with {max_parallel} threads.")
         
-        dependencies = " && ".join(load_dependencies) + " && "
+        # HARD_CODE_DEPENDENCIES is never empty, so the command never starts with a bare "&&"
+        # (a bash syntax error) when the user configured no dependencies.
+        dependencies = " && ".join(tools.HARD_CODE_DEPENDENCIES + list(load_dependencies or [])) + " && "
         gmx_mmpbsa_command = f"gmx_MMPBSA -O -i {input.mmpbsa_in} -cs {params.in_tpr} -ci {input.ndx} -cg 0 1 -ct {centered_xtc} -cp {input.top} -o res.dat -nogui"
 
         cwd = os.getcwd()

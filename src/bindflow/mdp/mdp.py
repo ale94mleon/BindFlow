@@ -32,7 +32,8 @@ class MDP:
 
     def _set_default_parameters(self):
         # Add any default parameters here
-        self.parameters = _MDP_PARAM_DEFAULT
+        # Copy, so set_parameters does not change the module-level defaults for every later MDP
+        self.parameters = dict(_MDP_PARAM_DEFAULT)
 
     def set_parameters(self, **kwargs):
         kwargs = {key.replace('_', '-'): value for key, value in kwargs.items()}

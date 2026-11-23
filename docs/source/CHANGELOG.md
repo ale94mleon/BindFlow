@@ -12,10 +12,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The installer runs straight from GitHub (`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ale94mleon/BindFlow/main/install/installer.sh)"`). In a terminal, it asks whether to add MM(PB/GB)SA and Espaloma and whether to recreate existing environments, and confirms before installing; `-y` skips the questions (`--help` lists all options). The installation docs now show this single command.
 - `install/uninstaller.sh`: removes the `BindFlow` and `BindFlow-TOFF` environments after listing them and asking, and optionally the files Espaloma leaves in the home directory (its model and DGL's config). It only removes environments that contain BindFlow or TOFF; `--dry-run`, `-y` and `--caches` are available. See the installation docs.
 - The installer stops on native Windows (Git Bash, MSYS2, Cygwin) and points to WSL2, where BindFlow installs as on Linux. AmberTools and GROMACS have no Windows builds on conda-forge.
+- `bindflow clean --dry-run` (`-n`): lists the processes, Slurm jobs and folders that would be affected, without touching them.
+- When it finishes, the installer lists the next steps: install GROMACS (with a link to the docs) and run `test_fep` (and `test_mmpbsa` with `--mmpbsa`) to check that BindFlow runs simulations with it.
 
 ### Changed
 
 - The installer takes the environment files from the local clone only when it runs as a file or with `--editable`; otherwise it downloads them (before, it looked in the current directory).
+- Slurm jobs are submitted through the [cluster-generic executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/cluster-generic.html) (`--executor cluster-generic`), now part of the `BindFlow` environment. Existing environments need it installed: `micromamba install -n BindFlow -c conda-forge -c bioconda snakemake-executor-plugin-cluster-generic`. The deploy guide and the A2A example show the new command.
+- `bindflow clean` only acts on the given pipeline: it cancels the Slurm jobs whose working directory is inside the pipeline folder and stops the Snakemake processes running there (and the jobs they started). Before, it killed every Snakemake process and cancelled all of the user's Slurm jobs.
+- The installer and uninstaller only run once fully downloaded: a transfer cut off midway no longer runs part of the script.
+- Python >= 3.10 is required (the code already did not run on 3.8 and 3.9). `pyproject.toml` lists the dependencies of `install/envs/bindflow.yml`, so `pip install bindflow` no longer misses Snakemake, ParmEd and others; MDRestraintsGenerator and gmx_MMPBSA still come from the installer.
+- {py:func}`bindflow.runners.calculate` raises a `ValueError` when two ligand files have the same name (e.g. `a/lig1.sdf` and `b/lig1.sdf`): the name is the ligand's output folder, so their results overwrote each other.
+
+### Fixed
+
+- Slurm runs failed at once with `unrecognized arguments`: the generated `job.sh` used `--cluster` and `--cluster-cancel`, which Snakemake 8 removed (BindFlow pins Snakemake 9.24).
+- Boolean Slurm options (e.g. `exclusive: true`) were passed as `--exclusive=`, which `sbatch` rejects; they are now passed as `--exclusive`.
+- The gmx_MMPBSA step always failed when no `dependencies` were configured: the command started with a bare `&&`.
+- FEP analysis asked for `prod.mdp` files of windows that do not exist when the number of vdw/coul lambda windows differed from the complex bonded ones.
+- `bindflow clean` crashed on subdirectories inside `slurm_logs`.
+- {py:func}`bindflow.utils.tools.gmx_runner` raised `TypeError` with the default `load_dependencies=None`.
+- {py:func}`bindflow.utils.tools.unarchive` could write outside the target folder when given a crafted archive (`../` paths, links). Extraction now uses tarfile's `data` filter (new {py:func}`bindflow.utils.tools.safe_extract` and {py:func}`bindflow.utils.tools.safe_extract_all`).
+- {py:func}`bindflow.utils.tools.archive` stored XTC files under their absolute path, so {py:func}`bindflow.utils.tools.unarchive` restored them under `target/home/...` instead of inside the project.
+- mdrun options set to `0` (e.g. `gpu_id: 0`) were silently dropped.
+- A custom `Slipids_2020` force field (`custom_ff_path`) was always shadowed by the bundled copy.
+- Converting water `[ settles ]` to `[ constraints ]` wrote the topology twice when the molecule had no `[ settles ]` section; it now raises a clear error.
+- `MDP(**parameters)` changed the default parameters of every MDP created afterwards.
+- {py:func}`bindflow.free_energy.gather_results.get_raw_fep_data` cut ligand names at the last dot (`lig.1` became `lig`).
 
 ## [0.17.0] - 2026.11.21
 

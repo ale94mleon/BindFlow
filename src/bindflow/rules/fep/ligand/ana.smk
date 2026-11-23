@@ -9,7 +9,8 @@ rule fep_ana_get_dg_ligand_contributions:
         finished_vdw=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/vdw.{state}/prod/prod.finished", state=range(len(config['lambdas']['ligand']['vdw'])), allow_missing=True),
         finished_coul=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/coul.{state}/prod/prod.finished", state=range(len(config['lambdas']['ligand']['coul'])), allow_missing=True),
         # To get the simulation temperature
-        mdp=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/{sim_type}.{state}/prod/prod.mdp", state=range(len(config['lambdas']['complex']['bonded'])), sim_type=['vdw', 'coul'], allow_missing=True)
+        # Each window type uses its own number of lambda states
+        mdp=[path for sim_type in ['vdw', 'coul'] for path in expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/{sim_type}.{state}/prod/prod.mdp", sim_type=sim_type, state=range(len(config['lambdas']['ligand'][sim_type])), allow_missing=True)]
     params:
         #  TODO finished_vdw is needed to connect the rule dependencies, but xvg_vdw is the thing that I need and they could also be passed as input. if finished is there xvg should also be there.
         xvg_vdw=expand(out_approach_path+"/{ligand_name}/{replica}/ligand/fep/simulation/vdw.{state}/prod/prod.xvg", state=range(len(config['lambdas']['ligand']['vdw'])), allow_missing=True),

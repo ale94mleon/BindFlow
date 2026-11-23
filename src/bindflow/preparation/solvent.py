@@ -228,10 +228,10 @@ def _tip3p_settles_to_constraints(top: tools.PathLike, molecule: str, out_top: U
     idx_begins, idx_ends = None, None
     section_found = False
     i = 0
-    while not lines[i].startswith('[ molecules ]') and i < len(lines):
+    while i < len(lines) and not lines[i].startswith('[ molecules ]'):
         if molecule in lines[i] and " 3\n" in lines[i]:
             j = i
-            while not lines[j].startswith('[ moleculetype ]') and j < len(lines):
+            while j < len(lines) and not lines[j].startswith('[ moleculetype ]'):
                 if lines[j].startswith('[ settles ]'):
                     section_found = True
                     idx_begins = j
@@ -242,6 +242,12 @@ def _tip3p_settles_to_constraints(top: tools.PathLike, molecule: str, out_top: U
                 j += 1
             break
         i += 1
+    if idx_begins is None:
+        # Without this check, lines[:None] + constraints + lines[None:] would write the topology twice
+        raise ValueError(f"No [ settles ] section found for molecule {molecule!r} in {top}")
+    if idx_ends is None:
+        # [ settles ] is the last section of the file
+        idx_ends = len(lines)
     if not out_top:
         out_top = top
     with open(out_top, 'w') as f:
