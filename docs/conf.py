@@ -119,10 +119,18 @@ html_static_path = ["source/_static"]
 
 # -- Mock heavy or optional dependencies to avoid import errors --
 
+# BindFlow declares no dependencies for pip (they come from install/envs), so the docs build,
+# which installs BindFlow with pip, must mock everything the documented modules import.
 autodoc_mock_imports = [
     "pandas",
     "toff",
-    "parmed"
+    "parmed",
+    "alchemlyb",
+    "pymbar",
+    "MDAnalysis",
+    "MDRestraintsGenerator",
+    "GMXMMPBSA",
+    "importlib_resources",
 ]
 
 intersphinx_mapping = {'Python': ('https://docs.python.org/3/', None),

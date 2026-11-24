@@ -40,23 +40,13 @@ keywords = [
 ]
 
 requires-python = ">= 3.11, < 3.13"
-# Mirrors install/envs/bindflow.yml, which is what the installer uses (it installs BindFlow with
-# pip --no-deps). Not listed because they are not on PyPI in the versions BindFlow needs: the pinned
-# MDRestraintsGenerator fork and gmx_MMPBSA (see install/installer.sh), and GROMACS.
-dependencies = [
-    "snakemake >= 9, < 10",
-    "snakemake-executor-plugin-cluster-generic >= 1.0.7",
-    "alchemlyb >= 2.4.1, < 2.6",
-    "pymbar >= 4.0.3, < 5",
-    "numpy",
-    "pandas >= 2.2, < 3",
-    "scipy",
-    "matplotlib",
-    "mdanalysis >= 2.11.0",
-    "parmed",
-    "pyyaml",
-    "importlib_resources",
-]
+# No runtime dependencies are declared on purpose. They come from the conda environment files in
+# install/envs (the installer installs BindFlow with pip --no-deps), and several are not on PyPI
+# (GROMACS, AmberTools, the pinned MDRestraintsGenerator, gmx_MMPBSA, the BindFlow-TOFF environment).
+# Declaring them here would let a pip install without --no-deps replace conda packages, and a second
+# list drifts from the environment files. BindFlow checks its environment at run time instead
+# (bindflow/_env_check.py).
+dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest"]
