@@ -237,12 +237,19 @@ Open [http://localhost:8000](http://localhost:8000). The HTML documentation is i
 
 ## Testing installation
 
-Finally, it is advised to check if everything is alright. Be patient and go for a coffee ☕, this could take a couple of minutes (~11 min on my Laptop) ⏳.
+Finally, it is advised to check if everything is alright. Be patient and go for a coffee ☕, the full suite could take a couple of minutes (~11 min on my Laptop) ⏳.
 
 ```bash
 micromamba activate BindFlow
 micromamba install -c conda-forge pytest
+pip install --no-deps alchemtest    # test data for the FEP analysis tests (not on conda-forge)
 pytest --pyargs bindflow.tests
+```
+
+To skip the two tests that run real GROMACS simulations (`test_fep` and `test_mmpbsa`, marked `gromacs`), which is what takes most of the time:
+
+```bash
+pytest --pyargs bindflow.tests -m "not gromacs"
 ```
 
 ```{admonition} Expected results
@@ -251,8 +258,9 @@ pytest --pyargs bindflow.tests
 - `test_fep`, `test_mmpbsa` and the OpenFF parameterization test should pass. `test_mmpbsa` needs the `--mmpbsa` option of the installer.
 - The Espaloma test is skipped if Espaloma is not installed.
 - On macOS, the GAFF and Espaloma tests are marked as expected to fail (`xfail`).
+- The FEP analysis tests are skipped if alchemtest is not installed, and the Slurm `job.sh` test if the cluster-generic executor plugin is missing.
 ```
 
 ```{note}
-The installation is tested automatically on GitHub Actions on Linux (x86_64 and ARM) and macOS Apple Silicon on every change of the installer or the code. To keep this affordable, those runs only include the installer check and the small-molecule parameterization tests; `test_fep` and `test_mmpbsa` run real GROMACS simulations and are only run locally, before each release.
+The installation is tested automatically on GitHub Actions on Linux (x86_64 and ARM) and macOS Apple Silicon on every change of the installer or the code. Those runs include every test except the ones marked `gromacs`: the installer check, the small-molecule parameterization, the FEP analysis on reference data, result gathering, the Slurm submission command, the Snakemake rules (dry runs) and `bindflow clean`. `test_fep` and `test_mmpbsa` run real GROMACS simulations and are only run locally, before each release.
 ```

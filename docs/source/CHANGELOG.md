@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### Added
+
+- Tests that need no GROMACS, run in CI on every platform: the FEP analysis on alchemtest's GROMACS benzene data (estimates, per-window sampling, the `min_samples` warning, the thermodynamic cycle), gathering results over ligands and replicas, the Slurm command and `job.sh` (run against a fake `sbatch`), Snakemake dry runs of the FEP analysis rules, tar extraction and archiving, gmx option rendering, MDP defaults, the `[ settles ]` conversion and `bindflow clean`.
+
+### Changed
+
+- `test_fep` and `test_mmpbsa` are marked `gromacs`; `pytest --pyargs bindflow.tests -m "not gromacs"` runs everything else. CI selects tests by this marker instead of `-k`, which also matched module names such as `test_fep_analysis`.
+
 ## [0.18.0] - 2026.11.24
 
 ### Upgrading
