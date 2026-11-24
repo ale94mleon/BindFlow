@@ -32,6 +32,10 @@ BindFlow is installed in **two** conda environments, created and linked by the B
 
 Keeping the heavy OpenMM/OpenFF/PyTorch stack in its own environment makes the dependency resolution much faster and more robust.
 
+```{note}
+`pip install bindflow` installs BindFlow **alone**, without dependencies. They come from the conda environment files in [`install/envs`](https://github.com/ale94mleon/BindFlow/tree/main/install/envs), and several are not on PyPI (GROMACS, AmberTools, the pinned MDRestraintsGenerator, gmx_MMPBSA, the TOFF environment). Use the installer. To update BindFlow inside an existing environment, `pip install --upgrade bindflow` is safe: it does not touch the conda packages. If something is missing, BindFlow says so and points here.
+```
+
 ### Supported platforms
 
 ```{important}

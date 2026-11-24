@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Slurm:** jobs are now submitted with Snakemake's cluster-generic executor plugin. Existing `BindFlow` environments need it: run the installer again, or `micromamba install -n BindFlow -c conda-forge -c bioconda snakemake-executor-plugin-cluster-generic`. Commands written by hand with `--cluster`/`--cluster-cancel` must change to `--executor cluster-generic --cluster-generic-submit-cmd 'sbatch --parsable ...' --cluster-generic-cancel-cmd scancel` (see the deploy guide).
 - **Environment modules:** if `module: command not found` appears on compute nodes, load the module system as the first entry of `extra_directives: dependencies`, e.g. `source /etc/profile.d/modules.sh` (or `lmod.sh`, depending on the cluster). BindFlow runs those commands in a non-login shell, where `module` is only defined if it was exported.
 - **Python:** 3.11 or newer is required (Snakemake 9 needs it). The installer already uses Python 3.11.
+- **pip:** `pip install bindflow` installs BindFlow alone, without dependencies. Install with the installer; inside an existing environment, `pip install --upgrade bindflow` updates BindFlow without touching the conda packages.
 - **`bindflow clean`** no longer kills every Snakemake process or cancels all of your Slurm jobs; it only acts on the given pipeline folder. Use `--dry-run` to see what it would do.
 
 ### Added
@@ -28,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Slurm jobs are submitted through the [cluster-generic executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/cluster-generic.html) (`--executor cluster-generic`), now part of the `BindFlow` environment (see Upgrading). The deploy guide and the A2A example show the new command.
 - `bindflow clean` only acts on the given pipeline: it cancels the Slurm jobs whose working directory is inside the pipeline folder and stops the Snakemake processes running there (and the jobs they started). Before, it killed every Snakemake process and cancelled all of the user's Slurm jobs.
 - The installer and uninstaller only run once fully downloaded: a transfer cut off midway no longer runs part of the script.
-- Python >= 3.11 is required: Snakemake 9 and its cluster-generic plugin need it, and the code did not run on 3.8 and 3.9. `pyproject.toml` lists the dependencies of `install/envs/bindflow.yml`, so `pip install bindflow` no longer misses Snakemake, ParmEd and others; MDRestraintsGenerator and gmx_MMPBSA still come from the installer.
+- Python >= 3.11 is required: Snakemake 9 and its cluster-generic plugin need it, and the code did not run on 3.8 and 3.9.
+- BindFlow no longer declares dependencies for pip (`pyproject.toml` had an incomplete list). They come from the environment files in `install/envs`, and several are not on PyPI. `pip install bindflow` installs BindFlow alone, so it can no longer replace conda packages when `--no-deps` is forgotten. If a dependency is missing, BindFlow now says which one and points to the installation docs, at import time or before submitting anything (the `snakemake` command, the cluster-generic plugin for Slurm, MDRestraintsGenerator for FEP, gmx_MMPBSA for MM(PB/GB)SA).
 - {py:func}`bindflow.runners.calculate` raises a `ValueError` when two ligand files have the same name (e.g. `a/lig1.sdf` and `b/lig1.sdf`): the name is the ligand's output folder, so their results overwrote each other.
 
 ### Fixed
