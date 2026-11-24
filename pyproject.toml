@@ -27,7 +27,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
@@ -40,7 +39,7 @@ keywords = [
     "drug-design"
 ]
 
-requires-python = ">= 3.10, < 3.13"
+requires-python = ">= 3.11, < 3.13"
 # Mirrors install/envs/bindflow.yml, which is what the installer uses (it installs BindFlow with
 # pip --no-deps). Not listed because they are not on PyPI in the versions BindFlow needs: the pinned
 # MDRestraintsGenerator fork and gmx_MMPBSA (see install/installer.sh), and GROMACS.
@@ -112,7 +111,7 @@ add-select = "D212,D415"
 
 [tool.ruff]
 line-length = 127
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "D"]
