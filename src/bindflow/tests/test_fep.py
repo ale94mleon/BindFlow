@@ -3,6 +3,7 @@
 import pytest
 
 
+@pytest.mark.gromacs
 @pytest.mark.filterwarnings("ignore")
 def test_fep():
     import tarfile
