@@ -5,12 +5,20 @@ from pathlib import Path
 from typing import List, Union
 from warnings import warn
 
+from bindflow._env_check import check_workflow_dependencies, missing_module_message
 from bindflow._gmx_check import check_gromacs_installation
 from bindflow._version import __version__
-from bindflow.free_energy import gather_results
-from bindflow.orchestration.flow_builder import approach_flow
-from bindflow.orchestration.generate_scheduler import Scheduler, SlurmScheduler
-from bindflow.utils import toff_env, tools
+
+try:
+    from bindflow.free_energy import gather_results
+    from bindflow.orchestration.flow_builder import approach_flow
+    from bindflow.orchestration.generate_scheduler import Scheduler, SlurmScheduler
+    from bindflow.utils import toff_env, tools
+except ModuleNotFoundError as error:
+    # BindFlow does not declare its dependencies for pip: point to the installer instead
+    if error.name and not error.name.startswith("bindflow"):
+        raise ModuleNotFoundError(missing_module_message(error.name), name=error.name) from error
+    raise
 
 import logging
 logger = logging.getLogger(__name__)
@@ -307,6 +315,7 @@ def calculate(
         calculation_type = calculation_type.lower()
 
     check_gromacs_installation()
+    check_workflow_dependencies(calculation_type, uses_slurm=issubclass(scheduler_class, SlurmScheduler))
     out_root_folder_path = Path(out_root_folder_path)
 
     # Make internal copy of configuration
