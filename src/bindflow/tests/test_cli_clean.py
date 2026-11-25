@@ -3,7 +3,7 @@ import os
 import shutil
 import signal
 import stat
-import subprocess
+import subprocess  # nosec B404: starts fake snakemake processes for clean to find
 import sys
 import time
 

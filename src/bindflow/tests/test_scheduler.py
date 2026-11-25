@@ -3,7 +3,7 @@ import importlib.util
 import os
 import shutil
 import stat
-import subprocess
+import subprocess  # nosec B404: runs the generated job.sh with a fake sbatch
 import sys
 
 import pytest

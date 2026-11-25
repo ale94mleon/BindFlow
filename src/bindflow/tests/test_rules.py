@@ -1,7 +1,7 @@
 """Snakemake rules: dry runs that check which files a rule asks for, without running anything."""
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404: runs fixed test commands (snakemake dry runs)
 from pathlib import Path
 
 import pytest
