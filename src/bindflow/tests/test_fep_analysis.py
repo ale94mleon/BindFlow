@@ -100,7 +100,7 @@ def _contribution(value, error):
 
 
 def test_get_dg_cycle(tmp_path):
-    """ΔG = ligand(coul + vdw) − boresch + complex(vdw + coul) − complex(bonded); errors add in quadrature."""
+    """ΔG = ligand(coul + vdw) - boresch + complex(vdw + coul) - complex(bonded); errors add in quadrature."""
     ligand = {"coul": _contribution(1.0, 0.1), "vdw": _contribution(2.0, 0.2)}
     complex_ = {"coul": _contribution(-10.0, 0.3), "vdw": _contribution(-20.0, 0.4),
                 "bonded": _contribution(3.0, 0.5), "boresch": 7.0}
