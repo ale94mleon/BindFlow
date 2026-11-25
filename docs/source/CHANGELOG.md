@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [0.18.1] - 2026.11.25
+
+No changes to how BindFlow behaves: this release adds a test suite that runs without GROMACS.
 
 ### Added
 
@@ -14,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `test_fep` and `test_mmpbsa` are marked `gromacs`; `pytest --pyargs bindflow.tests -m "not gromacs"` runs everything else. CI selects tests by this marker instead of `-k`, which also matched module names such as `test_fep_analysis`.
+- CI installs [alchemtest](https://github.com/alchemistry/alchemtest), the reference data for the FEP analysis tests, from PyPI with `--no-deps` (it is not on conda-forge). It is also part of the `dev` extra. Without it, those tests are skipped.
+- The installation docs show the quick run without the GROMACS simulations.
 
 ## [0.18.0] - 2026.11.24
 
@@ -139,7 +143,8 @@ sc-sigma                 = 0.3
 
 - `"MDRestraintsGenerator @ git+https://github.com/ale94mleon/MDRestraintsGenerator.git@dev"` dependency from `pyproject.toml` as it is not accepted by PyPi. This dependency is built during the conda environment step anyway.
 
-[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.18.0...HEAD
+[unreleased]: https://github.com/ale94mleon/bindflow/compare/v0.18.1...HEAD
+[0.18.1]: https://github.com/ale94mleon/bindflow/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/ale94mleon/bindflow/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/ale94mleon/bindflow/compare/v0.16.3...v0.17.0
 [0.16.3]: https://github.com/ale94mleon/bindflow/compare/v0.15.1...v0.16.3
