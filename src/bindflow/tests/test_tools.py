@@ -42,13 +42,18 @@ def test_safe_extract_refuses_members_outside_target(tmp_path, name, attributes)
 
 
 def test_safe_extract_keeps_absolute_paths_inside_target(tmp_path):
-    # The "data" filter strips the leading "/"; the fallback refuses the member. Either way nothing lands outside.
     target = tmp_path / "target"
-    try:
-        tools.safe_extract_all(_archive_with(str(tmp_path / "abs.txt")), target)
-    except ValueError:
-        pass
-    assert not (tmp_path / "abs.txt").exists()
+    absolute = tmp_path / "abs.txt"
+    archive = _archive_with(str(absolute))
+    if hasattr(tarfile, "data_filter"):
+        # The "data" filter strips the leading "/" and extracts inside the target
+        tools.safe_extract_all(archive, target)
+        assert (target / str(absolute).lstrip("/")).read_bytes() == b"content"
+    else:
+        # The fallback for older Pythons refuses the member
+        with pytest.raises(ValueError):
+            tools.safe_extract_all(archive, target)
+    assert not absolute.exists()
 
 
 def test_safe_extract_regular_member(tmp_path):
