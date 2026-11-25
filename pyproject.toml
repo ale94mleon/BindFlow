@@ -49,7 +49,12 @@ requires-python = ">= 3.11, < 3.13"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest", "alchemtest"]
+
+[tool.pytest.ini_options]
+markers = [
+    "gromacs: runs real GROMACS simulations (minutes); deselect with -m 'not gromacs'",
+]
 
 [tool.versioningit]
 default-version = "1+unknown"

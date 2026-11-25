@@ -3,10 +3,12 @@
 # What is tested here:
 #   - installer.sh end to end, including its own check (imports, ethane with every force field)
 #   - the small-molecule parameterization tests (test_small.py)
+#   - the tests that need no GROMACS: FEP analysis on alchemtest's benzene data, result gathering,
+#     Slurm command and job.sh (against a fake sbatch), rule dry runs, helpers and bindflow clean
 #   - uninstaller.sh, at the end (removes everything the installer and the tests created)
 # What is NOT tested here: test_fep.py and test_mmpbsa.py. They run real GROMACS simulations,
 # which take too long on the hosted runners; run them locally before a release
-# (pytest --pyargs bindflow.tests). GROMACS is therefore not installed in this workflow.
+# (pytest --pyargs bindflow.tests); they are marked "gromacs". GROMACS is therefore not installed in this workflow.
 name: Test installation
 
 on:
@@ -81,14 +83,19 @@ jobs:
           [[ "${{ matrix.espaloma }}" == "true" ]] && extra+=(--espaloma)
           bash install/installer.sh -y --editable . --mmpbsa ${extra[@]+"${extra[@]}"}
 
+      # alchemtest provides the GROMACS benzene data for the FEP analysis tests. It is not on
+      # conda-forge; it has no runtime dependencies, and --no-deps keeps pip away from conda packages.
       - name: Install pytest
-        run: micromamba install -n BindFlow -c conda-forge --override-channels -y pytest
+        run: |
+          micromamba install -n BindFlow -c conda-forge --override-channels -y pytest
+          micromamba run -n BindFlow python -m pip install --no-deps alchemtest
 
-      # test_fep and test_mmpbsa are excluded: they run full GROMACS simulations (see top of file)
+      # Tests marked "gromacs" (test_fep, test_mmpbsa) are excluded: they run full GROMACS
+      # simulations (see top of file). A marker, not -k: -k matches substrings of module names too.
       - name: Run light tests
         run: >-
           micromamba run -n BindFlow python -m pytest --pyargs bindflow.tests -v -rsx
-          -k "not test_fep and not test_mmpbsa"
+          -m "not gromacs"
 
       - name: Environment details
         if: always()
