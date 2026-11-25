@@ -31,7 +31,7 @@ def _archive_with(name: str, **attributes) -> tarfile.TarFile:
 @pytest.mark.parametrize("name, attributes", [
     ("../escape.txt", {}),
     ("link", {"type": tarfile.SYMTYPE, "linkname": "/etc/passwd"}),
-])
+], ids=["path-traversal", "symlink-escape"])
 def test_safe_extract_refuses_members_outside_target(tmp_path, name, attributes):
     target = tmp_path / "target"
     # tarfile's "data" filter raises a TarError subclass; the fallback for older Pythons raises ValueError
