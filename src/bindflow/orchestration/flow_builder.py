@@ -146,6 +146,7 @@ def approach_flow(global_config: dict, submit: bool = False) -> str:
         "replicas": global_config["replicas"],
         "hmr_factor": global_config["hmr_factor"],
         "custom_ff_path": global_config["custom_ff_path"],
+        "toff_prefix": str(global_config["toff_prefix"]) if global_config.get("toff_prefix") else None,
         'threads': global_config['threads'],
         'extra_directives': global_config['extra_directives'],
         'retries': 3,

@@ -15,6 +15,7 @@ We are grateful for the specific features and performance enhancements provided 
 
 - **[@LAndersen1](https://github.com/LAndersen1)** – Contributed to the development of the MM(PB/GB)SA integration module
 - **[@nicklamiller](https://github.com/nicklamiller)** – Repository maintenance contribution
+- **[@chenyangsu](https://github.com/chenyangsu)** – Fixed `toff_prefix` not reaching the ligand system build
 
 ---
 
